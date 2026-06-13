@@ -16,6 +16,12 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -26,18 +32,53 @@ jobs:
       - name: Generate platform files
         run: |
           flutter create --project-name flutter_parkirgo --platforms android .
-          # Force minSdkVersion 24 in build.gradle
+          
+      - name: Configure Android permissions and settings
+        run: |
+          # Patch minSdkVersion to 24 (ML Kit requirement)
           sed -i 's/minSdkVersion .*/minSdkVersion 24/g' android/app/build.gradle
-          # Fix namespace issue if any
-          echo "android.useAndroidX=true" > android/gradle.properties
-          echo "android.enableJetifier=true" >> android/gradle.properties
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-          cache: 'gradle'
+          # Fix targetSdkVersion and compileSdkVersion if needed
+          sed -i 's/targetSdkVersion .*/targetSdkVersion 34/g' android/app/build.gradle
+          sed -i 's/compileSdkVersion .*/compileSdkVersion 34/g' android/app/build.gradle
+          
+          # Add basic permissions to AndroidManifest
+          cat > android/app/src/main/AndroidManifest.xml <<EOF
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.CAMERA" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+              <uses-permission android:name="android.permission.BLUETOOTH" />
+              <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+              <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+              <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+              <application
+                  android:label="ParkirGo"
+                  android:name="\${applicationName}"
+                  android:icon="@mipmap/ic_launcher">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:launchMode="singleTop"
+                      android:theme="@style/LaunchTheme"
+                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+                      android:hardwareAccelerated="true"
+                      android:windowSoftInputMode="adjustResize">
+                      <meta-data
+                        android:name="io.flutter.embedding.android.NormalTheme"
+                        android:resource="@style/NormalTheme"
+                        />
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+                  <meta-data
+                      android:name="flutterEmbedding"
+                      android:value="2" />
+              </application>
+          </manifest>
+          EOF
 
       - name: Install dependencies
         run: flutter pub get
