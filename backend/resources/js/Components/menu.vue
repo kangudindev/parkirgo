@@ -183,55 +183,55 @@ export default {
           <span data-key="t-parkirgo">ParkirGo</span>
         </li>
         <li class="nav-item">
-          <Link href="/" class="nav-link menu-link">
+          <Link href="/" class="nav-link menu-link" :class="{ active: $page.url === '/' }">
             <i class="ri-dashboard-3-line"></i>
             <span>Command Center</span>
           </Link>
         </li>
         <li class="nav-item">
-          <Link href="/parkirgo/zones" class="nav-link menu-link">
+          <Link href="/parkirgo/zones" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/zones') }">
             <i class="ri-map-pin-2-line"></i>
             <span>Zona & Tarif</span>
           </Link>
         </li>
         <li class="nav-item">
-          <Link href="/parkirgo/vehicle-types" class="nav-link menu-link">
+          <Link href="/parkirgo/vehicle-types" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/vehicle-types') }">
             <i class="ri-roadster-line"></i>
             <span>Jenis Kendaraan</span>
           </Link>
         </li>
         <li class="nav-item">
-          <Link href="/parkirgo/shifts" class="nav-link menu-link">
+          <Link href="/parkirgo/shifts" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/shifts') }">
             <i class="ri-calendar-line"></i>
             <span>Shift</span>
           </Link>
         </li>
         <li class="nav-item">
-          <Link href="/parkirgo/penalties" class="nav-link menu-link">
+          <Link href="/parkirgo/penalties" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/penalties') }">
             <i class="ri-alert-line"></i>
             <span>Denda</span>
           </Link>
         </li>
         <li class="nav-item">
-          <Link href="/parkirgo/operations" class="nav-link menu-link">
+          <Link href="/parkirgo/operations" class="nav-link menu-link" :class="{ active: $page.url === '/parkirgo/operations' }">
             <i class="ri-parking-box-line"></i>
             <span>Operasional</span>
           </Link>
         </li>
         <li class="nav-item">
-          <Link href="/parkirgo/finance" class="nav-link menu-link">
+          <Link href="/parkirgo/finance" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/finance') }">
             <i class="ri-bank-card-line"></i>
             <span>Finance</span>
           </Link>
         </li>
         <li class="nav-item">
-          <Link href="/parkirgo/users" class="nav-link menu-link">
+          <Link href="/parkirgo/users" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/users') }">
             <i class="ri-user-settings-line"></i>
             <span>Manajemen Pengguna</span>
           </Link>
         </li>
         <li class="nav-item">
-          <Link href="/parkirgo/audit" class="nav-link menu-link">
+          <Link href="/parkirgo/audit" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/audit') }">
             <i class="ri-history-line"></i>
             <span>Audit Log</span>
           </Link>
