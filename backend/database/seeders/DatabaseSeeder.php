@@ -188,6 +188,168 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Add 5 more zones across Jakarta
+        $zones = [
+            [
+                'code' => 'ZONA-BLOK-M',
+                'name' => 'Blok M Square',
+                'city' => 'Jakarta Selatan',
+                'capacity_motor' => 200,
+                'capacity_car' => 100,
+                'status' => 'active'
+            ],
+            [
+                'code' => 'ZONA-KOTA-TUA',
+                'name' => 'Kota Tua Museum Fatahillah',
+                'city' => 'Jakarta Barat',
+                'capacity_motor' => 300,
+                'capacity_car' => 20,
+                'status' => 'active'
+            ],
+            [
+                'code' => 'ZONA-KELAPA-GADING',
+                'name' => 'Boulevard Kelapa Gading',
+                'city' => 'Jakarta Utara',
+                'capacity_motor' => 150,
+                'capacity_car' => 80,
+                'status' => 'active'
+            ],
+            [
+                'code' => 'ZONA-PASAR-BARU',
+                'name' => 'Pasar Baru Area',
+                'city' => 'Jakarta Pusat',
+                'capacity_motor' => 100,
+                'capacity_car' => 30,
+                'status' => 'active'
+            ],
+            [
+                'code' => 'ZONA-TEBET',
+                'name' => 'Tebet Eco Park West',
+                'city' => 'Jakarta Selatan',
+                'capacity_motor' => 180,
+                'capacity_car' => 40,
+                'status' => 'active'
+            ]
+        ];
+
+        $createdZones = [$zone];
+        foreach ($zones as $zData) {
+            $createdZones[] = Zone::updateOrCreate(['code' => $zData['code']], $zData);
+        }
+
+        // Add more jukirs
+        $jukirNames = ['Agus', 'Slamet', 'Iwan', 'Dedi', 'Roni', 'Heri', 'Mulyadi', 'Toto'];
+        $createdJukirs = [$jukir];
+        foreach ($jukirNames as $index => $name) {
+            $createdJukirs[] = User::updateOrCreate(
+                ['email' => strtolower($name) . '@parkirgo.test'],
+                [
+                    'name' => $name . ' Jukir',
+                    'password' => Hash::make('password'),
+                    'role' => 'jukir',
+                    'nik' => '3173' . str_pad($index + 2, 12, '0', STR_PAD_LEFT),
+                    'phone' => '08' . str_pad(rand(1000000000, 9999999999), 10, '0', STR_PAD_LEFT),
+                    'status' => 'active',
+                    'assigned_zone_id' => $createdZones[array_rand($createdZones)]->id,
+                    'qr_auth_token' => 'QR-' . strtoupper(bin2hex(random_bytes(12))),
+                    'email_verified_at' => now(),
+                    'last_seen_at' => now()->subMinutes(rand(1, 120)),
+                ]
+            );
+        }
+
+        // Create historical sessions, transactions, and settlements for the last 7 days
+        foreach ($createdZones as $z) {
+            $jukirInZone = User::where('assigned_zone_id', $z->id)->first() ?? $jukir;
+            
+            for ($i = 7; $i >= 0; $i--) {
+                $date = Carbon::today()->subDays($i);
+                
+                // Create a shift for each day
+                $dailyShift = Shift::updateOrCreate(
+                    ['code' => 'SHIFT-' . $z->code . '-' . $date->format('Ymd')],
+                    [
+                        'zone_id' => $z->id,
+                        'user_id' => $jukirInZone->id,
+                        'shift_date' => $date,
+                        'start_time' => '07:00:00',
+                        'end_time' => '15:00:00',
+                        'status' => $i == 0 ? 'active' : 'completed',
+                    ]
+                );
+
+                $dailyCash = 0;
+                $dailyQris = 0;
+
+                // Create some sessions for each day
+                $sessionCount = rand(10, 30);
+                for ($j = 1; $j <= $sessionCount; $j++) {
+                    $vType = rand(0, 1) == 0 ? $motor : $mobil;
+                    $tariff = $vType->code == 'motor' ? $flatMotor : $progressiveCar;
+                    $entryTime = (clone $date)->setTime(rand(7, 14), rand(0, 59));
+                    
+                    $isCompleted = $i > 0 || rand(0, 1) == 1;
+                    $exitTime = $isCompleted ? (clone $entryTime)->addMinutes(rand(30, 240)) : null;
+                    
+                    $amount = 3000; // default for motor
+                    if ($vType->code == 'mobil') {
+                        $duration = $exitTime ? $exitTime->diffInMinutes($entryTime) : 60;
+                        $hours = ceil($duration / 60);
+                        $amount = 5000 + (($hours - 1) * 4000);
+                    }
+
+                    $pSession = ParkingSession::create([
+                        'ticket_number' => $z->code . '-' . $date->format('ymd') . '-' . str_pad($j, 4, '0', STR_PAD_LEFT),
+                        'zone_id' => $z->id,
+                        'tariff_id' => $tariff->id,
+                        'jukir_id' => $jukirInZone->id,
+                        'plate_number' => 'B ' . rand(1000, 9999) . ' ' . chr(rand(65, 90)) . chr(rand(65, 90)),
+                        'vehicle_type_id' => $vType->id,
+                        'vehicle_type' => $vType->code,
+                        'entry_at' => $entryTime,
+                        'exit_at' => $exitTime,
+                        'estimated_amount' => $amount,
+                        'final_amount' => $isCompleted ? $amount : null,
+                        'status' => $isCompleted ? 'completed' : 'active',
+                        'payment_status' => $isCompleted ? 'paid' : 'unpaid',
+                    ]);
+
+                    if ($isCompleted) {
+                        $method = rand(0, 3) == 0 ? 'qris' : 'cash';
+                        Transaction::create([
+                            'transaction_number' => 'TRX-' . $date->format('Ymd') . '-' . $z->id . '-' . str_pad($j, 4, '0', STR_PAD_LEFT),
+                            'parking_session_id' => $pSession->id,
+                            'zone_id' => $z->id,
+                            'jukir_id' => $jukirInZone->id,
+                            'payment_method' => $method,
+                            'amount' => $amount,
+                            'status' => 'recorded',
+                            'qris_payload' => $method == 'qris' ? $z->qris_payload : null,
+                            'created_at' => $exitTime,
+                        ]);
+
+                        if ($method == 'cash') $dailyCash += $amount;
+                        else $dailyQris += $amount;
+                    }
+                }
+
+                // Create settlement for past days
+                if ($i > 0) {
+                    Settlement::create([
+                        'settlement_number' => 'SET-' . $date->format('Ymd') . '-' . $z->id,
+                        'shift_id' => $dailyShift->id,
+                        'zone_id' => $z->id,
+                        'jukir_id' => $jukirInZone->id,
+                        'settlement_date' => $date,
+                        'cash_amount' => $dailyCash,
+                        'qris_amount' => $dailyQris,
+                        'total_amount' => $dailyCash + $dailyQris,
+                        'status' => 'approved',
+                    ]);
+                }
+            }
+        }
+
         $admin->auditLogs()->create([
             'action' => 'seeded',
             'entity_type' => 'database',

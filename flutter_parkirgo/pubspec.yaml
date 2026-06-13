@@ -17,7 +17,7 @@ dependencies:
   qr_flutter: ^4.1.0
   image_picker: ^1.1.0
   geolocator: ^11.1.0
-  flutter_blue_plus: ^1.32.7
+  flutter_blue_plus: ^1.36.0
   connectivity_plus: ^6.0.5
   share_plus: ^9.0.0
   path_provider: ^2.1.3
