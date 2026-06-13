@@ -1,0 +1,12 @@
+{
+    frankenphp
+}
+
+parkirgo.localhost {
+    root * /var/www/html/public
+    encode zstd br gzip
+    php {
+        resolve_root_symlink
+    }
+    file_server
+}

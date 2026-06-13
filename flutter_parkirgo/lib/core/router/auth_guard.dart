@@ -1,0 +1,3 @@
+class AuthGuard {
+  AuthGuard._();
+}

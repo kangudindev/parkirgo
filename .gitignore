@@ -1,0 +1,58 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Backend - Laravel
+/vendor/
+/node_modules/
+.env
+.env.*.local
+.phpunit.result.cache
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+bootstrap/cache/*.php
+public/storage
+public/hot
+
+# Backend - Docker
+docker-compose.override.yml
+
+# Flutter
+flutter_parkirgo/build/
+flutter_parkirgo/.dart_tool/
+flutter_parkirgo/.packages
+flutter_parkirgo/.pub/
+flutter_parkirgo/pubspec.lock
+flutter_parkirgo/.flutter-plugins
+flutter_parkirgo/.flutter-plugins-dependencies
+flutter_parkirgo/android/.gradle/
+flutter_parkirgo/android/app/build/
+flutter_parkirgo/android/local.properties
+flutter_parkirgo/ios/Pods/
+flutter_parkirgo/ios/.symlinks/
+flutter_parkirgo/ios/Flutter/Flutter.framework
+flutter_parkirgo/ios/Flutter/Flutter.podspec
+flutter_parkirgo/ios/Runner.xcodeproj/project.xcworkspace
+flutter_parkirgo/ios/Runner.xcodeproj/xcuserdata
+flutter_parkirgo/test/.test_results/
+
+# Template (copy source, jangan di-track)
+template_ velzon_v4.4.1/
+mobile_apk/
+template_flutter/
+
+# Other
+*.zip
+*.tar.gz
+*.log
