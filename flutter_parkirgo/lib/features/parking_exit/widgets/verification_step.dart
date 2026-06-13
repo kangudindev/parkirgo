@@ -18,10 +18,10 @@ class VerificationStep extends StatefulWidget {
   final String? initialPlate;
 
   @override
-  State<VerificationStep> createState() => _VerificationStepState();
+  State<VerificationStep> createState() => VerificationStepState();
 }
 
-class _VerificationStepState extends State<VerificationStep> {
+class VerificationStepState extends State<VerificationStep> {
   File? _ktpPhoto;
   File? _stnkPhoto;
   File? _vehiclePhoto;

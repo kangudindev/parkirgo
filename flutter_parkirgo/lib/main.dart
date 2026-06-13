@@ -23,6 +23,7 @@ import 'data/repositories/auth_repository.dart';
 import 'data/repositories/parking_repository.dart';
 import 'data/repositories/settlement_repository.dart';
 import 'data/repositories/transaction_repository.dart';
+import 'data/repositories/supervisor_repository.dart';
 import 'features/attendance/bloc/attendance_bloc.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/home/bloc/home_bloc.dart';
@@ -59,6 +60,9 @@ Future<void> main() async {
   final settlementRepository = SettlementRepository(
     remote: SettlementRemoteDatasource(dio),
   );
+  final supervisorRepository = SupervisorRepository(
+    remote: SupervisorRemoteDatasource(dio),
+  );
 
   // Sync engine
   final syncEngine = SyncEngine(
@@ -74,6 +78,7 @@ Future<void> main() async {
       transactionRepository: transactionRepository,
       attendanceRepository: attendanceRepository,
       settlementRepository: settlementRepository,
+      supervisorRepository: supervisorRepository,
       syncEngine: syncEngine,
       dio: dio,
     ),
@@ -88,6 +93,7 @@ class ParkirGoApp extends StatefulWidget {
     required this.transactionRepository,
     required this.attendanceRepository,
     required this.settlementRepository,
+    required this.supervisorRepository,
     required this.syncEngine,
     required this.dio,
   });
@@ -97,6 +103,7 @@ class ParkirGoApp extends StatefulWidget {
   final TransactionRepository transactionRepository;
   final AttendanceRepository attendanceRepository;
   final SettlementRepository settlementRepository;
+  final SupervisorRepository supervisorRepository;
   final SyncEngine syncEngine;
   final Dio dio;
 
@@ -119,24 +126,43 @@ class _ParkirGoAppState extends State<ParkirGoApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiRepositoryProvider(
       providers: [
-        BlocProvider(create: (_) => AuthBloc(widget.authRepository)),
-        BlocProvider(create: (_) => HomeBloc(widget.parkingRepository)),
-        BlocProvider(create: (_) => AttendanceBloc(widget.attendanceRepository)),
-        BlocProvider(create: (_) => EntryBloc(widget.parkingRepository)),
-        BlocProvider(create: (_) => ActiveSessionsBloc(widget.parkingRepository)),
-        BlocProvider(create: (_) => ExitBloc(widget.parkingRepository, widget.transactionRepository)),
-        BlocProvider(create: (_) => PaymentBloc(widget.transactionRepository)),
-        BlocProvider(create: (_) => HistoryBloc(widget.transactionRepository)),
-        BlocProvider(create: (_) => SettlementBloc(widget.settlementRepository, widget.transactionRepository)),
-        Provider(create: (_) => SupervisorRemoteDatasource(widget.dio)),
+        RepositoryProvider.value(value: widget.authRepository),
+        RepositoryProvider.value(value: widget.parkingRepository),
+        RepositoryProvider.value(value: widget.transactionRepository),
+        RepositoryProvider.value(value: widget.attendanceRepository),
+        RepositoryProvider.value(value: widget.settlementRepository),
+        RepositoryProvider.value(value: widget.supervisorRepository),
+        RepositoryProvider.value(value: widget.dio),
       ],
-      child: MaterialApp.router(
-        title: 'ParkirGo',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        routerConfig: AppRouter.create(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (context) => AuthBloc(context.read<AuthRepository>())),
+          BlocProvider(create: (context) => HomeBloc(context.read<ParkingRepository>())),
+          BlocProvider(create: (context) => AttendanceBloc(context.read<AttendanceRepository>())),
+          BlocProvider(create: (context) => EntryBloc(context.read<ParkingRepository>())),
+          BlocProvider(create: (context) => ActiveSessionsBloc(context.read<ParkingRepository>())),
+          BlocProvider(create: (context) => ExitBloc(context.read<ParkingRepository>(), context.read<TransactionRepository>())),
+          BlocProvider(create: (context) => PaymentBloc(context.read<TransactionRepository>())),
+          BlocProvider(create: (context) => HistoryBloc(context.read<TransactionRepository>())),
+          BlocProvider(create: (context) => SettlementBloc(context.read<SettlementRepository>(), context.read<TransactionRepository>())),
+        ],
+        child: Builder(
+          builder: (context) {
+            return MultiProvider(
+              providers: [
+                Provider(create: (_) => SupervisorRemoteDatasource(widget.dio)),
+              ],
+              child: MaterialApp.router(
+                title: 'ParkirGo',
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.lightTheme,
+                routerConfig: AppRouter.create(),
+              ),
+            );
+          }
+        ),
       ),
     );
   }

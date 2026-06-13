@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/datasources/remote/supervisor_remote_ds.dart';
+import '../../../data/repositories/transaction_repository.dart';
 
 class ZoneReportPage extends StatefulWidget {
   const ZoneReportPage({super.key});
@@ -47,7 +47,7 @@ class _ZoneReportPageState extends State<ZoneReportPage> {
         title: const Text('Laporan Zona'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: _isLoading

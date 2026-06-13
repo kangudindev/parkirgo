@@ -37,11 +37,15 @@ jobs:
         run: |
           # Patch minSdkVersion to 24 (ML Kit requirement)
           sed -i 's/minSdkVersion .*/minSdkVersion 24/g' android/app/build.gradle
-          # Fix targetSdkVersion and compileSdkVersion if needed
           sed -i 's/targetSdkVersion .*/targetSdkVersion 34/g' android/app/build.gradle
           sed -i 's/compileSdkVersion .*/compileSdkVersion 34/g' android/app/build.gradle
           
-          # Add basic permissions to AndroidManifest
+          # Fix lint issues for cleaner build
+          echo "android.useAndroidX=true" > android/gradle.properties
+          echo "android.enableJetifier=true" >> android/gradle.properties
+          
+          # Create robust AndroidManifest.xml
+          mkdir -p android/app/src/main
           cat > android/app/src/main/AndroidManifest.xml <<EOF
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
