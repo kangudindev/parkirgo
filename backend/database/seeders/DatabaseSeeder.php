@@ -293,8 +293,9 @@ class DatabaseSeeder extends Seeder
                     
                     $amount = 3000; // default for motor
                     if ($vType->code == 'mobil') {
-                        $duration = $exitTime ? $exitTime->diffInMinutes($entryTime) : 60;
-                        $hours = ceil($duration / 60);
+                        $durationInMinutes = $exitTime ? $exitTime->diffInMinutes($entryTime, false) : 60;
+                        if ($durationInMinutes < 0) $durationInMinutes = rand(30, 240);
+                        $hours = max(1, ceil($durationInMinutes / 60));
                         $amount = 5000 + (($hours - 1) * 4000);
                     }
 
