@@ -1,35 +1,30 @@
 services:
   app:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: parkirgo-backend
     restart: unless-stopped
     working_dir: /var/www/html
-    ports:
-      - "80:80"
     volumes:
-      - ./:/var/www/html
+      - ./backend:/var/www/html
       - composer-cache:/tmp/composer-cache
     environment:
       APP_NAME: ParkirGo
       APP_ENV: local
-      APP_DEBUG: "true"
-      APP_URL: http://parkirgo.localhost
+      APP_URL: https://parkirgo.eu.cc
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: parkirgo
-      DB_USERNAME: parkirgo
-      DB_PASSWORD: parkirgo
+      DB_USERNAME: parkirgo_user
+      DB_PASSWORD: parkirgo_pass
       REDIS_HOST: redis
       CACHE_DRIVER: redis
       SESSION_DRIVER: redis
       QUEUE_CONNECTION: sync
       OCTANE_WORKERS: 2
       OCTANE_MAX_REQUESTS: 500
-      VITE_APP_NAME: ParkirGo
-      VITE_HOST: 0.0.0.0
     depends_on:
       mysql:
         condition: service_healthy
@@ -37,42 +32,21 @@ services:
         condition: service_started
     networks:
       - parkirgo
-
-  vite:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: parkirgo-vite
-    restart: unless-stopped
-    working_dir: /var/www/html
-    command: npm run dev -- --host 0.0.0.0
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./:/var/www/html
-    environment:
-      VITE_APP_NAME: ParkirGo
-      VITE_HOST: 0.0.0.0
-    depends_on:
-      - app
-    networks:
-      - parkirgo
+      - proxy
 
   mysql:
     image: mysql:8.4
     container_name: parkirgo-mysql
     restart: unless-stopped
-    ports:
-      - "3307:3306"
     environment:
       MYSQL_DATABASE: parkirgo
-      MYSQL_USER: parkirgo
-      MYSQL_PASSWORD: parkirgo
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: parkirgo_user
+      MYSQL_PASSWORD: parkirgo_pass
+      MYSQL_ROOT_PASSWORD: root_password
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_password"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -83,18 +57,6 @@ services:
     image: redis:7-alpine
     container_name: parkirgo-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
-    networks:
-      - parkirgo
-
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: parkirgo-mailpit
-    restart: unless-stopped
-    ports:
-      - "8025:8025"
-      - "1025:1025"
     networks:
       - parkirgo
 
@@ -105,3 +67,5 @@ volumes:
 networks:
   parkirgo:
     driver: bridge
+  proxy:
+    external: true
