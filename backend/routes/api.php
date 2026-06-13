@@ -54,5 +54,5 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('/supervisor/qris-pending', [SupervisorController::class, 'pendingQris']);
     Route::post('/supervisor/verify-qris', [SupervisorController::class, 'verifyQris']);
     Route::get('/supervisor/settlements-pending', [SupervisorController::class, 'pendingSettlements']);
-    Route::post('/supervisor/approve-settlement', [SupervisorController::class, 'approveSettlement']);
+    Route::post('/supervisor/approve-settlement', [SupervisorController::class, 'approveSettlement'])->name('api.v1.supervisor.approve-settlement');
 });

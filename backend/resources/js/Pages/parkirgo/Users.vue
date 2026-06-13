@@ -2,9 +2,10 @@
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import { router } from "@inertiajs/vue3";
+import JukirIdCard from "@/Components/JukirIdCard.vue";
 
 export default {
-  components: { Layout, PageHeader },
+  components: { Layout, PageHeader, JukirIdCard },
   props: {
     users: { type: Object, default: () => ({ data: [] }) },
     zones: { type: Array, default: () => [] },
@@ -13,8 +14,10 @@ export default {
     return {
       showModal: false,
       showQrModal: false,
+      showIdCardModal: false,
       editing: null,
       qrUser: null,
+      cardUser: null,
       form: { name: '', email: '', nik: '', phone: '', role: 'jukir', status: 'active', assigned_zone_id: null, password: '' },
     };
   },
@@ -59,6 +62,34 @@ export default {
       if (!user.qr_auth_token) return;
       this.qrUser = user;
       this.showQrModal = true;
+    },
+    showIdCard(user) {
+      this.cardUser = user;
+      this.showIdCardModal = true;
+    },
+    printIdCard() {
+      const printContents = document.getElementById('id-card-print-area').innerHTML;
+      const originalContents = document.body.innerHTML;
+      
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write('<html><head><title>Print ID Card</title>');
+      // Add necessary styles for printing
+      const styles = Array.from(document.styleSheets)
+        .map(styleSheet => {
+          try {
+            return Array.from(styleSheet.cssRules)
+              .map(rule => rule.cssText)
+              .join('');
+          } catch (e) {
+            return '';
+          }
+        }).join('');
+      printWindow.document.write(`<style>${styles}</style>`);
+      printWindow.document.write('</head><body>');
+      printWindow.document.write(printContents);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
     },
     copyToken(token) {
       navigator.clipboard.writeText(token);
@@ -157,11 +188,8 @@ export default {
                     <BButton v-if="!user.has_qr_token" size="sm" variant="primary" @click="generateQr(user.id)">
                       <i class="ri-qr-code-line me-1"></i>Generate QR
                     </BButton>
-                    <BButton v-if="user.has_qr_token" size="sm" variant="outline-info" @click="showQr(user)" title="Lihat QR ID Card">
-                      <i class="ri-eye-line"></i>
-                    </BButton>
-                    <BButton v-else-if="user.role !== 'admin' && user.has_qr_token" size="sm" variant="outline-warning" @click="generateQr(user.id)" title="Regenerate QR">
-                      <i class="ri-refresh-line me-1"></i>Re-Generate
+                    <BButton v-if="user.has_qr_token" size="sm" variant="outline-info" @click="showIdCard(user)" title="Cetak ID Card">
+                      <i class="ri-id-card-line"></i>
                     </BButton>
                     <BButton v-if="user.has_qr_token" size="sm" variant="outline-danger" @click="revokeQr(user.id)" title="Cabut QR ID Card">
                       <i class="ri-forbid-line"></i>
@@ -219,23 +247,21 @@ export default {
       </div>
     </BModal>
 
-    <!-- QR ID Card Modal -->
-    <BModal v-model="showQrModal" title="QR ID Card" hide-footer centered size="md">
-      <div v-if="qrUser" class="text-center py-3">
-        <div class="mb-3">
-          <img :src="`https://chart.googleapis.com/chart?chs=250x250&cht=qr&chl=${qrUser.qr_auth_token}`"
-               alt="QR Code" class="img-fluid border rounded p-2" style="max-width:260px" />
+    <!-- ID Card Preview Modal -->
+    <BModal v-model="showIdCardModal" title="Preview ID Card Juru Parkir" hide-footer centered size="xl">
+      <div v-if="cardUser" class="text-center py-3">
+        <div class="d-flex justify-content-center mb-4">
+          <div id="id-card-print-area">
+            <JukirIdCard :user="cardUser" />
+          </div>
         </div>
-        <h5 class="mb-1">{{ qrUser.name }}</h5>
-        <p class="text-muted mb-0">{{ qrUser.nik || '-' }} · {{ qrUser.assigned_zone?.name || '-' }}</p>
-        <hr />
-        <div class="d-flex align-items-center justify-content-center gap-2">
-          <code class="bg-light px-2 py-1 rounded small">{{ qrUser.qr_auth_token }}</code>
-          <BButton size="sm" variant="outline-secondary" @click="copyToken(qrUser.qr_auth_token)" title="Salin token">
-            <i class="ri-file-copy-line"></i>
+        <div class="d-flex justify-content-center gap-3">
+          <BButton variant="light" @click="showIdCardModal=false">Tutup</BButton>
+          <BButton variant="primary" @click="printIdCard">
+            <i class="ri-printer-line me-1"></i>Cetak ID Card
           </BButton>
         </div>
-        <p class="text-muted small mt-2">Gunakan kode di atas untuk dicetak pada ID Card Juru Parkir.</p>
+        <p class="text-muted small mt-3">Pastikan printer terhubung dan gunakan kertas ID Card standar (CR80) untuk hasil maksimal.</p>
       </div>
     </BModal>
   </Layout>
@@ -246,4 +272,18 @@ export default {
 .stat-card:hover { transform: translateY(-3px); box-shadow: 0 18px 45px rgba(15, 23, 42, .12) !important; }
 .avatar-xs { width: 32px; height: 32px; object-fit: cover; }
 .avatar-sm { width: 48px; height: 48px; }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #id-card-print-area, #id-card-print-area * {
+    visibility: visible;
+  }
+  #id-card-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+}
 </style>

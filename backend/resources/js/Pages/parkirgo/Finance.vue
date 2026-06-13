@@ -28,10 +28,18 @@ export default {
       return { recorded: "info", verified: "success", rejected: "danger", submitted: "warning", approved: "success" }[status] || "secondary";
     },
     approve(id) {
-      router.post("/api/v1/supervisor/approve-settlement", { settlement_id: id, action: "approve" }, { preserveScroll: true });
+      if (!confirm("Setujui setoran ini?")) return;
+      router.post(route('api.v1.supervisor.approve-settlement'), { settlement_id: id, action: "approve" }, { 
+        preserveScroll: true,
+        onError: (errors) => console.error(errors)
+      });
     },
     reject(id) {
-      router.post("/api/v1/supervisor/approve-settlement", { settlement_id: id, action: "reject" }, { preserveScroll: true });
+      if (!confirm("Tolak setoran ini?")) return;
+      router.post(route('api.v1.supervisor.approve-settlement'), { settlement_id: id, action: "reject" }, { 
+        preserveScroll: true,
+        onError: (errors) => console.error(errors)
+      });
     },
   },
 };
