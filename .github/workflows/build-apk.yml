@@ -24,7 +24,12 @@ jobs:
           cache: true
 
       - name: Generate platform files
-        run: flutter create --project-name flutter_parkirgo --platforms android .
+        run: |
+          flutter create --project-name flutter_parkirgo --platforms android .
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/g' android/app/build.gradle || true
+          sed -i 's/minSdkVersion 16/minSdkVersion 24/g' android/app/build.gradle || true
+          sed -i 's/minSdkVersion 19/minSdkVersion 24/g' android/app/build.gradle || true
+          sed -i 's/minSdkVersion 21/minSdkVersion 24/g' android/app/build.gradle || true
 
       - name: Install dependencies
         run: flutter pub get
