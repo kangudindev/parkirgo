@@ -11,12 +11,15 @@ use Inertia\Inertia;
 
 class ZoneController extends Controller
 {
-    public function index()
+    use HasAdvancedFilter;
+
+    public function index(Request $request)
     {
-        $zones = Zone::with(['tariffs.vehicleTypeMaster', 'vehicleTypes'])
-            ->withCount('jukirs')
-            ->latest()
-            ->get();
+        $zones = $this->applySort(
+            $this->applySearch(Zone::with(['tariffs.vehicleTypeMaster', 'vehicleTypes'])->withCount('jukirs'), $request, ['code', 'name', 'city']),
+            $request,
+            ['created_at', 'code', 'name', 'city', 'status']
+        )->paginate($this->perPage($request));
 
         $tariffs = ZoneTariff::with(['zone', 'vehicleTypeMaster'])->latest()->get();
         $vehicleTypes = VehicleType::where('status', VehicleType::STATUS_ACTIVE)

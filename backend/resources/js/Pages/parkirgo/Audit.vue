@@ -1,27 +1,64 @@
 <script>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import DataTable from "@/Components/DataTable.vue";
+import { router } from "@inertiajs/vue3";
 
 export default {
-  components: { Layout, PageHeader },
+  components: { Layout, PageHeader, DataTable },
   props: {
     logs: { type: Object, default: () => ({ data: [] }) },
+    sortField: { type: String, default: "created_at" },
+    sortDir: { type: String, default: "desc" },
+  },
+  data() {
+    return {
+      searchQuery: "",
+      perPageVal: 15,
+      tableSortField: this.sortField,
+      tableSortDir: this.sortDir,
+    };
+  },
+  computed: {
+    columns() {
+      return [
+        { key: "created_at", label: "Waktu" },
+        { key: "user_name", label: "Pengguna" },
+        { key: "action", label: "Aksi" },
+        { key: "entity_type", label: "Entitas" },
+        { key: "entity_id", label: "ID Entitas" },
+        { key: "ip_address", label: "IP Address" },
+      ];
+    },
   },
   methods: {
     formatDate(value) {
       if (!value) return "-";
-      return new Intl.DateTimeFormat("id-ID", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(value));
+      return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
     },
     actionClass(action) {
-      const actionText = (action || "").toLowerCase();
-      if (actionText.includes("create") || actionText.includes("buat")) return "success";
-      if (actionText.includes("update") || actionText.includes("ubah")) return "warning";
-      if (actionText.includes("delete") || actionText.includes("hapus")) return "danger";
-      if (actionText.includes("login")) return "primary";
+      const a = (action || "").toLowerCase();
+      if (a.includes("create") || a.includes("buat")) return "success";
+      if (a.includes("update") || a.includes("ubah")) return "warning";
+      if (a.includes("delete") || a.includes("hapus")) return "danger";
+      if (a.includes("login")) return "primary";
       return "secondary";
+    },
+    onSort(field, dir) {
+      this.tableSortField = field;
+      this.tableSortDir = dir;
+      router.get("/parkirgo/audit", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onSearch(q) {
+      this.searchQuery = q;
+      router.get("/parkirgo/audit", { search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPage(page) {
+      router.get("/parkirgo/audit", { page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPerPage(val) {
+      this.perPageVal = val;
+      router.get("/parkirgo/audit", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
     },
   },
 };
@@ -55,36 +92,26 @@ export default {
         <p class="text-muted mb-0">Pantau perubahan data dan aktivitas penting pada ParkirGo.</p>
       </BCardHeader>
       <BCardBody>
-        <div class="table-responsive table-card">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Waktu</th>
-                <th>Pengguna</th>
-                <th>Aksi</th>
-                <th>Entitas</th>
-                <th>ID Entitas</th>
-                <th>IP Address</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="log in logs.data" :key="log.id">
-                <td>{{ formatDate(log.created_at) }}</td>
-                <td>
-                  <div class="fw-semibold">{{ log.user?.name || 'Sistem' }}</div>
-                  <small class="text-muted">{{ log.user?.email || '-' }}</small>
-                </td>
-                <td><span :class="`badge bg-${actionClass(log.action)}-subtle text-${actionClass(log.action)}`">{{ log.action }}</span></td>
-                <td>{{ log.entity_type || '-' }}</td>
-                <td>{{ log.entity_id || '-' }}</td>
-                <td>{{ log.ip_address || '-' }}</td>
-              </tr>
-              <tr v-if="!logs.data?.length">
-                <td colspan="6" class="text-center text-muted py-4">Belum ada audit log.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          :columns="columns"
+          :data="logs"
+          :sort-field="tableSortField"
+          :sort-dir="tableSortDir"
+          @sort="onSort"
+          @search="onSearch"
+          @page-change="onPage"
+          @per-page-change="onPerPage"
+        >
+          <template #cell-created_at="{ row }">{{ formatDate(row.created_at) }}</template>
+          <template #cell-user_name="{ row }">
+            <div class="fw-semibold">{{ row.user?.name || "Sistem" }}</div>
+            <small class="text-muted">{{ row.user?.email || "-" }}</small>
+          </template>
+          <template #cell-action="{ row }">
+            <span :class="`badge bg-${actionClass(row.action)}-subtle text-${actionClass(row.action)}`">{{ row.action }}</span>
+          </template>
+          <template #cell-entity_id="{ row }">{{ row.entity_id || "-" }}</template>
+        </DataTable>
       </BCardBody>
     </BCard>
   </Layout>

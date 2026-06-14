@@ -1,12 +1,39 @@
 <script>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import DataTable from "@/Components/DataTable.vue";
+import { router } from "@inertiajs/vue3";
 
 export default {
-  components: { Layout, PageHeader },
+  components: { Layout, PageHeader, DataTable },
   props: {
-    sessions: { type: Array, default: () => [] },
+    sessions: { type: Object, default: () => ({ data: [] }) },
     attendances: { type: Array, default: () => [] },
+    sortField: { type: String, default: "created_at" },
+    sortDir: { type: String, default: "desc" },
+  },
+  data() {
+    return {
+      searchQuery: "",
+      perPageVal: 15,
+      tableSortField: this.sortField,
+      tableSortDir: this.sortDir,
+      searchQuery: "",
+      perPageVal: 15,
+    };
+  },
+  computed: {
+    columns() {
+      return [
+        { key: "ticket_number", label: "Tiket" },
+        { key: "plate_number", label: "Plat" },
+        { key: "zone_name", label: "Zona" },
+        { key: "jukir_name", label: "Jukir" },
+        { key: "entry_at", label: "Masuk" },
+        { key: "status", label: "Status", width: "100px" },
+        { key: "payment_status", label: "Bayar", width: "100px" },
+      ];
+    },
   },
   methods: {
     badge(status) {
@@ -14,6 +41,22 @@ export default {
     },
     date(value) {
       return value ? new Date(value).toLocaleString("id-ID") : "-";
+    },
+    onSort(field, dir) {
+      this.tableSortField = field;
+      this.tableSortDir = dir;
+      router.get("/parkirgo/operations", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onSearch(q) {
+      this.searchQuery = q;
+      router.get("/parkirgo/operations", { search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPage(page) {
+      router.get("/parkirgo/operations", { page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPerPage(val) {
+      this.perPageVal = val;
+      router.get("/parkirgo/operations", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
     },
   },
 };
@@ -32,32 +75,26 @@ export default {
             <span class="badge bg-success-subtle text-success">Flat bayar masuk · Progresif bayar keluar</span>
           </BCardHeader>
           <BCardBody>
-            <div class="table-responsive table-card">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>Tiket</th>
-                    <th>Plat</th>
-                    <th>Zona</th>
-                    <th>Jukir</th>
-                    <th>Masuk</th>
-                    <th>Status</th>
-                    <th>Bayar</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="session in sessions" :key="session.id">
-                    <td class="fw-semibold">{{ session.ticket_number }}</td>
-                    <td>{{ session.plate_number }}</td>
-                    <td>{{ session.zone?.name }}</td>
-                    <td>{{ session.jukir?.name }}</td>
-                    <td>{{ date(session.entry_at) }}</td>
-                    <td><span class="badge" :class="`bg-${badge(session.status)}-subtle text-${badge(session.status)}`">{{ session.status }}</span></td>
-                    <td><span class="badge" :class="session.payment_status === 'paid' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'">{{ session.payment_status }}</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              :columns="columns"
+              :data="sessions"
+              :sort-field="tableSortField"
+              :sort-dir="tableSortDir"
+              @sort="onSort"
+              @search="onSearch"
+              @page-change="onPage"
+              @per-page-change="onPerPage"
+            >
+              <template #cell-zone_name="{ row }">{{ row.zone?.name }}</template>
+              <template #cell-jukir_name="{ row }">{{ row.jukir?.name }}</template>
+              <template #cell-entry_at="{ row }">{{ date(row.entry_at) }}</template>
+              <template #cell-status="{ row }">
+                <span class="badge" :class="`bg-${badge(row.status)}-subtle text-${badge(row.status)}`">{{ row.status }}</span>
+              </template>
+              <template #cell-payment_status="{ row }">
+                <span class="badge" :class="row.payment_status === 'paid' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'">{{ row.payment_status }}</span>
+              </template>
+            </DataTable>
           </BCardBody>
         </BCard>
       </BCol>

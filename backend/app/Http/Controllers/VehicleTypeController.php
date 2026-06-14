@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Admin\HasAdvancedFilter;
 use App\Models\VehicleType;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -9,10 +10,21 @@ use Inertia\Inertia;
 
 class VehicleTypeController extends Controller
 {
-    public function index()
+    use HasAdvancedFilter;
+
+    public function index(Request $request)
     {
+        $query = VehicleType::orderBy('sort_order')->orderBy('name');
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
         return Inertia::render('parkirgo/VehicleTypes', [
-            'vehicleTypes' => VehicleType::orderBy('sort_order')->orderBy('name')->get(),
+            'vehicleTypes' => $query->get(),
         ]);
     }
 

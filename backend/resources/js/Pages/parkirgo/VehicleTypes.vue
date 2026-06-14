@@ -1,6 +1,7 @@
 <script>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import DataTable from "@/Components/DataTable.vue";
 import { router, useForm } from "@inertiajs/vue3";
 
 const emptyForm = () => ({
@@ -12,7 +13,7 @@ const emptyForm = () => ({
 });
 
 export default {
-  components: { Layout, PageHeader },
+  components: { Layout, PageHeader, DataTable },
   props: {
     vehicleTypes: { type: Array, default: () => [] },
   },
@@ -23,6 +24,7 @@ export default {
       editingType: null,
       deletingType: null,
       form: useForm(emptyForm()),
+      searchQuery: "",
     };
   },
   computed: {
@@ -34,6 +36,23 @@ export default {
     },
     sortedTypes() {
       return [...this.vehicleTypes].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    },
+    filteredTypes() {
+      if (!this.searchQuery) return this.sortedTypes;
+      const q = this.searchQuery.toLowerCase();
+      return this.sortedTypes.filter((t) =>
+        t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q)
+      );
+    },
+    columns() {
+      return [
+        { key: "sort_order", label: "Urut", sortable: false, width: "70px" },
+        { key: "name", label: "Jenis Kendaraan" },
+        { key: "code", label: "Kode", width: "100px" },
+        { key: "status", label: "Status", width: "100px" },
+        { key: "updated_at", label: "Diperbarui" },
+        { key: "actions", label: "Aksi", sortable: false, width: "120px" },
+      ];
     },
   },
   methods: {
@@ -61,12 +80,10 @@ export default {
           this.form.reset();
         },
       };
-
       if (this.editingType) {
         this.form.put(`/parkirgo/vehicle-types/${this.editingType.id}`, options);
         return;
       }
-
       this.form.post("/parkirgo/vehicle-types", options);
     },
     askDelete(type) {
@@ -85,6 +102,10 @@ export default {
     },
     statusClass(status) {
       return status === "active" ? "success" : "secondary";
+    },
+    formatDate(value) {
+      if (!value) return "-";
+      return new Date(value).toLocaleString("id-ID");
     },
   },
 };
@@ -146,16 +167,24 @@ export default {
           <p class="text-muted mb-0 small">Kode dipakai sebagai snapshot offline pada sesi parkir dan tarif zona.</p>
         </div>
         <BButton id="vehicle-type-create-button" variant="success" class="btn-label" @click="openCreate">
-          <i class="ri-add-line label-icon align-middle fs-16 me-2"></i>
-          Tambah Jenis
+          <i class="ri-add-line label-icon align-middle fs-16 me-2"></i>Tambah Jenis
         </BButton>
       </BCardHeader>
       <BCardBody>
+        <div class="mb-3">
+          <input
+            type="text"
+            class="form-control bg-light border-0"
+            style="max-width:300px"
+            placeholder="Cari jenis kendaraan..."
+            v-model="searchQuery"
+          />
+        </div>
         <div class="table-responsive table-card">
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
               <tr>
-                <th style="width: 70px;">Urut</th>
+                <th style="width:70px">Urut</th>
                 <th>Jenis Kendaraan</th>
                 <th>Kode</th>
                 <th>Status</th>
@@ -164,7 +193,7 @@ export default {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="type in sortedTypes" :key="type.id">
+              <tr v-for="type in filteredTypes" :key="type.id">
                 <td><span class="badge bg-light text-dark">{{ type.sort_order ?? 0 }}</span></td>
                 <td>
                   <div class="d-flex align-items-center gap-3">
@@ -183,17 +212,17 @@ export default {
                     {{ type.status }}
                   </span>
                 </td>
-                <td>{{ type.updated_at ? new Date(type.updated_at).toLocaleString('id-ID') : '-' }}</td>
+                <td>{{ formatDate(type.updated_at) }}</td>
                 <td class="text-end">
-                  <BButton :id="`vehicle-type-edit-${type.id}`" size="sm" variant="soft-primary" class="me-2" @click="openEdit(type)">
+                  <BButton size="sm" variant="soft-primary" class="me-2" @click="openEdit(type)">
                     <i class="ri-pencil-line"></i>
                   </BButton>
-                  <BButton :id="`vehicle-type-delete-${type.id}`" size="sm" variant="soft-danger" @click="askDelete(type)">
+                  <BButton size="sm" variant="soft-danger" @click="askDelete(type)">
                     <i class="ri-delete-bin-line"></i>
                   </BButton>
                 </td>
               </tr>
-              <tr v-if="sortedTypes.length === 0">
+              <tr v-if="filteredTypes.length === 0">
                 <td colspan="6" class="text-center py-5 text-muted">Belum ada master jenis kendaraan.</td>
               </tr>
             </tbody>
@@ -237,7 +266,7 @@ export default {
         <div class="d-flex justify-content-end gap-2 mt-4">
           <BButton id="vehicle-type-cancel-button" variant="light" type="button" @click="modalOpen = false">Batal</BButton>
           <BButton id="vehicle-type-submit-button" variant="success" type="submit" :disabled="form.processing">
-            {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
+            {{ form.processing ? "Menyimpan..." : "Simpan" }}
           </BButton>
         </div>
       </form>
@@ -260,33 +289,15 @@ export default {
   box-shadow: 0 22px 55px rgba(8, 145, 178, .24);
 }
 .vehicle-hero-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  display: grid;
-  place-items: center;
-  background: rgba(255,255,255,.2);
-  backdrop-filter: blur(8px);
-  font-size: 28px;
+  width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center;
+  background: rgba(255,255,255,.2); backdrop-filter: blur(8px); font-size: 28px;
 }
 .vehicle-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  color: #0ab39c;
-  background: linear-gradient(135deg, rgba(10,179,156,.14), rgba(64,81,137,.1));
-  font-size: 20px;
+  width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center;
+  color: #0ab39c; background: linear-gradient(135deg, rgba(10,179,156,.14), rgba(64,81,137,.1)); font-size: 20px;
 }
-.stat-card,
-.master-card {
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-.stat-card:hover,
-.master-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 18px 45px rgba(15, 23, 42, .10) !important;
-}
+.stat-card, .master-card { transition: transform .2s ease, box-shadow .2s ease; }
+.stat-card:hover, .master-card:hover { transform: translateY(-3px); box-shadow: 0 18px 45px rgba(15, 23, 42, .10) !important; }
 .text-white-75 { color: rgba(255,255,255,.76); }
+.avatar-sm { width: 48px; height: 48px; }
 </style>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Admin\HasAdvancedFilter;
 use App\Models\Attendance;
 use App\Models\AuditLog;
 use App\Models\ParkingSession;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
+    use HasAdvancedFilter;
     public function dashboard()
     {
         $today = Carbon::today();
@@ -62,17 +64,18 @@ class AdminController extends Controller
         ]);
     }
 
-    public function operations()
+    public function operations(Request $request)
     {
         try {
-            $sessions = ParkingSession::with(['zone', 'jukir', 'tariff', 'vehicleTypeMaster'])
-                ->latest()
-                ->limit(30)
-                ->get();
+            $sessions = $this->applySort(
+                $this->applySearch(ParkingSession::with(['zone', 'jukir', 'tariff', 'vehicleTypeMaster']), $request, ['ticket_number', 'plate_number']),
+                $request,
+                ['created_at', 'ticket_number', 'plate_number', 'status', 'payment_status']
+            )->paginate($this->perPage($request));
 
             $attendances = Attendance::with(['zone', 'user', 'shift'])
                 ->latest()
-                ->limit(20)
+                ->limit(10)
                 ->get();
         } catch (\Exception $e) {
             report($e);
@@ -86,17 +89,18 @@ class AdminController extends Controller
         ]);
     }
 
-    public function finance()
+    public function finance(Request $request)
     {
         try {
-            $transactions = Transaction::with(['zone', 'jukir', 'parkingSession'])
-                ->latest()
-                ->limit(30)
-                ->get();
+            $transactions = $this->applySort(
+                $this->applySearch(Transaction::with(['zone', 'jukir', 'parkingSession']), $request, ['transaction_number', 'payment_method', 'status']),
+                $request,
+                ['created_at', 'transaction_number', 'amount', 'payment_method', 'status']
+            )->paginate($this->perPage($request));
 
             $settlements = Settlement::with(['zone', 'jukir', 'shift'])
                 ->latest()
-                ->limit(20)
+                ->limit(10)
                 ->get();
         } catch (\Exception $e) {
             report($e);
@@ -110,12 +114,14 @@ class AdminController extends Controller
         ]);
     }
 
-    public function audit()
+    public function audit(Request $request)
     {
         try {
-            $logs = AuditLog::with('user')
-                ->latest()
-                ->paginate(50);
+            $logs = $this->applySort(
+                $this->applySearch(AuditLog::with('user'), $request, ['action', 'entity_type', 'ip_address']),
+                $request,
+                ['created_at', 'action', 'entity_type', 'entity_id']
+            )->paginate($this->perPage($request));
         } catch (\Exception $e) {
             report($e);
             $logs = new \stdClass();

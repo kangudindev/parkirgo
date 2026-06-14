@@ -11,9 +11,16 @@ use Inertia\Inertia;
 
 class ShiftController extends Controller
 {
-    public function index()
+    use HasAdvancedFilter;
+
+    public function index(Request $request)
     {
-        $shifts = Shift::with(['zone', 'user'])->latest()->paginate(50);
+        $shifts = $this->applySort(
+            $this->applySearch(Shift::with(['zone', 'user']), $request, ['code']),
+            $request,
+            ['created_at', 'shift_date', 'start_time', 'end_time', 'status', 'code']
+        )->paginate($this->perPage($request));
+
         $zones = Zone::where('status', 'active')->orderBy('name')->get(['id', 'name', 'code']);
         $users = User::whereIn('role', ['jukir', 'supervisor'])
             ->where('status', 'active')

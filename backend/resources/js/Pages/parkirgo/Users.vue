@@ -1,14 +1,17 @@
 <script>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
-import { router } from "@inertiajs/vue3";
+import DataTable from "@/Components/DataTable.vue";
 import JukirIdCard from "@/Components/JukirIdCard.vue";
+import { router } from "@inertiajs/vue3";
 
 export default {
-  components: { Layout, PageHeader, JukirIdCard },
+  components: { Layout, PageHeader, DataTable, JukirIdCard },
   props: {
     users: { type: Object, default: () => ({ data: [] }) },
     zones: { type: Array, default: () => [] },
+    sortField: { type: String, default: "created_at" },
+    sortDir: { type: String, default: "desc" },
   },
   data() {
     return {
@@ -18,8 +21,26 @@ export default {
       editing: null,
       qrUser: null,
       cardUser: null,
-      form: { name: '', email: '', nik: '', phone: '', role: 'jukir', status: 'active', assigned_zone_id: null, password: '' },
+      searchQuery: "",
+      perPageVal: 15,
+      tableSortField: this.sortField,
+      tableSortDir: this.sortDir,
+      form: { name: "", email: "", nik: "", phone: "", role: "jukir", status: "active", assigned_zone_id: null, password: "" },
     };
+  },
+  computed: {
+    columns() {
+      return [
+        { key: "name", label: "Nama" },
+        { key: "nik", label: "NIK", width: "140px" },
+        { key: "role", label: "Role", width: "120px" },
+        { key: "zone_name", label: "Zona" },
+        { key: "status", label: "Status", width: "100px" },
+        { key: "qr_status", label: "QR ID Card", sortable: false, width: "120px" },
+        { key: "last_seen_at", label: "Online" },
+        { key: "actions", label: "Aksi", sortable: false, width: "180px" },
+      ];
+    },
   },
   methods: {
     roleLabel(role) {
@@ -35,32 +56,32 @@ export default {
     },
     open(u) {
       this.editing = u;
-      if (u) this.form = { name: u.name, email: u.email, nik: u.nik || '', phone: u.phone || '', role: u.role, status: u.status, assigned_zone_id: u.assigned_zone_id, password: '' };
-      else this.form = { name: '', email: '', nik: '', phone: '', role: 'jukir', status: 'active', assigned_zone_id: null, password: '' };
+      if (u) this.form = { name: u.name, email: u.email, nik: u.nik || "", phone: u.phone || "", role: u.role, status: u.status, assigned_zone_id: u.assigned_zone_id, password: "" };
+      else this.form = { name: "", email: "", nik: "", phone: "", role: "jukir", status: "active", assigned_zone_id: null, password: "" };
       this.showModal = true;
     },
     save() {
       if (!this.form.name || !this.form.email) {
-        this.$page.props.flash = { error: 'Nama dan Email harus diisi.' };
+        this.$page.props.flash = { error: "Nama dan Email harus diisi." };
         return;
       }
       if (!this.editing && !this.form.password) {
-        this.$page.props.flash = { error: 'Password harus diisi untuk pengguna baru.' };
+        this.$page.props.flash = { error: "Password harus diisi untuk pengguna baru." };
         return;
       }
       if (this.form.password && this.form.password.length < 6) {
-        this.$page.props.flash = { error: 'Password minimal 6 karakter.' };
+        this.$page.props.flash = { error: "Password minimal 6 karakter." };
         return;
       }
       if (this.editing) {
-        router.post(route('parkirgo.users.update', this.editing.id), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
+        router.post(route("parkirgo.users.update", this.editing.id), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
       } else {
-        router.post(route('parkirgo.users.store'), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
+        router.post(route("parkirgo.users.store"), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
       }
     },
     remove(u) {
       if (!confirm(`Hapus pengguna ${u.name}?`)) return;
-      router.delete(route('parkirgo.users.destroy', u.id), { preserveScroll: true });
+      router.delete(route("parkirgo.users.destroy", u.id), { preserveScroll: true });
     },
     generateQr(userId) {
       if (!confirm("Generate QR ID Card baru untuk pengguna ini? Kartu lama akan tidak berlaku.")) return;
@@ -70,41 +91,44 @@ export default {
       if (!confirm("Cabut QR ID Card?")) return;
       router.post(route("parkirgo.users.revoke-qr", userId), {}, { preserveScroll: true });
     },
-    showQr(user) {
-      if (!user.qr_auth_token) return;
-      this.qrUser = user;
-      this.showQrModal = true;
-    },
     showIdCard(user) {
       this.cardUser = user;
       this.showIdCardModal = true;
     },
     printIdCard() {
-      const printContents = document.getElementById('id-card-print-area').innerHTML;
-      const originalContents = document.body.innerHTML;
-      
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write('<html><head><title>Print ID Card</title>');
-      // Add necessary styles for printing
+      const printContents = document.getElementById("id-card-print-area").innerHTML;
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write("<html><head><title>Print ID Card</title>");
       const styles = Array.from(document.styleSheets)
         .map(styleSheet => {
-          try {
-            return Array.from(styleSheet.cssRules)
-              .map(rule => rule.cssText)
-              .join('');
-          } catch (e) {
-            return '';
-          }
-        }).join('');
+          try { return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join(""); }
+          catch (e) { return ""; }
+        }).join("");
       printWindow.document.write(`<style>${styles}</style>`);
-      printWindow.document.write('</head><body>');
+      printWindow.document.write("</head><body>");
       printWindow.document.write(printContents);
-      printWindow.document.write('</body></html>');
+      printWindow.document.write("</body></html>");
       printWindow.document.close();
       printWindow.print();
     },
     copyToken(token) {
       navigator.clipboard.writeText(token);
+    },
+    onSort(field, dir) {
+      this.tableSortField = field;
+      this.tableSortDir = dir;
+      router.get("/parkirgo/users", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onSearch(q) {
+      this.searchQuery = q;
+      router.get("/parkirgo/users", { search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPage(page) {
+      router.get("/parkirgo/users", { page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPerPage(val) {
+      this.perPageVal = val;
+      router.get("/parkirgo/users", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
     },
   },
 };
@@ -158,69 +182,59 @@ export default {
         </BButton>
       </BCardHeader>
       <BCardBody>
-        <div class="table-responsive table-card">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Nama</th>
-                <th>NIK</th>
-                <th>Role</th>
-                <th>Zona</th>
-                <th>Status</th>
-                <th>QR ID Card</th>
-                <th>Terakhir Online</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="user in users.data" :key="user.id">
-                <td>
-                  <div class="d-flex align-items-center gap-2">
-                    <img :src="user.profile_photo_url" :alt="user.name" class="rounded-circle avatar-xs" />
-                    <span class="fw-semibold">{{ user.name }}</span>
-                  </div>
-                </td>
-                <td>{{ user.nik || '-' }}</td>
-                <td><span class="badge bg-info-subtle text-info">{{ roleLabel(user.role) }}</span></td>
-                <td>{{ user.assigned_zone?.name || '-' }}</td>
-                <td><span :class="`badge bg-${statusClass(user.status)}-subtle text-${statusClass(user.status)}`">{{ user.status }}</span></td>
-                <td>
-                  <span v-if="user.role === 'admin'" class="text-muted fst-italic">N/A</span>
-                  <span v-else-if="user.has_qr_token" class="badge bg-success-subtle text-success">
-                    <i class="ri-scanner-2-line me-1"></i>Aktif
-                  </span>
-                  <span v-else class="badge bg-warning-subtle text-warning">
-                    <i class="ri-scanner-2-line me-1"></i>Belum
-                  </span>
-                </td>
-                <td>{{ formatDate(user.last_seen_at) }}</td>
-                <td>
-                  <div v-if="user.role !== 'admin'" class="d-flex gap-1">
-                    <BButton size="sm" variant="outline-secondary" @click="open(user)"><i class="ri-pencil-line"></i></BButton>
-                    <BButton v-if="!user.has_qr_token" size="sm" variant="primary" @click="generateQr(user.id)">
-                      <i class="ri-scanner-2-line me-1"></i>Generate QR
-                    </BButton>
-                    <BButton v-if="user.has_qr_token" size="sm" variant="outline-info" @click="showIdCard(user)" title="Cetak ID Card">
-                      <i class="ri-id-card-line"></i>
-                    </BButton>
-                    <BButton v-if="user.has_qr_token" size="sm" variant="outline-danger" @click="revokeQr(user.id)" title="Cabut QR ID Card">
-                      <i class="ri-forbid-line"></i>
-                    </BButton>
-                    <BButton size="sm" variant="outline-danger" @click="remove(user)"><i class="ri-delete-bin-line"></i></BButton>
-                  </div>
-                  <span v-else class="text-muted">-</span>
-                </td>
-              </tr>
-              <tr v-if="!users.data?.length">
-                <td colspan="8" class="text-center text-muted py-4">Belum ada data pengguna.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          :columns="columns"
+          :data="users"
+          :sort-field="tableSortField"
+          :sort-dir="tableSortDir"
+          @sort="onSort"
+          @search="onSearch"
+          @page-change="onPage"
+          @per-page-change="onPerPage"
+        >
+          <template #cell-name="{ row }">
+            <div class="d-flex align-items-center gap-2">
+              <img :src="row.profile_photo_url" :alt="row.name" class="rounded-circle avatar-xs" />
+              <span class="fw-semibold">{{ row.name }}</span>
+            </div>
+          </template>
+          <template #cell-role="{ row }">
+            <span class="badge bg-info-subtle text-info">{{ roleLabel(row.role) }}</span>
+          </template>
+          <template #cell-zone_name="{ row }">{{ row.assigned_zone?.name || "-" }}</template>
+          <template #cell-status="{ row }">
+            <span :class="`badge bg-${statusClass(row.status)}-subtle text-${statusClass(row.status)}`">{{ row.status }}</span>
+          </template>
+          <template #cell-qr_status="{ row }">
+            <span v-if="row.role === 'admin'" class="text-muted fst-italic">N/A</span>
+            <span v-else-if="row.has_qr_token" class="badge bg-success-subtle text-success">
+              <i class="ri-scanner-2-line me-1"></i>Aktif
+            </span>
+            <span v-else class="badge bg-warning-subtle text-warning">
+              <i class="ri-scanner-2-line me-1"></i>Belum
+            </span>
+          </template>
+          <template #cell-last_seen_at="{ row }">{{ formatDate(row.last_seen_at) }}</template>
+          <template #cell-actions="{ row }">
+            <div v-if="row.role !== 'admin'" class="d-flex gap-1">
+              <BButton size="sm" variant="outline-secondary" @click="open(row)" title="Edit"><i class="ri-pencil-line"></i></BButton>
+              <BButton v-if="!row.has_qr_token" size="sm" variant="primary" @click="generateQr(row.id)" title="Generate QR">
+                <i class="ri-scanner-2-line"></i>
+              </BButton>
+              <BButton v-if="row.has_qr_token" size="sm" variant="outline-info" @click="showIdCard(row)" title="Cetak ID Card">
+                <i class="ri-id-card-line"></i>
+              </BButton>
+              <BButton v-if="row.has_qr_token" size="sm" variant="outline-danger" @click="revokeQr(row.id)" title="Cabut QR">
+                <i class="ri-forbid-line"></i>
+              </BButton>
+              <BButton size="sm" variant="outline-danger" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></BButton>
+            </div>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </DataTable>
       </BCardBody>
     </BCard>
 
-    <!-- User Modal -->
     <BModal v-model="showModal" :title="editing ? 'Edit Pengguna' : 'Tambah Pengguna'" hide-footer>
       <div class="mb-2"><label class="form-label">Nama</label><input v-model="form.name" class="form-control" /></div>
       <div class="mb-2"><label class="form-label">Email</label><input v-model="form.email" type="email" class="form-control" /></div>
@@ -250,7 +264,7 @@ export default {
         </select>
       </div>
       <div class="mb-3">
-        <label class="form-label">{{ editing ? 'Password Baru (kosongkan jika tidak diubah)' : 'Password' }}</label>
+        <label class="form-label">{{ editing ? "Password Baru (kosongkan jika tidak diubah)" : "Password" }}</label>
         <input v-model="form.password" type="password" class="form-control" />
       </div>
       <div class="d-flex justify-content-end gap-2">
@@ -259,7 +273,6 @@ export default {
       </div>
     </BModal>
 
-    <!-- ID Card Preview Modal -->
     <BModal v-model="showIdCardModal" title="Preview ID Card Juru Parkir" hide-footer centered size="xl">
       <div v-if="cardUser" class="text-center py-3">
         <div class="d-flex justify-content-center mb-4">
@@ -284,18 +297,4 @@ export default {
 .stat-card:hover { transform: translateY(-3px); box-shadow: 0 18px 45px rgba(15, 23, 42, .12) !important; }
 .avatar-xs { width: 32px; height: 32px; object-fit: cover; }
 .avatar-sm { width: 48px; height: 48px; }
-
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  #id-card-print-area, #id-card-print-area * {
-    visibility: visible;
-  }
-  #id-card-print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-  }
-}
 </style>

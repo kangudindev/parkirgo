@@ -1,21 +1,46 @@
 <script>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import DataTable from "@/Components/DataTable.vue";
+import { router } from "@inertiajs/vue3";
+
 const currency = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
 
 export default {
-  components: { Layout, PageHeader },
+  components: { Layout, PageHeader, DataTable },
   props: {
-    transactions: { type: Array, default: () => [] },
+    transactions: { type: Object, default: () => ({ data: [] }) },
     settlements: { type: Array, default: () => [] },
+    sortField: { type: String, default: "created_at" },
+    sortDir: { type: String, default: "desc" },
+  },
+  data() {
+    return {
+      searchQuery: "",
+      perPageVal: 15,
+      tableSortField: this.sortField,
+      tableSortDir: this.sortDir,
+      searchQuery: "",
+      perPageVal: 15,
+    };
   },
   computed: {
     totals() {
-      return this.transactions.reduce((acc, trx) => {
+      const items = this.transactions.data || [];
+      return items.reduce((acc, trx) => {
         acc[trx.payment_method] = (acc[trx.payment_method] || 0) + Number(trx.amount || 0);
         acc.all += Number(trx.amount || 0);
         return acc;
       }, { all: 0, cash: 0, qris: 0 });
+    },
+    columns() {
+      return [
+        { key: "transaction_number", label: "No Transaksi" },
+        { key: "zone_name", label: "Zona" },
+        { key: "payment_method", label: "Metode", width: "100px" },
+        { key: "amount", label: "Amount", width: "150px" },
+        { key: "status", label: "Status", width: "120px" },
+      ];
     },
   },
   methods: {
@@ -24,6 +49,22 @@ export default {
     },
     badge(status) {
       return { recorded: "info", verified: "success", rejected: "danger", approved: "success" }[status] || "secondary";
+    },
+    onSort(field, dir) {
+      this.tableSortField = field;
+      this.tableSortDir = dir;
+      router.get("/parkirgo/finance", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onSearch(q) {
+      this.searchQuery = q;
+      router.get("/parkirgo/finance", { search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPage(page) {
+      router.get("/parkirgo/finance", { page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPerPage(val) {
+      this.perPageVal = val;
+      router.get("/parkirgo/finance", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
     },
   },
 };
@@ -88,28 +129,25 @@ export default {
             <BCardTitle class="mb-0">Transaksi QRIS/Cash</BCardTitle>
           </BCardHeader>
           <BCardBody>
-            <div class="table-responsive table-card">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>No Transaksi</th>
-                    <th>Zona</th>
-                    <th>Metode</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="trx in transactions" :key="trx.id">
-                    <td class="fw-semibold">{{ trx.transaction_number }}</td>
-                    <td>{{ trx.zone?.name }}</td>
-                    <td class="text-uppercase">{{ trx.payment_method }}</td>
-                    <td>{{ money(trx.amount) }}</td>
-                    <td><span class="badge" :class="`bg-${badge(trx.status)}-subtle text-${badge(trx.status)}`">{{ trx.status }}</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              :columns="columns"
+              :data="transactions"
+              :sort-field="tableSortField"
+              :sort-dir="tableSortDir"
+              @sort="onSort"
+              @search="onSearch"
+              @page-change="onPage"
+              @per-page-change="onPerPage"
+            >
+              <template #cell-zone_name="{ row }">{{ row.zone?.name }}</template>
+              <template #cell-payment_method="{ row }">
+                <span class="text-uppercase">{{ row.payment_method }}</span>
+              </template>
+              <template #cell-amount="{ row }">{{ money(row.amount) }}</template>
+              <template #cell-status="{ row }">
+                <span class="badge" :class="`bg-${badge(row.status)}-subtle text-${badge(row.status)}`">{{ row.status }}</span>
+              </template>
+            </DataTable>
           </BCardBody>
         </BCard>
       </BCol>
@@ -131,7 +169,6 @@ export default {
               <div class="progress mt-3" style="height: 6px">
                 <div class="progress-bar bg-success" :style="{ width: `${settlement.total_amount ? (settlement.qris_amount / settlement.total_amount) * 100 : 0}%` }"></div>
               </div>
-
             </div>
             <div v-if="!settlements.length" class="text-center text-muted py-3">Belum ada setoran.</div>
           </BCardBody>
@@ -147,4 +184,5 @@ export default {
 .metric-card.qris::after { background: #0ab39c; }
 .metric-card.cash::after { background: #f7b84b; }
 .metric-card.total::after { background: #405189; }
+.avatar-sm { width: 48px; height: 48px; }
 </style>

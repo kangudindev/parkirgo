@@ -1,48 +1,80 @@
 <script>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import DataTable from "@/Components/DataTable.vue";
 import { router } from "@inertiajs/vue3";
 
 export default {
-  components: { Layout, PageHeader },
+  components: { Layout, PageHeader, DataTable },
   props: {
     shifts: { type: Object, default: () => ({ data: [] }) },
     zones: { type: Array, default: () => [] },
     users: { type: Array, default: () => [] },
+    sortField: { type: String, default: "created_at" },
+    sortDir: { type: String, default: "desc" },
   },
   data() {
     return {
       showModal: false,
       editing: null,
-      form: { zone_id: null, user_id: null, shift_date: '', start_time: '', end_time: '', status: 'active' },
+      form: { zone_id: null, user_id: null, shift_date: "", start_time: "", end_time: "", status: "active" },
+      searchQuery: "",
+      perPageVal: 15,
+      tableSortField: this.sortField,
+      tableSortDir: this.sortDir,
     };
+  },
+  computed: {
+    columns() {
+      return [
+        { key: "code", label: "Kode", width: "140px" },
+        { key: "user_name", label: "Jukir" },
+        { key: "zone_name", label: "Zona" },
+        { key: "shift_date", label: "Tanggal" },
+        { key: "time", label: "Jam" },
+        { key: "status", label: "Status", width: "100px" },
+        { key: "actions", label: "Aksi", sortable: false, width: "100px" },
+      ];
+    },
   },
   methods: {
     open(s) {
       this.editing = s;
-      if (s) this.form = { zone_id: s.zone_id, user_id: s.user_id, shift_date: s.shift_date?.substring(0,10) || '', start_time: s.start_time?.substring(0,5) || '', end_time: s.end_time?.substring(0,5) || '', status: s.status };
-      else this.form = { zone_id: null, user_id: null, shift_date: '', start_time: '', end_time: '', status: 'active' };
+      if (s) this.form = { zone_id: s.zone_id, user_id: s.user_id, shift_date: s.shift_date?.substring(0,10) || "", start_time: s.start_time?.substring(0,5) || "", end_time: s.end_time?.substring(0,5) || "", status: s.status };
+      else this.form = { zone_id: null, user_id: null, shift_date: "", start_time: "", end_time: "", status: "active" };
       this.showModal = true;
     },
     save() {
       if (!this.form.zone_id || !this.form.user_id || !this.form.shift_date || !this.form.start_time || !this.form.end_time) {
-        this.$page.props.flash = { error: 'Semua field harus diisi.' };
+        this.$page.props.flash = { error: "Semua field harus diisi." };
         return;
       }
       if (this.form.start_time >= this.form.end_time) {
-        this.$page.props.flash = { error: 'Jam selesai harus setelah jam mulai.' };
+        this.$page.props.flash = { error: "Jam selesai harus setelah jam mulai." };
         return;
       }
-      if (this.editing) router.post(route('parkirgo.shifts.update', this.editing.id), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
-      else router.post(route('parkirgo.shifts.store'), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
+      if (this.editing) router.post(route("parkirgo.shifts.update", this.editing.id), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
+      else router.post(route("parkirgo.shifts.store"), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
     },
     remove(s) {
-      if (!confirm('Hapus shift ini?')) return;
-      router.delete(route('parkirgo.shifts.destroy', s.id), { preserveScroll: true });
+      if (!confirm("Hapus shift ini?")) return;
+      router.delete(route("parkirgo.shifts.destroy", s.id), { preserveScroll: true });
     },
-    formatDate(v) {
-      if (!v) return '-';
-      return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(v));
+    onSort(field, dir) {
+      this.tableSortField = field;
+      this.tableSortDir = dir;
+      router.get("/parkirgo/shifts", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onSearch(q) {
+      this.searchQuery = q;
+      router.get("/parkirgo/shifts", { search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPage(page) {
+      router.get("/parkirgo/shifts", { page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPerPage(val) {
+      this.perPageVal = val;
+      router.get("/parkirgo/shifts", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
     },
   },
 };
@@ -51,6 +83,7 @@ export default {
 <template>
   <Layout>
     <PageHeader title="Manajemen Shift" pageTitle="ParkirGo" />
+
     <BRow class="g-3 mb-4">
       <BCol md="4">
         <BCard no-body class="border-0 shadow-sm stat-card">
@@ -80,36 +113,30 @@ export default {
         </BButton>
       </BCardHeader>
       <BCardBody>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>Kode</th>
-                <th>Jukir</th>
-                <th>Zona</th>
-                <th>Tanggal</th>
-                <th>Jam</th>
-                <th>Status</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="s in shifts.data" :key="s.id">
-                <td><code>{{ s.code }}</code></td>
-                <td>{{ s.user?.name || '-' }}</td>
-                <td>{{ s.zone?.name || '-' }}</td>
-                <td>{{ s.shift_date?.substring(0,10) || '-' }}</td>
-                <td>{{ s.start_time?.substring(0,5) }} - {{ s.end_time?.substring(0,5) }}</td>
-                <td><span :class="`badge bg-${s.status === 'active' ? 'success' : 'secondary'}-subtle text-${s.status === 'active' ? 'success' : 'secondary'}`">{{ s.status }}</span></td>
-                <td class="d-flex gap-1">
-                  <BButton size="sm" variant="outline-secondary" @click="open(s)"><i class="ri-pencil-line"></i></BButton>
-                  <BButton size="sm" variant="outline-danger" @click="remove(s)"><i class="ri-delete-bin-line"></i></BButton>
-                </td>
-              </tr>
-              <tr v-if="!shifts.data?.length"><td colspan="7" class="text-center text-muted py-4">Belum ada data shift.</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          :columns="columns"
+          :data="shifts"
+          :sort-field="tableSortField"
+          :sort-dir="tableSortDir"
+          @sort="onSort"
+          @search="onSearch"
+          @page-change="onPage"
+          @per-page-change="onPerPage"
+        >
+          <template #cell-user_name="{ row }">{{ row.user?.name || "-" }}</template>
+          <template #cell-zone_name="{ row }">{{ row.zone?.name || "-" }}</template>
+          <template #cell-shift_date="{ row }">{{ row.shift_date?.substring(0,10) || "-" }}</template>
+          <template #cell-time="{ row }">{{ row.start_time?.substring(0,5) }} - {{ row.end_time?.substring(0,5) }}</template>
+          <template #cell-status="{ row }">
+            <span :class="`badge bg-${row.status === 'active' ? 'success' : 'secondary'}-subtle text-${row.status === 'active' ? 'success' : 'secondary'}`">{{ row.status }}</span>
+          </template>
+          <template #cell-actions="{ row }">
+            <div class="d-flex gap-1">
+              <BButton size="sm" variant="outline-secondary" @click="open(row)"><i class="ri-pencil-line"></i></BButton>
+              <BButton size="sm" variant="outline-danger" @click="remove(row)"><i class="ri-delete-bin-line"></i></BButton>
+            </div>
+          </template>
+        </DataTable>
       </BCardBody>
     </BCard>
 

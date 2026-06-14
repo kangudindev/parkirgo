@@ -11,10 +11,16 @@ use Inertia\Inertia;
 
 class UserController extends Controller
 {
-    public function index()
+    use HasAdvancedFilter;
+
+    public function index(Request $request)
     {
         return Inertia::render('parkirgo/Users', [
-            'users' => User::with('assignedZone')->latest()->paginate(50),
+            'users' => $this->applySort(
+                $this->applySearch(User::with('assignedZone'), $request, ['name', 'email', 'nik', 'phone', 'role']),
+                $request,
+                ['name', 'email', 'role', 'status', 'created_at']
+            )->paginate($this->perPage($request)),
             'zones' => Zone::where('status', 'active')->orderBy('name')->get(['id', 'name', 'code']),
         ]);
     }
