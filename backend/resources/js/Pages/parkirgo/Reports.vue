@@ -71,10 +71,16 @@ export default {
 <template>
   <Layout>
     <div class="print-area p-4">
-      <div class="d-flex justify-content-between align-items-center no-print mb-4">
-        <PageHeader title="Laporan Pendapatan" pageTitle="ParkirGo" class="mb-0" />
-        <div class="d-flex gap-2">
-           <BButton variant="primary" @click="printReport">
+      <div class="page-title-box d-flex align-items-center justify-content-between mb-4 no-print">
+        <h4 class="mb-0">Laporan Pendapatan</h4>
+        <div class="d-flex align-items-center gap-3">
+          <ol class="breadcrumb m-0 d-none d-md-flex">
+            <li class="breadcrumb-item">
+              <a href="javascript: void(0);">ParkirGo</a>
+            </li>
+            <li class="breadcrumb-item active">Laporan Pendapatan</li>
+          </ol>
+          <BButton variant="primary" @click="printReport">
             <i class="ri-printer-line me-1"></i>Cetak Laporan
           </BButton>
         </div>
