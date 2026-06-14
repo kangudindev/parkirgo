@@ -55,15 +55,15 @@ export default {
       return {
         series: [{
           type: "gauge",
-          center: ["50%", "60%"],
+          center: ["50%", "65%"],
           radius: "100%",
           startAngle: 200,
           endAngle: -20,
           min: 0,
           max: capacity || 100,
-          progress: { show: true, width: 6, itemStyle: { color: color } },
-          pointer: { show: true, length: '60%', width: 3, itemStyle: { color: color } },
-          axisLine: { lineStyle: { width: 6, color: [[1, "#e9ebec"]] } },
+          progress: { show: true, width: 5, itemStyle: { color: color } },
+          pointer: { show: true, length: '60%', width: 2, itemStyle: { color: color } },
+          axisLine: { lineStyle: { width: 5, color: [[1, "#e9ebec"]] } },
           axisTick: { show: false },
           splitLine: { show: false },
           axisLabel: { show: false },
@@ -217,15 +217,15 @@ export default {
 
             <hr class="my-3" />
 
-            <div class="d-flex" style="gap:1px;overflow-x:auto">
-              <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center flex-fill px-1">
-                <i :class="vt.icon || 'ri-car-line'" class="fs-22 d-block mb-1 text-primary"></i>
-                <span class="small fw-medium d-block text-truncate" style="max-width:80px">{{ vt.name }}</span>
-                <div class="d-flex justify-content-center" style="height:55px">
-                  <VueEcharts :option="gaugeOption(vt.active_count, vt.pivot.capacity)" style="width:65px;height:55px" />
+            <div class="d-flex flex-wrap" style="gap:4px">
+              <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center px-1 mb-2" style="width: 19%; min-width: 60px; flex-grow: 1;">
+                <i :class="vt.icon || 'ri-car-line'" class="fs-18 d-block mb-1 text-primary"></i>
+                <span class="small fw-medium d-block text-truncate mx-auto" style="max-width:60px; font-size: 10px;">{{ vt.name }}</span>
+                <div class="d-flex justify-content-center" style="height:45px">
+                  <VueEcharts :option="gaugeOption(vt.active_count, vt.pivot.capacity)" style="width:55px;height:45px" />
                 </div>
-                <div class="small fw-semibold mt-1">{{ vt.active_count || 0 }}<span class="text-muted fw-normal">/{{ vt.pivot.capacity }}</span></div>
-                <div class="small" :class="(vt.pivot.capacity - vt.active_count) > 0 ? 'text-success' : 'text-danger'">
+                <div class="small fw-semibold mt-1" style="font-size: 11px;">{{ vt.active_count || 0 }}<span class="text-muted fw-normal">/{{ vt.pivot.capacity }}</span></div>
+                <div class="small" :class="(vt.pivot.capacity - vt.active_count) > 0 ? 'text-success' : 'text-danger'" style="font-size: 10px;">
                   {{ Math.max(0, vt.pivot.capacity - vt.active_count) }} sisa
                 </div>
               </div>
