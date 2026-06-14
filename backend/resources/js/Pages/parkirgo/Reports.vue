@@ -91,29 +91,28 @@ export default {
         </div>
       </div>
 
-      <BCard no-body class="border-0 shadow-sm mb-4 no-print">
-        <BCardBody>
-          <DateRangeFilter :date-from="filters.date_from" :date-to="filters.date_to" @change="onDateRangeChange" />
-        </BCardBody>
-      </BCard>
-
-    <ul class="nav nav-tabs nav-tabs-custom mb-4 no-print" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" :class="{ active: activeTab === 'user' }" @click="activeTab = 'user'" type="button">
-          <i class="ri-user-line me-1"></i>Per Pengguna
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" :class="{ active: activeTab === 'shift' }" @click="activeTab = 'shift'" type="button">
-          <i class="ri-calendar-line me-1"></i>Per Shift
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" :class="{ active: activeTab === 'zone' }" @click="activeTab = 'zone'" type="button">
-          <i class="ri-map-pin-2-line me-1"></i>Per Zona
-        </button>
-      </li>
-    </ul>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 no-print border-bottom">
+      <ul class="nav nav-tabs nav-tabs-custom border-bottom-0 mb-0" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" :class="{ active: activeTab === 'user' }" @click="activeTab = 'user'" type="button">
+            <i class="ri-user-line me-1"></i>Per Pengguna
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" :class="{ active: activeTab === 'shift' }" @click="activeTab = 'shift'" type="button">
+            <i class="ri-calendar-line me-1"></i>Per Shift
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" :class="{ active: activeTab === 'zone' }" @click="activeTab = 'zone'" type="button">
+            <i class="ri-map-pin-2-line me-1"></i>Per Zona
+          </button>
+        </li>
+      </ul>
+      <div class="pb-2 mt-3 mt-md-0">
+        <DateRangeFilter :date-from="filters.date_from" :date-to="filters.date_to" @change="onDateRangeChange" />
+      </div>
+    </div>
 
     <div v-show="activeTab === 'user' || isPrinting">
       <div class="print-only mb-3 mt-4 border-bottom pb-2">
