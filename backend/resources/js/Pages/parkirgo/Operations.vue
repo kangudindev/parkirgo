@@ -107,42 +107,65 @@ export default {
       this.perPageVal = val;
       this.applyFilters();
     },
+    printData() {
+      window.print();
+    },
   },
 };
 </script>
 
 <template>
   <Layout>
-    <PageHeader title="Sesi Parkir" pageTitle="ParkirGo" />
+    <div class="print-area">
+      <PageHeader title="Sesi Parkir" pageTitle="ParkirGo" class="no-print" />
 
-    <BCard no-body class="border-0 shadow-sm mb-4">
-      <BCardBody>
-        <BRow class="g-3">
-          <BCol md="3">
-            <label class="form-label text-muted small mb-1">Pilih Zona</label>
-            <select v-model="filterForm.zone_id" class="form-select form-select-sm" @change="applyFilters">
-              <option value="">Semua Zona</option>
-              <option v-for="z in zones" :key="z.id" :value="z.id">{{ z.name }}</option>
-            </select>
-          </BCol>
-          <BCol md="3">
-            <label class="form-label text-muted small mb-1">Jenis Kendaraan</label>
-            <select v-model="filterForm.vehicle_type_id" class="form-select form-select-sm" @change="applyFilters">
-              <option value="">Semua Jenis</option>
-              <option v-for="vt in vehicleTypes" :key="vt.id" :value="vt.id">{{ vt.name }}</option>
-            </select>
-          </BCol>
-          <BCol md="6">
-            <label class="form-label text-muted small mb-1">Filter Tanggal</label>
-            <DateRangeFilter 
-              :date-from="filterForm.date_from" 
-              :date-to="filterForm.date_to" 
-              @change="onDateRangeChange" 
-            />
-          </BCol>
-        </BRow>
-      </BCardBody>
-    </BCard>
+      <div class="print-only mb-4 mt-2">
+        <div class="d-flex align-items-center justify-content-center mb-3">
+          <img src="/images/logo_parkirgo.png" alt="ParkirGo" height="40" />
+        </div>
+        <h3 class="text-center fw-bold mb-1">DATA SESI PARKIR</h3>
+        <p class="text-center text-muted small mb-0">Sistem Manajemen Perparkiran Digital</p>
+        <div class="text-center mt-2">
+          <span class="badge bg-light text-dark border px-3">
+            Periode: {{ filterForm.date_from }} s/d {{ filterForm.date_to }}
+          </span>
+        </div>
+        <hr />
+      </div>
+
+      <BCard no-body class="border-0 shadow-sm mb-4 no-print">
+        <BCardBody>
+          <BRow class="g-3 align-items-end">
+            <BCol md="3">
+              <label class="form-label text-muted small mb-1">Pilih Zona</label>
+              <select v-model="filterForm.zone_id" class="form-select form-select-sm" @change="applyFilters">
+                <option value="">Semua Zona</option>
+                <option v-for="z in zones" :key="z.id" :value="z.id">{{ z.name }}</option>
+              </select>
+            </BCol>
+            <BCol md="3">
+              <label class="form-label text-muted small mb-1">Jenis Kendaraan</label>
+              <select v-model="filterForm.vehicle_type_id" class="form-select form-select-sm" @change="applyFilters">
+                <option value="">Semua Jenis</option>
+                <option v-for="vt in vehicleTypes" :key="vt.id" :value="vt.id">{{ vt.name }}</option>
+              </select>
+            </BCol>
+            <BCol md="4">
+              <label class="form-label text-muted small mb-1">Filter Tanggal</label>
+              <DateRangeFilter 
+                :date-from="filterForm.date_from" 
+                :date-to="filterForm.date_to" 
+                @change="onDateRangeChange" 
+              />
+            </BCol>
+            <BCol md="2" class="text-end">
+              <BButton variant="soft-secondary" class="w-100 btn-sm" @click="printData">
+                <i class="ri-printer-line me-1"></i> Cetak
+              </BButton>
+            </BCol>
+          </BRow>
+        </BCardBody>
+      </BCard>
 
     <BRow>
       <BCol xl="12">
@@ -228,9 +251,29 @@ export default {
           </BRow>
         </div>
       </div>
-      <div class="d-flex justify-content-end mt-3">
+      <div class="d-flex justify-content-end mt-3 no-print">
         <BButton variant="light" @click="showDetailModal=false">Tutup</BButton>
       </div>
     </BModal>
+    </div>
   </Layout>
 </template>
+
+<style scoped>
+@media print {
+  .no-print, .nav-tabs, .btn, .card-header, .page-title-box, .app-menu, .navbar-header, footer, .footer, .pagination-wrap, .search-box {
+    display: none !important;
+  }
+  .main-content { margin-left: 0 !important; padding: 0 !important; margin-top: 0 !important; }
+  .page-content { padding: 0 !important; }
+  .card { border: 1px solid #ddd !important; box-shadow: none !important; margin-bottom: 20px !important; page-break-inside: avoid; }
+  .card-body { padding: 15px !important; }
+  .print-only { display: block !important; }
+  .print-area { width: 100%; padding: 0; }
+  table { width: 100% !important; border-collapse: collapse !important; }
+  th, td { border: 1px solid #ddd !important; padding: 8px !important; font-size: 10px !important; }
+  th { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+  .badge { border: 1px solid #ccc !important; color: #333 !important; background: transparent !important; }
+}
+.print-only { display: none; }
+</style>
