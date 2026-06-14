@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title inertia>ParkirGo - Dashboard Admin</title>
     <meta name="description"
-        content="ParkirGo adalah aplikasi manajemen parkir digital untuk mencatat kendaraan masuk/keluar pada parkir tepi jalan.">
+        content="ParkirGo adalah System Manajemen Parkir Digital.">
     <meta name="keywords"
         content="ParkirGo, manajemen parkir, aplikasi parkir, retribusi parkir, parkir digital">
     <meta name="author" content="ParkirGo">

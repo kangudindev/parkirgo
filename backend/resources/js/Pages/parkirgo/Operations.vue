@@ -141,7 +141,7 @@ export default {
           <img src="/images/logo_parkirgo.png" alt="ParkirGo" height="40" />
         </div>
         <h3 class="text-center fw-bold mb-1">DATA SESI PARKIR</h3>
-        <p class="text-center text-muted small mb-0">Sistem Manajemen Perparkiran Digital</p>
+        <p class="text-center text-muted small mb-0">System Manajemen Parkir Digital</p>
         <div class="text-center mt-2 d-flex justify-content-center gap-2">
           <span class="badge bg-light text-dark border px-2">
             Periode: {{ filterForm.date_from }} - {{ filterForm.date_to }}

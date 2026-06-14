@@ -40,7 +40,7 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
                                 <img src="/images/logo_parkirgo.png" alt="ParkirGo" height="36" />
                                 </Link>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p>
+                            <p class="mt-3 fs-15 fw-medium">System Manajemen Parkir Digital</p>
                         </div>
                     </BCol>
                 </BRow>

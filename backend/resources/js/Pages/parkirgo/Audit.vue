@@ -89,7 +89,7 @@ export default {
     <BCard no-body class="border-0 shadow-sm">
       <BCardHeader>
         <BCardTitle class="mb-1">Riwayat Aktivitas Sistem</BCardTitle>
-        <p class="text-muted mb-0">Pantau perubahan data dan aktivitas penting pada ParkirGo.</p>
+        <p class="text-muted mb-0">Pantau perubahan data dan aktivitas penting pada System Manajemen Parkir Digital.</p>
       </BCardHeader>
       <BCardBody>
         <DataTable

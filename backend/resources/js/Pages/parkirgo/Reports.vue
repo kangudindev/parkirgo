@@ -85,7 +85,7 @@ export default {
            <img src="/images/logo_parkirgo.png" alt="ParkirGo" height="50" />
         </div>
         <h2 class="fw-bold mb-1">LAPORAN PENDAPATAN PARKIRGO</h2>
-        <p class="text-uppercase letter-spacing-1 mb-1">Sistem Manajemen Perparkiran Digital</p>
+        <p class="text-uppercase letter-spacing-1 mb-1">System Manajemen Parkir Digital</p>
         <div class="badge bg-light text-dark border p-2 px-3 mt-2">
            Periode: {{ filters.date_from }} s/d {{ filters.date_to }}
         </div>
