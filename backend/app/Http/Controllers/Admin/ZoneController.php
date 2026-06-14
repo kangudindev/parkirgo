@@ -38,10 +38,6 @@ class ZoneController extends Controller
         return $path;
     }
 
-class ZoneController extends Controller
-{
-    use HasAdvancedFilter;
-
     public function index(Request $request)
     {
         $zones = $this->applySort(
