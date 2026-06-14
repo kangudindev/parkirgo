@@ -70,23 +70,32 @@ export default {
 
 <template>
   <Layout>
-    <div class="print-area">
-      <PageHeader title="Laporan Pendapatan" pageTitle="ParkirGo" class="no-print" />
-
-      <div class="print-only mb-4 mt-4">
-        <h3 class="mb-1 text-center fw-bold">Laporan Pendapatan ParkirGo</h3>
-        <p class="text-center text-muted">Periode: {{ filters.date_from }} s/d {{ filters.date_to }}</p>
-        <hr />
+    <div class="print-area p-4">
+      <div class="d-flex justify-content-between align-items-center no-print mb-4">
+        <PageHeader title="Laporan Pendapatan" pageTitle="ParkirGo" class="mb-0" />
+        <div class="d-flex gap-2">
+           <BButton variant="primary" @click="printReport">
+            <i class="ri-printer-line me-1"></i>Cetak Laporan
+          </BButton>
+        </div>
       </div>
 
-    <BCard no-body class="border-0 shadow-sm mb-4 no-print">
-      <BCardBody class="d-flex justify-content-between align-items-center">
-        <DateRangeFilter :date-from="filters.date_from" :date-to="filters.date_to" @change="onDateRangeChange" class="flex-grow-1" />
-        <BButton variant="soft-secondary" @click="printReport" class="ms-3">
-          <i class="ri-printer-line me-1"></i>Cetak Laporan
-        </BButton>
-      </BCardBody>
-    </BCard>
+      <div class="print-only text-center mb-5">
+        <div class="d-flex justify-content-center mb-3">
+           <img src="/images/logo_parkirgo.png" alt="ParkirGo" height="50" />
+        </div>
+        <h2 class="fw-bold mb-1">LAPORAN PENDAPATAN PARKIRGO</h2>
+        <p class="text-uppercase letter-spacing-1 mb-1">Sistem Manajemen Perparkiran Digital</p>
+        <div class="badge bg-light text-dark border p-2 px-3 mt-2">
+           Periode: {{ filters.date_from }} s/d {{ filters.date_to }}
+        </div>
+      </div>
+
+      <BCard no-body class="border-0 shadow-sm mb-4 no-print">
+        <BCardBody>
+          <DateRangeFilter :date-from="filters.date_from" :date-to="filters.date_to" @change="onDateRangeChange" />
+        </BCardBody>
+      </BCard>
 
     <ul class="nav nav-tabs nav-tabs-custom mb-4 no-print" role="tablist">
       <li class="nav-item" role="presentation">
@@ -107,7 +116,9 @@ export default {
     </ul>
 
     <div v-show="activeTab === 'user' || isPrinting">
-      <h5 class="print-only mb-3">Rekap Per Pengguna</h5>
+      <div class="print-only mb-3 mt-4 border-bottom pb-2">
+        <h5 class="fw-bold mb-0 text-uppercase"><i class="ri-user-line me-2"></i>Rekap Pendapatan Per Pengguna</h5>
+      </div>
       <BRow class="g-3 mb-4">
         <BCol md="4" class="col-print-4">
           <BCard no-body class="border-0 shadow-sm">
@@ -164,7 +175,9 @@ export default {
     </div>
 
     <div v-show="activeTab === 'shift' || isPrinting">
-      <h5 class="print-only mb-3 mt-4">Rekap Per Shift</h5>
+      <div class="print-only mb-3 mt-5 border-bottom pb-2" style="page-break-before: always;">
+        <h5 class="fw-bold mb-0 text-uppercase"><i class="ri-calendar-line me-2"></i>Rekap Pendapatan Per Shift</h5>
+      </div>
       <BRow class="g-3 mb-4">
         <BCol md="3" class="col-print-3">
           <BCard no-body class="border-0 shadow-sm">
@@ -235,7 +248,9 @@ export default {
     </div>
 
     <div v-show="activeTab === 'zone' || isPrinting">
-      <h5 class="print-only mb-3 mt-4">Rekap Per Zona</h5>
+      <div class="print-only mb-3 mt-5 border-bottom pb-2" style="page-break-before: always;">
+        <h5 class="fw-bold mb-0 text-uppercase"><i class="ri-map-pin-2-line me-2"></i>Rekap Pendapatan Per Zona</h5>
+      </div>
       <BRow class="g-3 mb-4">
         <BCol md="4" class="col-print-4">
           <BCard no-body class="border-0 shadow-sm">
@@ -301,15 +316,22 @@ export default {
   .no-print, .nav-tabs, .btn, .card-header, .page-title-box, .app-menu, .navbar-header, footer, .footer {
     display: none !important;
   }
-  .main-content { margin-left: 0 !important; padding: 0 !important; }
+  .main-content { margin-left: 0 !important; padding: 0 !important; margin-top: 0 !important; }
   .page-content { padding: 0 !important; }
-  .card { border: 1px solid #eee !important; box-shadow: none !important; margin-bottom: 10px !important; }
+  .card { border: 1px solid #ddd !important; box-shadow: none !important; margin-bottom: 20px !important; page-break-inside: avoid; }
+  .card-body { padding: 15px !important; }
   .print-only { display: block !important; }
-  .print-area { width: 100%; padding: 20px; }
-  .col-print-4 { width: 33.333% !important; float: left; }
-  .col-print-3 { width: 25% !important; float: left; }
-  .row { display: block !important; }
+  .print-area { width: 100%; padding: 0; }
+  .col-print-4 { width: 33.333% !important; float: left; padding: 5px; }
+  .col-print-3 { width: 25% !important; float: left; padding: 5px; }
+  .row { display: flex !important; flex-wrap: wrap !important; }
   .table-responsive { overflow: visible !important; }
+  table { width: 100% !important; border-collapse: collapse !important; }
+  th, td { border: 1px solid #ddd !important; padding: 8px !important; font-size: 11px !important; }
+  th { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+  .badge { border: 1px solid #ccc !important; color: #333 !important; background: transparent !important; }
+  h3, h4, h5 { color: #000 !important; }
+  hr { border-top: 2px solid #000 !important; margin: 20px 0 !important; }
 }
 .print-only { display: none; }
 </style>

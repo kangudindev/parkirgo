@@ -96,12 +96,12 @@ export default {
 
     <BRow class="g-3 mb-4">
       <BCol xl="3" md="6">
-        <BCard no-body class="border-0 overflow-hidden parkirgo-hero-card text-white">
+        <BCard no-body class="border-0 overflow-hidden parkirgo-hero-card text-white h-100">
           <BCardBody>
             <div class="d-flex align-items-start justify-content-between">
               <div>
                 <p class="text-white-75 mb-2">Pendapatan {{ periodLabel }}</p>
-                <h3 class="text-white mb-1">{{ money(summary.revenue_period) }}</h3>
+                <h3 class="text-white mb-1 fw-bold">{{ money(summary.revenue_period) }}</h3>
                 <span class="badge bg-white text-success">Live Ops</span>
               </div>
               <div class="avatar-sm rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center">
@@ -112,14 +112,15 @@ export default {
         </BCard>
       </BCol>
       <BCol xl="3" md="6">
-        <BCard no-body class="border-0 shadow-sm">
+        <BCard no-body class="border-0 overflow-hidden parkirgo-hero-card text-white h-100">
           <BCardBody>
-            <div class="d-flex justify-content-between">
+            <div class="d-flex align-items-start justify-content-between">
               <div>
-                <p class="text-muted mb-1">Sesi Aktif</p>
-                <h3 class="mb-0">{{ summary.active_sessions || 0 }}</h3>
+                <p class="text-white-75 mb-2">Sesi Aktif</p>
+                <h3 class="text-white mb-1 fw-bold">{{ summary.active_sessions || 0 }}</h3>
+                <span class="badge bg-white text-primary">Monitoring</span>
               </div>
-              <div class="avatar-sm rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center">
+              <div class="avatar-sm rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center">
                 <i class="ri-parking-box-line fs-22"></i>
               </div>
             </div>
@@ -127,14 +128,15 @@ export default {
         </BCard>
       </BCol>
       <BCol xl="3" md="6">
-        <BCard no-body class="border-0 shadow-sm">
+        <BCard no-body class="border-0 overflow-hidden parkirgo-hero-card text-white h-100">
           <BCardBody>
-            <div class="d-flex justify-content-between">
+            <div class="d-flex align-items-start justify-content-between">
               <div>
-                <p class="text-muted mb-1">Jukir Online</p>
-                <h3 class="mb-0">{{ summary.jukirs_online || 0 }}</h3>
+                <p class="text-white-75 mb-2">Jukir Online</p>
+                <h3 class="text-white mb-1 fw-bold">{{ summary.jukirs_online || 0 }}</h3>
+                <span class="badge bg-white text-info">Petugas</span>
               </div>
-              <div class="avatar-sm rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center">
+              <div class="avatar-sm rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center">
                 <i class="ri-user-smile-line fs-22"></i>
               </div>
             </div>
@@ -142,14 +144,15 @@ export default {
         </BCard>
       </BCol>
       <BCol xl="3" md="6">
-        <BCard no-body class="border-0 shadow-sm">
+        <BCard no-body class="border-0 overflow-hidden parkirgo-hero-card text-white h-100">
           <BCardBody>
-            <div class="d-flex justify-content-between">
+            <div class="d-flex align-items-start justify-content-between">
               <div>
-                <p class="text-muted mb-1">Zona Aktif</p>
-                <h3 class="mb-0">{{ summary.zones_active || 0 }}</h3>
+                <p class="text-white-75 mb-2">Zona Aktif</p>
+                <h3 class="text-white mb-1 fw-bold">{{ summary.zones_active || 0 }}</h3>
+                <span class="badge bg-white text-success">Operasional</span>
               </div>
-              <div class="avatar-sm rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center">
+              <div class="avatar-sm rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center">
                 <i class="ri-map-pin-2-line fs-22"></i>
               </div>
             </div>
