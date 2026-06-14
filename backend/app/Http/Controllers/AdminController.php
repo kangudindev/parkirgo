@@ -55,7 +55,7 @@ class AdminController extends Controller
 
             $zones->each(function ($zone) use ($activeByZoneType) {
                 $typeCounts = $activeByZoneType->get($zone->id, collect())->keyBy('vehicle_type_id');
-                $zone->vehicle_types->each(function ($vt) use ($typeCounts) {
+                $zone->vehicleTypes->each(function ($vt) use ($typeCounts) {
                     $vt->active_count = (int) ($typeCounts[$vt->id]['count'] ?? 0);
                 });
             });
