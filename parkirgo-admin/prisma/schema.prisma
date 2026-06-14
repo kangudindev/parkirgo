@@ -1,0 +1,380 @@
+// Prisma Schema for ParkirGo Admin Dashboard
+// Based on PRD specification
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// CORE MODELS
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  nik       String   @unique @db.VarChar(20)
+  name      String   @db.VarChar(100)
+  email     String?  @unique @db.VarChar(100)
+  phone     String?  @db.VarChar(20)
+  password  String   @db.VarChar(255)
+  role      EnumUserRole
+  zoneId    String?  @db.VarChar(36)
+  photo     String?  @db.VarChar(255)
+  status    EnumUserStatus @default(active)
+  deviceId  String?  @db.VarChar(100)
+  lastLogin DateTime?
+  failedLoginAttempts Int @default(0)
+  lockedUntil DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  zone         Zone?        @relation("ZoneUsers", fields: [zoneId], references: [id])
+  shifts       Shift[]
+  attendances  Attendance[]
+  parkingSessions ParkingSession[]
+  transactions Transaction[]
+  settlements  Settlement[]
+  auditLogs    AuditLog[]
+  verifiedTransactions Transaction[] @relation("VerifiedBy")
+
+  @@index([nik])
+  @@index([zoneId])
+  @@index([role])
+  @@index([status])
+}
+
+enum EnumUserRole {
+  admin
+  supervisor
+  jukir
+}
+
+enum EnumUserStatus {
+  active
+  inactive
+  locked
+}
+
+// ============================================
+// ZONE & TARIFF MODELS
+// ============================================
+
+model Zone {
+  id              String   @id @default(cuid())
+  name            String   @db.VarChar(100)
+  city            String?  @db.VarChar(100)
+  polygonCoordinates Json?
+  capacity        Int?
+  qrisImage       String?  @db.VarChar(255)
+  qrisPayload     String?  @db.Text
+  qrisMerchantName String? @db.VarChar(100)
+  qrisIsActive    Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  users       User[]
+  tariffs     ZoneTariff[]
+  shifts      Shift[]
+  penalties   ZonePenalty[]
+  parkingSessions ParkingSession[]
+
+  @@index([city])
+  @@index([isActive])
+}
+
+model ZoneTariff {
+  id                    String   @id @default(cuid())
+  zoneId                String   @db.VarChar(36)
+  vehicleType           EnumVehicleType
+  pricingType           EnumPricingType
+  paymentTiming         EnumPaymentTiming @default(exit)
+  flatRate              Decimal? @db.Decimal(10, 2)
+  progressiveRate       Decimal? @db.Decimal(10, 2)
+  maxDaily              Decimal? @db.Decimal(10, 2)
+  gracePeriodMinutes    Int      @default(0)
+  roundingStrategy      EnumRoundingStrategy @default(nearest)
+  startHour             String?  @db.VarChar(5)
+  endHour               String?  @db.VarChar(5)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  zone     Zone    @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  @@unique([zoneId, vehicleType])
+  @@index([zoneId])
+}
+
+enum EnumVehicleType {
+  motor
+  mobil
+  bus
+  truk
+  other
+}
+
+enum EnumPricingType {
+  flat
+  progressive
+}
+
+enum EnumPaymentTiming {
+  entry
+  exit
+}
+
+enum EnumRoundingStrategy {
+  none
+  nearest
+  ceiling
+  floor
+}
+
+// ============================================
+// SHIFT & ATTENDANCE MODELS
+// ============================================
+
+model Shift {
+  id        String       @id @default(cuid())
+  userId    String       @db.VarChar(36)
+  zoneId    String       @db.VarChar(36)
+  date      DateTime     @db.Date
+  startTime DateTime     @db.Time
+  endTime   DateTime?    @db.Time
+  status    EnumShiftStatus @default(scheduled)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zone         Zone         @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  attendance   Attendance?
+  settlement   Settlement?
+  transactions Transaction[]
+
+  @@unique([userId, date])
+  @@index([zoneId])
+  @@index([date])
+}
+
+enum EnumShiftStatus {
+  scheduled
+  active
+  completed
+  cancelled
+}
+
+model Attendance {
+  id              String           @id @default(cuid())
+  localId         String?          @db.VarChar(36)
+  userId          String           @db.VarChar(36)
+  shiftId         String?          @unique @db.VarChar(36)
+  checkInTime     DateTime
+  checkInLat      Decimal?         @db.Decimal(10, 8)
+  checkInLng      Decimal?         @db.Decimal(11, 8)
+  checkInPhoto    String?          @db.VarChar(255)
+  checkOutTime    DateTime?
+  checkOutLat     Decimal?         @db.Decimal(10, 8)
+  checkOutLng     Decimal?         @db.Decimal(11, 8)
+  syncStatus      EnumSyncStatus   @default(synced)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shift Shift @relation(fields: [shiftId], references: [id])
+
+  @@index([userId])
+  @@index([checkInTime])
+}
+
+enum EnumSyncStatus {
+  pending
+  synced
+  conflict
+}
+
+// ============================================
+// PARKING & TRANSACTION MODELS
+// ============================================
+
+model ParkingSession {
+  id              String           @id @default(cuid())
+  localId         String?          @db.VarChar(36)
+  vehiclePlate    String           @db.VarChar(20)
+  vehicleType     EnumVehicleType
+  zoneId          String           @db.VarChar(36)
+  jukirId         String           @db.VarChar(36)
+  entryTime       DateTime
+  exitTime        DateTime?
+  entryPhoto      String?          @db.VarChar(255)
+  exitPhoto       String?          @db.VarChar(255)
+  durationMinutes Int?
+  totalFee        Decimal?         @db.Decimal(10, 2)
+  pricingType     EnumPricingType
+  paymentTiming   EnumPaymentTiming
+  status          EnumSessionStatus @default(active)
+  syncStatus      EnumSyncStatus   @default(synced)
+  idempotencyKey  String?          @unique @db.VarChar(36)
+
+  // Card lost / unregistered fields
+  ownerName       String?          @db.VarChar(100)
+  ownerNik        String?          @db.VarChar(20)
+  ownerAddress    String?          @db.VarChar(255)
+  ownerKtpPhoto   String?          @db.VarChar(255)
+  ownerStnkPhoto  String?          @db.VarChar(255)
+  exitVehiclePhoto String?         @db.VarChar(255)
+  driverPhoto     String?          @db.VarChar(255)
+  isCardLost      Boolean          @default(false)
+  penaltyFee      Decimal?         @db.Decimal(10, 2)
+  jukirNote       String?          @db.Text
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relations
+  zone         Zone          @relation(fields: [zoneId], references: [id])
+  jukir        User          @relation("JukirSessions", fields: [jukirId], references: [id])
+  transactions Transaction[]
+
+  @@index([zoneId])
+  @@index([jukirId])
+  @@index([vehiclePlate])
+  @@index([status])
+  @@index([entryTime])
+}
+
+enum EnumSessionStatus {
+  active
+  completed
+  void
+}
+
+model Transaction {
+  id               String             @id @default(cuid())
+  localId          String?            @db.VarChar(36)
+  sessionId        String             @db.VarChar(36)
+  shiftId          String?            @db.VarChar(36)
+  amount           Decimal            @db.Decimal(10, 2)
+  paymentMethod    EnumPaymentMethod
+  paymentStatus    EnumPaymentStatus  @default(recorded)
+  qrisRefId        String?            @db.VarChar(100)
+  verificationBy   String?            @db.VarChar(36)
+  verificationAt   DateTime?
+  transactionTime  DateTime
+  syncStatus       EnumSyncStatus     @default(synced)
+  idempotencyKey   String?            @unique @db.VarChar(36)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  // Relations
+  session       ParkingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  shift         Shift?         @relation(fields: [shiftId], references: [id])
+  verifiedBy    User?          @relation("VerifiedBy", fields: [verificationBy], references: [id])
+
+  @@index([sessionId])
+  @@index([shiftId])
+  @@index([paymentStatus])
+  @@index([transactionTime])
+}
+
+enum EnumPaymentMethod {
+  cash
+  qris_static
+}
+
+enum EnumPaymentStatus {
+  recorded
+  verified
+  rejected
+  refunded
+}
+
+// ============================================
+// SETTLEMENT MODEL
+// ============================================
+
+model Settlement {
+  id               String             @id @default(cuid())
+  userId           String             @db.VarChar(36)
+  shiftId          String             @unique @db.VarChar(36)
+  totalTransactions Int
+  totalCash        Decimal            @db.Decimal(10, 2)
+  totalQris        Decimal            @db.Decimal(10, 2)
+  totalAmount      Decimal            @db.Decimal(10, 2)
+  proofImage       String?            @db.VarChar(255)
+  status           EnumSettlementStatus @default(pending)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id])
+  shift Shift @relation(fields: [shiftId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum EnumSettlementStatus {
+  pending
+  verified
+  rejected
+}
+
+// ============================================
+// PENALTY MODEL
+// ============================================
+
+model ZonePenalty {
+  id           String           @id @default(cuid())
+  zoneId       String           @db.VarChar(36)
+  vehicleType  EnumVehicleType?
+  penaltyType  EnumPenaltyType
+  amount       Decimal          @db.Decimal(10, 2)
+  status       EnumUserStatus   @default(active)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  // Relations
+  zone Zone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  @@unique([zoneId, penaltyType, vehicleType])
+  @@index([zoneId])
+}
+
+enum EnumPenaltyType {
+  card_lost
+  unregistered
+}
+
+// ============================================
+// AUDIT LOG MODEL
+// ============================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?  @db.VarChar(36)
+  action      String   @db.VarChar(50)
+  entityType  String   @db.VarChar(50)
+  entityId    String?  @db.VarChar(36)
+  oldValues   Json?
+  newValues   Json?
+  ipAddress   String?  @db.VarChar(45)
+  deviceId    String?  @db.VarChar(100)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}

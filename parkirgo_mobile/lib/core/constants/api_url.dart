@@ -1,0 +1,29 @@
+class ApiUrl {
+  ApiUrl._();
+
+  static const String baseUrl = String.fromEnvironment(
+    'BASE_URL',
+    defaultValue: 'https://parkirgo.eu.cc/api',
+  );
+
+  static const String v1 = '$baseUrl/v1';
+
+  static const String loginQr = '$v1/login/qr';
+  static const String me = '$v1/me';
+  static const String zones = '$v1/zones';
+  static const String attendances = '$v1/attendances';
+  static const String parkingSessions = '$v1/parking-sessions';
+  static String closeParkingSession(String id) => '$parkingSessions/$id/close';
+  static String byTicketParkingSession(String ticket) => '$parkingSessions/by-ticket/$ticket';
+  static String forceExit(String id) => '$parkingSessions/$id/force-exit';
+  static const String unregisteredExit = '$v1/parking-sessions/unregistered-exit';
+  static const String transactions = '$v1/transactions';
+  static const String settlements = '$v1/settlements';
+  static const String syncBatch = '$v1/sync/batch';
+  static const String upload = '$v1/upload';
+  static const String penalties = '$v1/penalties';
+  static const String penaltyByZoneType = '$v1/penalties/by-zone-type';
+  static const String supervisorMonitoring = '$v1/supervisor/monitoring';
+  static const String supervisorQrisPending = '$v1/supervisor/qris-pending';
+  static const String supervisorVerifyQris = '$v1/supervisor/verify-qris';
+}
