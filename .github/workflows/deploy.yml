@@ -29,13 +29,14 @@ jobs:
             docker exec parkirgo-backend php artisan migrate --force 2>&1
 
             echo "=== Build frontend ==="
-            docker exec parkirgo-backend bash -c 'cd /var/www/html && npm install --legacy-peer-deps 2>&1 && npm run build 2>&1'
+            docker exec -e NODE_OPTIONS='--max-old-space-size=4096' parkirgo-backend bash -c 'cd /var/www/html && npm install --legacy-peer-deps 2>&1 && npm run build 2>&1'
 
             echo "=== Optimize ==="
             docker exec parkirgo-backend php artisan optimize:clear 2>&1
             docker exec parkirgo-backend php artisan optimize 2>&1
 
-            echo "=== Reload Octane ==="
-            docker exec parkirgo-backend php artisan octane:reload 2>&1
+            echo "=== Restart container ==="
+            docker restart parkirgo-backend 2>&1
+            sleep 5
 
             echo "=== Deploy complete ==="
