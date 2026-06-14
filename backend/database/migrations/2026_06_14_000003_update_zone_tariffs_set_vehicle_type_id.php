@@ -20,6 +20,10 @@ return new class extends Migration
             WHERE t.vehicle_type_id IS NULL
         ");
 
+        Schema::table('zone_tariffs', function (Blueprint $table) {
+            $table->index('zone_id');
+        });
+
         DB::statement('ALTER TABLE `zone_tariffs` DROP INDEX `zone_tariffs_zone_id_vehicle_type_pricing_type_unique`');
 
         Schema::table('zone_tariffs', function (Blueprint $table) {
@@ -43,5 +47,9 @@ return new class extends Migration
         });
 
         DB::statement('ALTER TABLE `zone_tariffs` ADD UNIQUE INDEX `zone_tariffs_zone_id_vehicle_type_pricing_type_unique` (`zone_id`, `vehicle_type`, `pricing_type`)');
+
+        Schema::table('zone_tariffs', function (Blueprint $table) {
+            $table->dropIndex(['zone_id']);
+        });
     }
 };
