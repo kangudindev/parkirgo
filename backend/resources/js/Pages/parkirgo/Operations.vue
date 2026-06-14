@@ -118,21 +118,21 @@ export default {
     <BCard no-body class="border-0 shadow-sm mb-4">
       <BCardBody>
         <BRow class="g-3">
-          <BCol md="4">
+          <BCol md="3">
             <label class="form-label text-muted small mb-1">Pilih Zona</label>
-            <select v-model="filterForm.zone_id" class="form-select" @change="applyFilters">
+            <select v-model="filterForm.zone_id" class="form-select form-select-sm" @change="applyFilters">
               <option value="">Semua Zona</option>
               <option v-for="z in zones" :key="z.id" :value="z.id">{{ z.name }}</option>
             </select>
           </BCol>
-          <BCol md="4">
+          <BCol md="3">
             <label class="form-label text-muted small mb-1">Jenis Kendaraan</label>
-            <select v-model="filterForm.vehicle_type_id" class="form-select" @change="applyFilters">
+            <select v-model="filterForm.vehicle_type_id" class="form-select form-select-sm" @change="applyFilters">
               <option value="">Semua Jenis</option>
               <option v-for="vt in vehicleTypes" :key="vt.id" :value="vt.id">{{ vt.name }}</option>
             </select>
           </BCol>
-          <BCol md="4">
+          <BCol md="6">
             <label class="form-label text-muted small mb-1">Filter Tanggal</label>
             <DateRangeFilter 
               :date-from="filterForm.date_from" 

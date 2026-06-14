@@ -47,10 +47,13 @@ export default {
       }
     }
   },
-  watch: {
-    customMode(val) {
-      if (val) this.activePreset = "custom";
-    },
+  computed: {
+    selectedLabel() {
+      const preset = this.presets.find(p => p.key === this.activePreset);
+      if (preset) return preset.label;
+      if (this.activePreset === 'custom') return 'Custom Range';
+      return 'Pilih Tanggal';
+    }
   },
   methods: {
     fmt(date) {
@@ -65,13 +68,8 @@ export default {
       this.$emit("change", { date_from: range.from, date_to: range.to, preset: preset.key });
     },
     toggleCustom() {
-      this.customMode = !this.customMode;
-      if (this.customMode) {
-        this.activePreset = "custom";
-      } else {
-        this.fromDate = this.fmt(new Date());
-        this.toDate = this.fmt(new Date());
-      }
+      this.customMode = true;
+      this.activePreset = "custom";
     },
     applyCustom() {
       if (this.fromDate && this.toDate) {
@@ -83,52 +81,53 @@ export default {
 </script>
 
 <template>
-  <div>
-    <div class="d-flex flex-wrap gap-1 mb-3" role="group">
-      <button
-        v-for="p in presets"
-        :key="p.key"
-        type="button"
-        class="btn btn-sm"
-        :class="activePreset === p.key ? 'btn-primary' : 'btn-soft-primary'"
-        @click="selectPreset(p)"
-      >
-        {{ p.label }}
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm"
-        :class="customMode ? 'btn-primary' : 'btn-soft-primary'"
-        @click="toggleCustom"
-      >
-        <i class="ri-calendar-line me-1"></i>Custom Range
-      </button>
-    </div>
+  <div class="date-filter-container">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <BDropdown variant="soft-primary" class="flex-shrink-0" toggle-class="btn-sm">
+        <template #button-content>
+          <i class="ri-calendar-event-line me-1"></i> {{ selectedLabel }}
+        </template>
+        <BDropdownItem v-for="p in presets" :key="p.key" @click="selectPreset(p)" :active="activePreset === p.key">
+          {{ p.label }}
+        </BDropdownItem>
+        <BDropdownDivider />
+        <BDropdownItem @click="toggleCustom" :active="activePreset === 'custom'">
+          Custom Range
+        </BDropdownItem>
+      </BDropdown>
 
-    <div v-if="customMode" class="row g-2 align-items-end">
-      <div class="col-md-4">
-        <label class="form-label mb-1 text-muted small">Dari Tanggal</label>
-        <flat-pickr
-          v-model="fromDate"
-          :config="{ dateFormat: 'Y-m-d', altFormat: 'd M Y', altInput: true, allowInput: true }"
-          class="form-control flatpickr-input"
-          placeholder="Pilih tanggal"
-        ></flat-pickr>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label mb-1 text-muted small">Sampai Tanggal</label>
-        <flat-pickr
-          v-model="toDate"
-          :config="{ dateFormat: 'Y-m-d', altFormat: 'd M Y', altInput: true, allowInput: true }"
-          class="form-control flatpickr-input"
-          placeholder="Pilih tanggal"
-        ></flat-pickr>
-      </div>
-      <div class="col-md-4 d-flex gap-2">
-        <BButton variant="primary" @click="applyCustom">
-          <i class="ri-filter-2-line me-1"></i>Tampilkan
+      <div v-if="customMode" class="d-flex align-items-center gap-2 animate-fade-in">
+        <div style="width: 140px">
+          <flat-pickr
+            v-model="fromDate"
+            :config="{ dateFormat: 'Y-m-d', altFormat: 'd M Y', altInput: true, allowInput: true }"
+            class="form-control form-control-sm"
+            placeholder="Dari"
+          ></flat-pickr>
+        </div>
+        <i class="ri-arrow-right-line text-muted"></i>
+        <div style="width: 140px">
+          <flat-pickr
+            v-model="toDate"
+            :config="{ dateFormat: 'Y-m-d', altFormat: 'd M Y', altInput: true, allowInput: true }"
+            class="form-control form-control-sm"
+            placeholder="Sampai"
+          ></flat-pickr>
+        </div>
+        <BButton variant="primary" size="sm" @click="applyCustom">
+          <i class="ri-check-line"></i>
         </BButton>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+</style>
