@@ -9,16 +9,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("
-            UPDATE zone_tariffs t
-            SET t.vehicle_type_id = (
-                SELECT id FROM vehicle_types
-                WHERE LOWER(name) = LOWER(t.vehicle_type)
-                   OR LOWER(code) = LOWER(t.vehicle_type)
-                LIMIT 1
-            )
-            WHERE t.vehicle_type_id IS NULL
-        ");
+        if (Schema::hasColumn('zone_tariffs', 'vehicle_type')) {
+            DB::statement("
+                UPDATE zone_tariffs t
+                SET t.vehicle_type_id = (
+                    SELECT id FROM vehicle_types
+                    WHERE LOWER(name) = LOWER(t.vehicle_type)
+                       OR LOWER(code) = LOWER(t.vehicle_type)
+                    LIMIT 1
+                )
+                WHERE t.vehicle_type_id IS NULL
+            ");
+        }
 
         Schema::table('zone_tariffs', function (Blueprint $table) {
             $table->index('zone_id');
@@ -45,7 +47,9 @@ return new class extends Migration
         DB::statement('ALTER TABLE `zone_tariffs` DROP INDEX `zone_tariffs_zone_id_vehicle_type_id_pricing_type_unique`');
 
         Schema::table('zone_tariffs', function (Blueprint $table) {
-            $table->string('vehicle_type', 30)->after('vehicle_type_id');
+            if (!Schema::hasColumn('zone_tariffs', 'vehicle_type')) {
+                $table->string('vehicle_type', 30)->after('vehicle_type_id');
+            }
             $table->foreignId('vehicle_type_id')->nullable()->change();
             $table->foreign('vehicle_type_id')->references('id')->on('vehicle_types')->nullOnDelete();
         });
