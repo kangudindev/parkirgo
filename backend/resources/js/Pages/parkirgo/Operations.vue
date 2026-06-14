@@ -81,7 +81,7 @@ export default {
 
 <template>
   <Layout>
-    <PageHeader title="Operasional Lapangan" pageTitle="ParkirGo" />
+    <PageHeader title="Sesi Parkir" pageTitle="ParkirGo" />
 
     <BRow>
       <BCol xl="12">

@@ -212,12 +212,12 @@ export default {
         <li class="nav-item">
           <Link href="/parkirgo/operations" class="nav-link menu-link" :class="{ active: $page.url === '/parkirgo/operations' }">
             <i class="ri-parking-box-line"></i>
-            <span>Operasional</span>
+            <span>Sesi Parkir</span>
           </Link>
         </li>
         <li class="nav-item">
           <Link href="/parkirgo/attendances" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/attendances') }">
-            <i class="ri-user-check-line"></i>
+            <i class="ri-calendar-check-line"></i>
             <span>Absensi</span>
           </Link>
         </li>
