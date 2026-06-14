@@ -10,7 +10,7 @@ export default {
   components: { Layout, PageHeader, DataTable },
   props: {
     transactions: { type: Object, default: () => ({ data: [] }) },
-    settlements: { type: Array, default: () => [] },
+    settlements: { type: Object, default: () => ({ data: [] }) },
     sortField: { type: String, default: "created_at" },
     sortDir: { type: String, default: "desc" },
   },
@@ -46,6 +46,54 @@ export default {
   methods: {
     money(value) {
       return currency.format(Number(value || 0));
+    },
+    formatDateShort(v) {
+      if (!v) return "-";
+      return new Intl.DateTimeFormat("id-ID", { 
+        day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit"
+      }).format(new Date(v));
+    },
+    badge(status) {
+      return { recorded: "info", verified: "success", rejected: "danger", approved: "success" }[status] || "secondary";
+    },
+    onSort(field, dir) {
+      this.tableSortField = field; this.tableSortDir = dir;
+      router.get("/parkirgo/finance", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onSearch(q) {
+      this.searchQuery = q;
+      router.get("/parkirgo/finance", { search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPage(page) {
+      router.get("/parkirgo/finance", { page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPerPage(val) {
+      this.perPageVal = val;
+      router.get("/parkirgo/finance", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
+    },
+    onSortSet(field, dir) {
+      this.tableSortField = field; this.tableSortDir = dir;
+      router.get("/parkirgo/finance", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onSearchSet(q) {
+      this.searchQuery = q;
+      router.get("/parkirgo/finance", { search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPageSet(page) {
+      router.get("/parkirgo/finance", { page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+    },
+    onPerPageSet(val) {
+      this.perPageVal = val;
+      router.get("/parkirgo/finance", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
+    },
+  },
+    formatDateShort(v) {
+      if (!v) return "-";
+      return new Intl.DateTimeFormat("id-ID", { 
+        day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit"
+      }).format(new Date(v));
     },
     badge(status) {
       return { recorded: "info", verified: "success", rejected: "danger", approved: "success" }[status] || "secondary";
@@ -123,10 +171,10 @@ export default {
     </BRow>
 
     <BRow>
-      <BCol xl="7">
+      <BCol xl="12">
         <BCard no-body class="border-0 shadow-sm">
           <BCardHeader>
-            <BCardTitle class="mb-0">Transaksi QRIS/Cash</BCardTitle>
+            <BCardTitle class="mb-0">Transaksi Terbaru</BCardTitle>
           </BCardHeader>
           <BCardBody>
             <DataTable
@@ -151,26 +199,42 @@ export default {
           </BCardBody>
         </BCard>
       </BCol>
-      <BCol xl="5">
+      <BCol xl="12" class="mt-4">
         <BCard no-body class="border-0 shadow-sm">
           <BCardHeader>
-            <BCardTitle class="mb-0">Setoran Shift</BCardTitle>
+            <BCardTitle class="mb-0">Daftar Setoran Jukir</BCardTitle>
           </BCardHeader>
           <BCardBody>
-            <div v-for="settlement in settlements" :key="settlement.id" class="p-3 rounded border mb-3">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <h6 class="mb-1">{{ settlement.settlement_number }}</h6>
-                  <p class="text-muted mb-1">{{ settlement.jukir?.name }} · {{ settlement.zone?.name }}</p>
-                  <small>Cash {{ money(settlement.cash_amount) }} · QRIS {{ money(settlement.qris_amount) }}</small>
-                </div>
-                <span class="badge" :class="`bg-${badge(settlement.status)}-subtle text-${badge(settlement.status)}`">{{ settlement.status }}</span>
-              </div>
-              <div class="progress mt-3" style="height: 6px">
-                <div class="progress-bar bg-success" :style="{ width: `${settlement.total_amount ? (settlement.qris_amount / settlement.total_amount) * 100 : 0}%` }"></div>
-              </div>
-            </div>
-            <div v-if="!settlements.length" class="text-center text-muted py-3">Belum ada setoran.</div>
+            <DataTable
+              :columns="[
+                { key: 'created_at', label: 'Waktu' },
+                { key: 'settlement_number', label: 'No. Setoran' },
+                { key: 'jukir_name', label: 'Jukir' },
+                { key: 'zone_name', label: 'Zona' },
+                { key: 'cash_amount', label: 'Tunai', class: 'text-end' },
+                { key: 'qris_amount', label: 'QRIS', class: 'text-end' },
+                { key: 'total_amount', label: 'Total', class: 'text-end' },
+                { key: 'status', label: 'Status', class: 'text-center' },
+              ]"
+              :data="settlements"
+              :sort-field="tableSortField"
+              :sort-dir="tableSortDir"
+              @sort="onSortSet"
+              @search="onSearchSet"
+              @page-change="onPageSet"
+              @per-page-change="onPerPageSet"
+            >
+              <template #cell-created_at="{ row }">{{ formatDateShort(row.created_at) }}</template>
+              <template #cell-jukir_name="{ row }">{{ row.jukir?.name }}</template>
+              <template #cell-zone_name="{ row }">{{ row.zone?.name }}</template>
+              <template #cell-cash_amount="{ row }">{{ money(row.cash_amount) }}</template>
+              <template #cell-qris_amount="{ row }">{{ money(row.qris_amount) }}</template>
+              <template #cell-total_amount="{ row }"><span class="fw-bold">{{ money(row.total_amount) }}</span></template>
+              <template #cell-status="{ row }">
+                <span class="badge" :class="`bg-${badge(row.status)}-subtle text-${badge(row.status)}`">{{ row.status }}</span>
+              </template>
+            </DataTable>
+            <div v-if="!settlements.data?.length" class="text-center text-muted py-3">Belum ada setoran.</div>
           </BCardBody>
         </BCard>
       </BCol>

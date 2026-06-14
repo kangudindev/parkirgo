@@ -48,7 +48,14 @@ export default {
       if (!v && v !== 0) return "-";
       const m = Math.floor(v / 60);
       const s = v % 60;
-      return m > 0 ? `${m}m ${s}s` : `${s}s`;
+      return m > 0 ? `${m}j ${s}m` : `${m}m`;
+    },
+    formatDateShort(v) {
+      if (!v) return "-";
+      return new Intl.DateTimeFormat("id-ID", { 
+        day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit"
+      }).format(new Date(v));
     },
     gaugeOption(active, capacity) {
       const pct = capacity ? (active / capacity) * 100 : 0;
@@ -249,10 +256,10 @@ export default {
               <div class="avatar-xs me-3 rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center">
                 <i class="ri-bank-card-line"></i>
               </div>
-              <div class="flex-grow-1">
-                <h6 class="mb-1">{{ trx.transaction_number }}</h6>
-                <p class="text-muted mb-0">{{ trx.zone?.name }} · {{ trx.payment_method }}</p>
-              </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-1">{{ trx.transaction_number }}</h6>
+                  <p class="text-muted mb-0 small">{{ formatDateShort(trx.created_at) }} · {{ trx.zone?.name }} · {{ trx.payment_method }}</p>
+                </div>
               <div class="text-end">
                 <div class="fw-semibold">{{ money(trx.amount) }}</div>
                 <span class="badge" :class="`bg-${statusClass(trx.status)}-subtle text-${statusClass(trx.status)}`">{{ trx.status }}</span>
@@ -274,10 +281,10 @@ export default {
               <div class="avatar-xs me-3 rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center">
                 <i class="ri-parking-box-line"></i>
               </div>
-              <div class="flex-grow-1">
-                <h6 class="mb-1">{{ session.ticket_number }}</h6>
-                <p class="text-muted mb-0">{{ session.zone?.name }} · {{ session.plate_number }}</p>
-              </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-1">{{ session.ticket_number }}</h6>
+                  <p class="text-muted mb-0 small">{{ formatDateShort(session.entry_at) }} · {{ session.zone?.name }} · {{ session.plate_number }}</p>
+                </div>
               <div class="text-end">
                 <div class="small">{{ duration(session.duration_minutes) }}</div>
                 <span class="badge" :class="`bg-${statusClass(session.status)}-subtle text-${statusClass(session.status)}`">{{ session.status }}</span>

@@ -241,10 +241,11 @@ class AdminController extends Controller
                 ['created_at', 'transaction_number', 'amount', 'payment_method', 'status']
             )->paginate($this->perPage($request));
 
-            $settlements = Settlement::with(['zone', 'jukir', 'shift'])
-                ->latest()
-                ->limit(10)
-                ->get();
+            $settlements = $this->applySort(
+                $this->applySearch(Settlement::with(['zone', 'jukir', 'shift']), $request, ['settlement_number']),
+                $request,
+                ['created_at', 'settlement_number', 'total_amount', 'status']
+            )->paginate($this->perPage($request));
         } catch (\Exception $e) {
             report($e);
             $transactions = collect();

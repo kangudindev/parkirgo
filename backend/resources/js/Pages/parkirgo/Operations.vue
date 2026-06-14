@@ -65,6 +65,13 @@ export default {
   },
   methods: {
     money(v) { return currency.format(Number(v || 0)); },
+    formatDateShort(v) {
+      if (!v) return "-";
+      return new Intl.DateTimeFormat("id-ID", { 
+        day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit"
+      }).format(new Date(v));
+    },
     badge(status) {
       return { active: "success", exited: "secondary", completed: "primary", synced: "success", pending: "warning" }[status] || "info";
     },
@@ -197,8 +204,8 @@ export default {
               <template #cell-vehicle_name="{ row }">{{ row.vehicleTypeMaster?.name || row.vehicle_type || "-" }}</template>
               <template #cell-zone_name="{ row }">{{ row.zone?.name }}</template>
               <template #cell-jukir_name="{ row }">{{ row.jukir?.name }}</template>
-              <template #cell-entry_at="{ row }">{{ date(row.entry_at) }}</template>
-              <template #cell-exit_at="{ row }">{{ date(row.exit_at) }}</template>
+              <template #cell-entry_at="{ row }">{{ formatDateShort(row.entry_at) }}</template>
+              <template #cell-exit_at="{ row }">{{ formatDateShort(row.exit_at) }}</template>
               <template #cell-duration_minutes="{ row }">{{ durasi(row.duration_minutes) }}</template>
               <template #cell-amount="{ row }">{{ money(row.final_amount ?? row.estimated_amount) }}</template>
               <template #cell-denda="{ row }">
@@ -236,8 +243,8 @@ export default {
         </div>
         <div class="col-md-6">
           <table class="table table-sm table-borderless mb-0">
-            <tr><td class="text-muted" style="width:120px">Masuk</td><td>{{ date(detailSession.entry_at) }}</td></tr>
-            <tr><td class="text-muted">Keluar</td><td>{{ date(detailSession.exit_at) }}</td></tr>
+            <tr><td class="text-muted" style="width:120px">Masuk</td><td>{{ formatDateShort(detailSession.entry_at) }}</td></tr>
+            <tr><td class="text-muted">Keluar</td><td>{{ formatDateShort(detailSession.exit_at) }}</td></tr>
             <tr><td class="text-muted">Durasi</td><td>{{ durasi(detailSession.duration_minutes) }}</td></tr>
             <tr><td class="text-muted">Biaya</td><td class="fw-semibold">{{ money(detailSession.final_amount ?? detailSession.estimated_amount) }}</td></tr>
             <tr v-if="detailSession.penalty_fee"><td class="text-muted">Denda</td><td class="text-danger fw-semibold">{{ money(detailSession.penalty_fee) }}</td></tr>
