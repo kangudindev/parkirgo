@@ -4,6 +4,8 @@ import PageHeader from "@/Components/page-header.vue";
 import DataTable from "@/Components/DataTable.vue";
 import { router } from "@inertiajs/vue3";
 
+const currency = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
+
 export default {
   components: { Layout, PageHeader, DataTable },
   props: {
@@ -17,6 +19,8 @@ export default {
       perPageVal: 15,
       tableSortField: this.sortField,
       tableSortDir: this.sortDir,
+      showDetailModal: false,
+      detailSession: null,
     };
   },
   computed: {
@@ -24,20 +28,37 @@ export default {
       return [
         { key: "ticket_number", label: "Tiket" },
         { key: "plate_number", label: "Plat" },
+        { key: "vehicle_name", label: "Kendaraan", width: "100px" },
         { key: "zone_name", label: "Zona" },
         { key: "jukir_name", label: "Jukir" },
         { key: "entry_at", label: "Masuk" },
+        { key: "exit_at", label: "Keluar" },
+        { key: "duration_minutes", label: "Durasi", width: "80px" },
+        { key: "amount", label: "Biaya", width: "130px" },
+        { key: "denda", label: "Denda", width: "100px" },
         { key: "status", label: "Status", width: "100px" },
-        { key: "payment_status", label: "Bayar", width: "100px" },
+        { key: "payment_status", label: "Bayar", width: "90px" },
+        { key: "actions", label: "", sortable: false, width: "50px" },
       ];
     },
   },
   methods: {
+    money(v) { return currency.format(Number(v || 0)); },
     badge(status) {
-      return { active: "success", exited: "secondary", synced: "success", pending: "warning" }[status] || "info";
+      return { active: "success", exited: "secondary", completed: "primary", synced: "success", pending: "warning" }[status] || "info";
     },
     date(value) {
       return value ? new Date(value).toLocaleString("id-ID") : "-";
+    },
+    durasi(min) {
+      if (!min && min !== 0) return "-";
+      const h = Math.floor(min / 60);
+      const m = min % 60;
+      return h > 0 ? `${h}j ${m}m` : `${m}m`;
+    },
+    openDetail(s) {
+      this.detailSession = s;
+      this.showDetailModal = true;
     },
     onSort(field, dir) {
       this.tableSortField = field; this.tableSortDir = dir;
@@ -73,19 +94,82 @@ export default {
           <BCardBody>
             <DataTable :columns="columns" :data="sessions" :sort-field="tableSortField" :sort-dir="tableSortDir"
               @sort="onSort" @search="onSearch" @page-change="onPage" @per-page-change="onPerPage">
+              <template #cell-vehicle_name="{ row }">{{ row.vehicleTypeMaster?.name || row.vehicle_type || "-" }}</template>
               <template #cell-zone_name="{ row }">{{ row.zone?.name }}</template>
               <template #cell-jukir_name="{ row }">{{ row.jukir?.name }}</template>
               <template #cell-entry_at="{ row }">{{ date(row.entry_at) }}</template>
+              <template #cell-exit_at="{ row }">{{ date(row.exit_at) }}</template>
+              <template #cell-duration_minutes="{ row }">{{ durasi(row.duration_minutes) }}</template>
+              <template #cell-amount="{ row }">{{ money(row.final_amount ?? row.estimated_amount) }}</template>
+              <template #cell-denda="{ row }">
+                <span v-if="row.penalty_fee" class="text-danger fw-semibold">{{ money(row.penalty_fee) }}</span>
+                <span v-else class="text-muted">-</span>
+              </template>
               <template #cell-status="{ row }">
                 <span class="badge" :class="`bg-${badge(row.status)}-subtle text-${badge(row.status)}`">{{ row.status }}</span>
               </template>
               <template #cell-payment_status="{ row }">
                 <span class="badge" :class="row.payment_status === 'paid' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'">{{ row.payment_status }}</span>
               </template>
+              <template #cell-actions="{ row }">
+                <BButton size="sm" variant="soft-primary" @click="openDetail(row)" title="Detail">
+                  <i class="ri-eye-line"></i>
+                </BButton>
+              </template>
             </DataTable>
           </BCardBody>
         </BCard>
       </BCol>
     </BRow>
+
+    <BModal v-model="showDetailModal" title="Detail Sesi Parkir" hide-footer centered size="lg">
+      <div v-if="detailSession" class="row g-3">
+        <div class="col-md-6">
+          <table class="table table-sm table-borderless mb-0">
+            <tr><td class="text-muted" style="width:120px">No. Tiket</td><td class="fw-semibold">{{ detailSession.ticket_number }}</td></tr>
+            <tr><td class="text-muted">Plat Nomor</td><td class="fw-semibold">{{ detailSession.plate_number }}</td></tr>
+            <tr><td class="text-muted">Kendaraan</td><td>{{ detailSession.vehicleTypeMaster?.name || detailSession.vehicle_type }}</td></tr>
+            <tr><td class="text-muted">Zona</td><td>{{ detailSession.zone?.name }} ({{ detailSession.zone?.code }})</td></tr>
+            <tr><td class="text-muted">Jukir</td><td>{{ detailSession.jukir?.name }}</td></tr>
+            <tr><td class="text-muted">Tarif</td><td>{{ detailSession.tariff ? (detailSession.tariff.pricing_type === 'flat' ? 'Flat' : 'Progresif') + ' - ' + detailSession.tariff.vehicleTypeMaster?.name : '-' }}</td></tr>
+          </table>
+        </div>
+        <div class="col-md-6">
+          <table class="table table-sm table-borderless mb-0">
+            <tr><td class="text-muted" style="width:120px">Masuk</td><td>{{ date(detailSession.entry_at) }}</td></tr>
+            <tr><td class="text-muted">Keluar</td><td>{{ date(detailSession.exit_at) }}</td></tr>
+            <tr><td class="text-muted">Durasi</td><td>{{ durasi(detailSession.duration_minutes) }}</td></tr>
+            <tr><td class="text-muted">Biaya</td><td class="fw-semibold">{{ money(detailSession.final_amount ?? detailSession.estimated_amount) }}</td></tr>
+            <tr v-if="detailSession.penalty_fee"><td class="text-muted">Denda</td><td class="text-danger fw-semibold">{{ money(detailSession.penalty_fee) }}</td></tr>
+            <tr><td class="text-muted">Status</td><td><span class="badge" :class="`bg-${badge(detailSession.status)}-subtle text-${badge(detailSession.status)}`">{{ detailSession.status }}</span></td></tr>
+            <tr><td class="text-muted">Pembayaran</td><td><span class="badge" :class="detailSession.payment_status === 'paid' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'">{{ detailSession.payment_status }}</span></td></tr>
+          </table>
+        </div>
+        <div v-if="detailSession.is_card_lost" class="col-12">
+          <BAlert variant="warning" show class="mb-0 py-2 small">
+            <i class="ri-alert-line me-1"></i> Karcis hilang — {{ detailSession.owner_name || 'Nama tidak tercatat' }}
+          </BAlert>
+        </div>
+        <div v-if="detailSession.jukir_note" class="col-12">
+          <label class="text-muted small">Catatan Jukir:</label>
+          <p class="mb-0">{{ detailSession.jukir_note }}</p>
+        </div>
+        <div class="col-12">
+          <BRow class="g-2">
+            <BCol v-if="detailSession.entry_photo_path" md="6">
+              <small class="text-muted">Foto Masuk</small>
+              <img :src="'/storage/' + detailSession.entry_photo_path" class="img-fluid rounded border" alt="entry" />
+            </BCol>
+            <BCol v-if="detailSession.exit_photo_path" md="6">
+              <small class="text-muted">Foto Keluar</small>
+              <img :src="'/storage/' + detailSession.exit_photo_path" class="img-fluid rounded border" alt="exit" />
+            </BCol>
+          </BRow>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end mt-3">
+        <BButton variant="light" @click="showDetailModal=false">Tutup</BButton>
+      </div>
+    </BModal>
   </Layout>
 </template>

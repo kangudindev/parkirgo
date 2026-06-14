@@ -110,7 +110,6 @@ export default {
       });
 
       if (this.editingZone) {
-        formData.append("_method", "PUT");
         router.post(route("parkirgo.zones.update", this.editingZone.id), formData, {
           preserveScroll: true,
           onSuccess: () => { this.showZoneModal = false; this.qrisPreviewUrl = null; },

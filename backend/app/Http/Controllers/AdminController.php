@@ -19,23 +19,29 @@ use Illuminate\Support\Facades\DB;
 class AdminController extends Controller
 {
     use HasAdvancedFilter;
-    public function dashboard()
+
+    public function dashboard(Request $request)
     {
-        $today = Carbon::today();
+        $period = $request->input('period', 'today');
+        $dates = $this->getPeriodRange($period);
+        $dateFrom = $dates['from'];
+        $dateTo = $dates['to'];
 
         try {
             $summary = [
-                'revenue_today' => Transaction::whereBetween('created_at', [$today->startOfDay(), $today->endOfDay()])->sum('amount'),
+                'revenue_period' => Transaction::whereBetween('created_at', [$dateFrom, $dateTo])->sum('amount'),
                 'active_sessions' => ParkingSession::where('status', 'active')->count(),
                 'zones_active' => Zone::where('status', 'active')->count(),
                 'jukirs_online' => User::where('role', 'jukir')->where('status', 'active')->count(),
                 'pending_qris' => Transaction::where('payment_method', 'qris')->where('status', 'recorded')->count(),
-                'settlements_today' => Settlement::whereBetween('created_at', [$today->startOfDay(), $today->endOfDay()])->count(),
+                'settlements_period' => Settlement::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
             ];
 
-            $zones = Zone::withCount(['parkingSessions as active_sessions_count' => fn ($query) => $query->where('status', 'active')])
-                ->withSum(['transactions as revenue_sum' => fn ($query) => $query->whereBetween('created_at', [$today->startOfDay(), $today->endOfDay()])], 'amount')
-                ->with('vehicleTypes')
+            $zones = Zone::with('vehicleTypes')
+                ->withCount(['jukirs'])
+                ->withCount(['shifts' => fn ($q) => $q->whereBetween('shift_date', [Carbon::parse($dateFrom)->startOfDay(), Carbon::parse($dateTo)->endOfDay()])])
+                ->withCount(['parkingSessions as active_sessions_count' => fn ($q) => $q->where('status', 'active')])
+                ->withSum(['transactions as revenue_sum' => fn ($q) => $q->whereBetween('created_at', [$dateFrom, $dateTo])], 'amount')
                 ->latest()
                 ->get();
 
@@ -44,12 +50,12 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             report($e);
             $summary = [
-                'revenue_today' => 0,
+                'revenue_period' => 0,
                 'active_sessions' => 0,
                 'zones_active' => 0,
                 'jukirs_online' => 0,
                 'pending_qris' => 0,
-                'settlements_today' => 0,
+                'settlements_period' => 0,
             ];
             $zones = collect();
             $recentSessions = collect();
@@ -61,14 +67,26 @@ class AdminController extends Controller
             'zones' => $zones,
             'recentSessions' => $recentSessions,
             'recentTransactions' => $recentTransactions,
+            'period' => $period,
         ]);
+    }
+
+    private function getPeriodRange(string $period): array
+    {
+        $now = now();
+        return match ($period) {
+            'week' => ['from' => $now->copy()->startOfWeek()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
+            'month' => ['from' => $now->copy()->startOfMonth()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
+            'year' => ['from' => $now->copy()->startOfYear()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
+            default => ['from' => $now->copy()->startOfDay()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
+        };
     }
 
     public function operations(Request $request)
     {
         try {
             $sessions = $this->applySort(
-                $this->applySearch(ParkingSession::with(['zone', 'jukir', 'tariff', 'vehicleTypeMaster']), $request, ['ticket_number', 'plate_number']),
+                $this->applySearch(ParkingSession::with(['zone', 'jukir', 'tariff.vehicleTypeMaster', 'vehicleTypeMaster']), $request, ['ticket_number', 'plate_number']),
                 $request,
                 ['created_at', 'ticket_number', 'plate_number', 'status', 'payment_status']
             )->paginate($this->perPage($request));

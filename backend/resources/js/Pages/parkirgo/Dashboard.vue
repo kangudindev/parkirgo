@@ -1,7 +1,7 @@
 <script>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
-import { Link } from "@inertiajs/vue3";
+import { Link, router } from "@inertiajs/vue3";
 
 const currency = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
 
@@ -12,20 +12,20 @@ export default {
     zones: { type: Array, default: () => [] },
     recentSessions: { type: Array, default: () => [] },
     recentTransactions: { type: Array, default: () => [] },
+    period: { type: String, default: "today" },
+  },
+  computed: {
+    periodLabel() {
+      const labels = { today: "Hari Ini", week: "Minggu Ini", month: "Bulan Ini", year: "Tahun Ini" };
+      return labels[this.period] || "Hari Ini";
+    },
   },
   methods: {
     money(value) {
       return currency.format(Number(value || 0));
     },
     statusClass(status) {
-      return {
-        active: "success",
-        paid: "success",
-        unpaid: "warning",
-        recorded: "info",
-        verified: "primary",
-        exited: "secondary",
-      }[status] || "dark";
+      return { active: "success", paid: "success", unpaid: "warning", recorded: "info", verified: "primary", exited: "secondary" }[status] || "dark";
     },
     totalCap(zone) {
       return (zone.vehicle_types || []).reduce((s, vt) => s + (vt.pivot?.capacity || 0), 0);
@@ -35,11 +35,22 @@ export default {
       if (!cap) return null;
       return Math.round((zone.active_sessions_count || 0) / cap * 100);
     },
+    vtCap(zone, vtId) {
+      const vt = (zone.vehicle_types || []).find(v => v.id === vtId);
+      return vt ? vt.pivot.capacity : 0;
+    },
     duration(value) {
       if (!value) return "-";
       const min = Math.floor(value / 60);
       const sec = value % 60;
       return min > 0 ? `${min}m ${sec}s` : `${sec}s`;
+    },
+    switchPeriod(p) {
+      router.get("/", { period: p }, { preserveState: true });
+    },
+    colorBy(idx) {
+      const colors = ["primary", "success", "info", "warning", "danger", "secondary"];
+      return colors[idx % colors.length];
     },
   },
 };
@@ -49,14 +60,25 @@ export default {
   <Layout>
     <PageHeader title="Dashboard" pageTitle="ParkirGo" />
 
+    <BCard no-body class="border-0 shadow-sm mb-4">
+      <BCardBody class="py-2">
+        <div class="d-flex flex-wrap gap-1" role="group">
+          <button type="button" class="btn btn-sm" :class="period === 'today' ? 'btn-primary' : 'btn-soft-primary'" @click="switchPeriod('today')">Hari Ini</button>
+          <button type="button" class="btn btn-sm" :class="period === 'week' ? 'btn-primary' : 'btn-soft-primary'" @click="switchPeriod('week')">Minggu Ini</button>
+          <button type="button" class="btn btn-sm" :class="period === 'month' ? 'btn-primary' : 'btn-soft-primary'" @click="switchPeriod('month')">Bulan Ini</button>
+          <button type="button" class="btn btn-sm" :class="period === 'year' ? 'btn-primary' : 'btn-soft-primary'" @click="switchPeriod('year')">Tahun Ini</button>
+        </div>
+      </BCardBody>
+    </BCard>
+
     <BRow class="g-3 mb-4">
-      <BCol xl="4" md="6">
+      <BCol xl="3" md="6">
         <BCard no-body class="border-0 overflow-hidden parkirgo-hero-card text-white">
           <BCardBody>
             <div class="d-flex align-items-start justify-content-between">
               <div>
-                <p class="text-white-75 mb-2">Pendapatan Hari Ini</p>
-                <h3 class="text-white mb-1">{{ money(summary.revenue_today) }}</h3>
+                <p class="text-white-75 mb-2">Pendapatan {{ periodLabel }}</p>
+                <h3 class="text-white mb-1">{{ money(summary.revenue_period) }}</h3>
                 <span class="badge bg-white text-success">Live Ops</span>
               </div>
               <div class="avatar-sm rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center">
@@ -66,7 +88,7 @@ export default {
           </BCardBody>
         </BCard>
       </BCol>
-      <BCol xl="4" md="6">
+      <BCol xl="3" md="6">
         <BCard no-body class="border-0 shadow-sm">
           <BCardBody>
             <div class="d-flex justify-content-between">
@@ -81,7 +103,7 @@ export default {
           </BCardBody>
         </BCard>
       </BCol>
-      <BCol xl="4" md="6">
+      <BCol xl="3" md="6">
         <BCard no-body class="border-0 shadow-sm">
           <BCardBody>
             <div class="d-flex justify-content-between">
@@ -96,7 +118,7 @@ export default {
           </BCardBody>
         </BCard>
       </BCol>
-      <BCol xl="4" md="6">
+      <BCol xl="3" md="6">
         <BCard no-body class="border-0 shadow-sm">
           <BCardBody>
             <div class="d-flex justify-content-between">
@@ -111,31 +133,52 @@ export default {
           </BCardBody>
         </BCard>
       </BCol>
-      <BCol xl="4" md="6">
-        <BCard no-body class="border-0 shadow-sm">
+    </BRow>
+
+    <BRow class="g-3 mb-4">
+      <BCol v-for="(zone, idx) in zones" :key="zone.id" xl="4" md="6">
+        <BCard no-body class="border-0 shadow-sm h-100 zone-card">
           <BCardBody>
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between align-items-start mb-2">
               <div>
-                <p class="text-muted mb-1">QRIS Menunggu</p>
-                <h3 class="mb-0">{{ summary.pending_qris || 0 }}</h3>
+                <h5 class="mb-0">{{ zone.name }}</h5>
+                <span class="badge bg-primary-subtle text-primary">{{ zone.code }}</span>
+                <span v-if="zone.city" class="ms-1 text-muted small">{{ zone.city }}</span>
               </div>
-              <div class="avatar-sm rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center">
-                <i class="ri-qr-code-line fs-22"></i>
+              <span class="badge bg-success-subtle text-success">{{ zone.status }}</span>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <div class="p-2 rounded bg-light">
+                  <small class="text-muted">Pendapatan</small>
+                  <div class="fw-bold text-success">{{ money(zone.revenue_sum) }}</div>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="p-2 rounded bg-light text-center">
+                  <small class="text-muted">Shift</small>
+                  <div class="fw-bold">{{ zone.shifts_count || 0 }}</div>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="p-2 rounded bg-light text-center">
+                  <small class="text-muted">Jukir</small>
+                  <div class="fw-bold">{{ zone.jukirs_count || 0 }}</div>
+                </div>
               </div>
             </div>
-          </BCardBody>
-        </BCard>
-      </BCol>
-      <BCol xl="4" md="6">
-        <BCard no-body class="border-0 shadow-sm">
-          <BCardBody>
-            <div class="d-flex justify-content-between">
-              <div>
-                <p class="text-muted mb-1">Setoran Hari Ini</p>
-                <h3 class="mb-0">{{ summary.settlements_today || 0 }}</h3>
+
+            <div v-for="vt in zone.vehicle_types || []" :key="vt.id" class="mb-2">
+              <div class="d-flex justify-content-between small mb-1">
+                <span>{{ vt.name }}</span>
+                <span class="text-muted">{{ vt.pivot.capacity }} slot</span>
               </div>
-              <div class="avatar-sm rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center">
-                <i class="ri-bank-line fs-22"></i>
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:8px">
+                  <div class="progress-bar" :class="`bg-${colorBy(idx)}`" :style="{ width: Math.min(100, (zone.active_sessions_count || 0) / (vt.pivot.capacity || 1) * 100) + '%' }"></div>
+                </div>
+                <small class="fw-medium">{{ zone.active_sessions_count || 0 }}/{{ vt.pivot.capacity }}</small>
               </div>
             </div>
           </BCardBody>
@@ -144,55 +187,7 @@ export default {
     </BRow>
 
     <BRow>
-      <BCol xl="8">
-        <BCard no-body class="border-0 shadow-sm">
-          <BCardHeader class="align-items-center d-flex">
-            <BCardTitle class="mb-0 flex-grow-1">Radar Zona</BCardTitle>
-            <Link href="/parkirgo/zones" class="btn btn-sm btn-soft-primary">Kelola Zona</Link>
-          </BCardHeader>
-          <BCardBody>
-            <div class="table-responsive table-card">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>Zona</th>
-                    <th>Kota</th>
-                    <th>Sesi Aktif</th>
-                    <th>Kapasitas</th>
-                    <th>Terisi</th>
-                    <th>Pendapatan</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="zone in zones" :key="zone.id">
-                    <td>
-                      <div class="fw-semibold">{{ zone.name }}</div>
-                      <small class="text-muted">{{ zone.code }}</small>
-                    </td>
-                    <td>{{ zone.city || '-' }}</td>
-                    <td>{{ zone.active_sessions_count || 0 }}</td>
-                    <td>{{ totalCap(zone) }}</td>
-                    <td>
-                      <div v-if="usagePct(zone) !== null" class="d-flex align-items-center gap-2">
-                        <div class="progress flex-grow-1" style="height:6px;min-width:50px">
-                          <div class="progress-bar" :class="usagePct(zone) > 90 ? 'bg-danger' : usagePct(zone) > 70 ? 'bg-warning' : 'bg-success'"
-                            :style="{ width: usagePct(zone) + '%' }"></div>
-                        </div>
-                        <small class="text-muted">{{ usagePct(zone) }}%</small>
-                      </div>
-                      <span v-else class="text-muted">-</span>
-                    </td>
-                    <td>{{ money(zone.revenue_sum) }}</td>
-                    <td><span class="badge bg-success-subtle text-success">{{ zone.status }}</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </BCardBody>
-        </BCard>
-      </BCol>
-      <BCol xl="4">
+      <BCol xl="6">
         <BCard no-body class="border-0 shadow-sm mb-3">
           <BCardHeader>
             <BCardTitle class="mb-0">Transaksi Terbaru</BCardTitle>
@@ -213,7 +208,9 @@ export default {
             </div>
           </BCardBody>
         </BCard>
-        <BCard no-body class="border-0 shadow-sm">
+      </BCol>
+      <BCol xl="6">
+        <BCard no-body class="border-0 shadow-sm mb-3">
           <BCardHeader>
             <BCardTitle class="mb-0">Sesi Aktif Terbaru</BCardTitle>
           </BCardHeader>
@@ -244,4 +241,7 @@ export default {
   box-shadow: 0 18px 45px rgba(14, 165, 233, 0.22);
 }
 .text-white-75 { color: rgba(255,255,255,.75); }
+.zone-card { transition: transform .2s ease, box-shadow .2s ease; }
+.zone-card:hover { transform: translateY(-4px); box-shadow: 0 18px 45px rgba(15, 23, 42, .12) !important; }
+.avatar-xs { width: 32px; height: 32px; object-fit: cover; }
 </style>

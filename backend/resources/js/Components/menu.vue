@@ -179,9 +179,6 @@ export default {
 
     <template v-if="layoutType === 'vertical' || layoutType === 'semibox'">
       <ul class="navbar-nav h-100" id="navbar-nav">
-        <li class="menu-title">
-          <span data-key="t-parkirgo">ParkirGo</span>
-        </li>
         <li class="nav-item">
           <Link href="/" class="nav-link menu-link" :class="{ active: $page.url === '/' }">
             <i class="ri-dashboard-3-line"></i>
