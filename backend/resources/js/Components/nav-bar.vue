@@ -118,9 +118,9 @@ export default {
           </button>
 
           <!-- Real-time Clock -->
-          <div class="ms-3 d-none d-md-flex align-items-center text-muted fw-medium">
+          <div class="ms-3 d-none d-md-flex align-items-center text-dark fw-bold">
             <i class="ri-time-line me-2 fs-18 text-primary"></i>
-            <span class="fs-14">{{ currentTime }}</span>
+            <span class="fs-15">{{ currentTime }}</span>
           </div>
         </div>
 
@@ -148,71 +148,23 @@ export default {
               </span>
             </template>
             <h6 class="dropdown-header">Selamat Datang, {{ $page.props.auth.user.name }}!</h6>
+            
             <Link class="dropdown-item py-2" :href="route('profile.show')">
               <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
               <span class="align-middle">Profil Saya</span>
             </Link>
+
+            <Link class="dropdown-item py-2" href="/auth/lockscreen-basic">
+              <i class="mdi mdi-lock text-muted fs-16 align-middle me-1"></i>
+              <span class="align-middle">Kunci Layar</span>
+            </Link>
+
             <div class="dropdown-divider"></div>
+            
             <form method="POST" @submit.prevent="logout" class="p-0">
-              <button type="submit" class="dropdown-item py-2 border-0 bg-transparent w-100 text-start text-danger">
+              <button type="submit" class="dropdown-item py-2 border-0 bg-transparent w-100 text-start text-danger fw-bold">
                 <i class="mdi mdi-logout fs-16 align-middle me-1"></i> Keluar
               </button>
-            </form>
-          </BDropdown>
-        </div>
-      </div>
-    </div>
-  </header>
-</template>
-            <BDropdownItem aria-labelledby="page-header-search-dropdown">
-              <form class="p-3">
-                <div class="form-group m-0">
-                  <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search ..." aria-label="Recipient's username" />
-                    <BButton variant="primary" type="submit">
-                      <i class="mdi mdi-magnify"></i>
-                    </BButton>
-                  </div>
-                </div>
-              </form>
-            </BDropdownItem>
-          </BDropdown>
-
-
-
-          <div class="ms-1 header-item d-none d-sm-flex">
-            <BButton type="button" variant="ghost-secondary" class="btn-icon btn-topbar rounded-circle"
-              data-toggle="fullscreen" @click="initFullScreen">
-              <i class="bx bx-fullscreen fs-22"></i>
-            </BButton>
-          </div>
-
-          <div class="ms-1 header-item d-none d-sm-flex">
-            <BButton type="button" variant="ghost-secondary" class="btn-icon btn-topbar rounded-circle light-dark-mode"
-              @click="toggleDarkMode">
-              <i class="bx bx-moon fs-22"></i>
-            </BButton>
-          </div>
-
-
-
-          <BDropdown variant="link" class="ms-sm-3 header-item topbar-user" toggle-class="rounded-circle arrow-none" menu-class="dropdown-menu-end" :offset="{ alignmentAxis: -14, crossAxis: 0, mainAxis: 0 }">
-            <template #button-content>
-              <span class="d-flex align-items-center">
-                <img v-if="$page.props.jetstream.managesProfilePhotos" class="rounded-circle header-profile-user" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name">
-                <span class="text-start ms-xl-2">
-                  <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{ $page.props.auth.user.name }}</span>
-                  <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text text-capitalize">{{ $page.props.auth.user.role }}</span>
-                </span>
-              </span>
-            </template>
-            <h6 class="dropdown-header">Welcome {{ $page.props.auth.user.name }}!</h6>
-            <Link class="dropdown-item py-2" :href="route('profile.show')"><i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
-            <span class="align-middle">Profil Saya</span>
-            </Link>
-            <div class="dropdown-divider"></div>
-            <form method="POST" @submit.prevent="logout" class="p-0">
-              <button type="submit" class="dropdown-item py-2 border-0 bg-transparent w-100 text-start text-danger"><i class="mdi mdi-logout fs-16 align-middle me-1"></i> Keluar</button>
             </form>
           </BDropdown>
         </div>
