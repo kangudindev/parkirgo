@@ -32,24 +32,23 @@ export default {
       return m > 0 ? `${m}m ${s}s` : `${s}s`;
     },
     gaugeOption(active, capacity) {
-      const pct = capacity ? active / capacity : 0;
-      const color = pct > 0.9 ? "#f06548" : pct > 0.7 ? "#f7b84b" : "#0ab39c";
+      const pct = capacity ? (active / capacity) * 100 : 0;
+      const color = pct > 90 ? "#f06548" : pct > 70 ? "#f7b84b" : "#0ab39c";
       return {
         series: [{
           type: "gauge",
-          center: ["50%", "50%"],
-          radius: "90%",
-          startAngle: 220,
-          endAngle: -40,
+          center: ["50%", "55%"],
+          radius: "100%",
+          startAngle: 200,
+          endAngle: -20,
           min: 0,
-          max: capacity || 1,
-          axisLine: {
-            lineStyle: { width: 6, color: [[0.7, "#0ab39c"], [0.9, "#f7b84b"], [1, "#f06548"]] }
-          },
+          max: capacity || 100,
+          progress: { show: true, width: 6, itemStyle: { color: color } },
+          pointer: { show: true, length: '60%', width: 3, itemStyle: { color: color } },
+          axisLine: { lineStyle: { width: 6, color: [[1, "#e9ebec"]] } },
           axisTick: { show: false },
           splitLine: { show: false },
           axisLabel: { show: false },
-          pointer: { show: false },
           detail: { show: false },
           data: [{ value: active || 0 }]
         }]
@@ -154,6 +153,15 @@ export default {
               <span class="badge bg-success-subtle text-success">{{ zone.status }}</span>
             </div>
 
+            <div class="mb-3 border-bottom pb-3">
+              <div class="text-muted small mb-1">Pendapatan</div>
+              <h3 class="fw-bold text-success mb-0">{{ money(zone.revenue_sum) }}</h3>
+              <div class="d-flex gap-3 mt-2 text-muted small">
+                <div><i class="ri-calendar-event-line me-1"></i>Shift: {{ zone.shifts_count || 0 }}</div>
+                <div><i class="ri-user-smile-line me-1"></i>Jukir: {{ zone.jukirs_count || 0 }}</div>
+              </div>
+            </div>
+
             <div class="d-flex" style="gap:1px;overflow-x:auto">
               <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center flex-fill px-1">
                 <i :class="vt.icon || 'ri-car-line'" class="fs-22 d-block mb-1"></i>
@@ -165,22 +173,6 @@ export default {
                 <div class="small" :class="(vt.pivot.capacity - vt.active_count) > 0 ? 'text-success' : 'text-danger'">
                   {{ (vt.pivot.capacity - vt.active_count) || 0 }} sisa
                 </div>
-              </div>
-            </div>
-
-            <hr class="my-2" />
-            <div class="row g-1 text-center small">
-              <div class="col-6">
-                <div class="text-muted">Pendapatan</div>
-                <div class="fw-semibold text-success">{{ money(zone.revenue_sum) }}</div>
-              </div>
-              <div class="col-3">
-                <div class="text-muted">Shift</div>
-                <div class="fw-semibold">{{ zone.shifts_count || 0 }}</div>
-              </div>
-              <div class="col-3">
-                <div class="text-muted">Jukir</div>
-                <div class="fw-semibold">{{ zone.jukirs_count || 0 }}</div>
               </div>
             </div>
           </BCardBody>
