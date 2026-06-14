@@ -17,6 +17,7 @@ export default {
   data() {
     return {
       activeTab: "user",
+      isPrinting: false,
     };
   },
   computed: {
@@ -57,7 +58,11 @@ export default {
       return Number(num || 0).toFixed(1);
     },
     printReport() {
-      window.print();
+      this.isPrinting = true;
+      setTimeout(() => {
+        window.print();
+        this.isPrinting = false;
+      }, 500);
     },
   },
 };
@@ -66,14 +71,15 @@ export default {
 <template>
   <Layout>
     <div class="print-area">
-      <PageHeader title="Laporan Pendapatan" pageTitle="ParkirGo" />
+      <PageHeader title="Laporan Pendapatan" pageTitle="ParkirGo" class="no-print" />
 
-      <div class="print-only mb-4">
-        <h4 class="mb-1 text-center">Laporan Pendapatan ParkirGo</h4>
+      <div class="print-only mb-4 mt-4">
+        <h3 class="mb-1 text-center fw-bold">Laporan Pendapatan ParkirGo</h3>
         <p class="text-center text-muted">Periode: {{ filters.date_from }} s/d {{ filters.date_to }}</p>
+        <hr />
       </div>
 
-    <BCard no-body class="border-0 shadow-sm mb-4">
+    <BCard no-body class="border-0 shadow-sm mb-4 no-print">
       <BCardBody class="d-flex justify-content-between align-items-center">
         <DateRangeFilter :date-from="filters.date_from" :date-to="filters.date_to" @change="onDateRangeChange" class="flex-grow-1" />
         <BButton variant="soft-secondary" @click="printReport" class="ms-3">
@@ -82,7 +88,7 @@ export default {
       </BCardBody>
     </BCard>
 
-    <ul class="nav nav-tabs nav-tabs-custom mb-4" role="tablist">
+    <ul class="nav nav-tabs nav-tabs-custom mb-4 no-print" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link" :class="{ active: activeTab === 'user' }" @click="activeTab = 'user'" type="button">
           <i class="ri-user-line me-1"></i>Per Pengguna
@@ -100,9 +106,10 @@ export default {
       </li>
     </ul>
 
-    <div v-show="activeTab === 'user'">
+    <div v-show="activeTab === 'user' || isPrinting">
+      <h5 class="print-only mb-3">Rekap Per Pengguna</h5>
       <BRow class="g-3 mb-4">
-        <BCol md="4">
+        <BCol md="4" class="col-print-4">
           <BCard no-body class="border-0 shadow-sm">
             <BCardBody>
               <p class="text-muted mb-1">Total Transaksi</p>
@@ -110,7 +117,7 @@ export default {
             </BCardBody>
           </BCard>
         </BCol>
-        <BCol md="4">
+        <BCol md="4" class="col-print-4">
           <BCard no-body class="border-0 shadow-sm">
             <BCardBody>
               <p class="text-muted mb-1">Total Setoran</p>
@@ -118,7 +125,7 @@ export default {
             </BCardBody>
           </BCard>
         </BCol>
-        <BCol md="4">
+        <BCol md="4" class="col-print-4">
           <BCard no-body class="border-0 shadow-sm">
             <BCardBody>
               <p class="text-muted mb-1">Jumlah Jukir</p>
@@ -128,7 +135,7 @@ export default {
         </BCol>
       </BRow>
 
-      <BCard no-body class="border-0 shadow-sm">
+      <BCard no-body class="border-0 shadow-sm mb-5">
         <BCardBody>
           <div class="table-responsive table-card">
             <table class="table table-hover align-middle mb-0">
@@ -149,9 +156,6 @@ export default {
                   <td class="text-end">{{ money(item.total_settlement) }}</td>
                   <td class="text-center">{{ item.transaction_count }}</td>
                 </tr>
-                <tr v-if="!revenuePerUser.length">
-                  <td colspan="5" class="text-center text-muted py-4">Belum ada data transaksi pada periode ini.</td>
-                </tr>
               </tbody>
             </table>
           </div>
@@ -159,9 +163,10 @@ export default {
       </BCard>
     </div>
 
-    <div v-show="activeTab === 'shift'">
+    <div v-show="activeTab === 'shift' || isPrinting">
+      <h5 class="print-only mb-3 mt-4">Rekap Per Shift</h5>
       <BRow class="g-3 mb-4">
-        <BCol md="3">
+        <BCol md="3" class="col-print-3">
           <BCard no-body class="border-0 shadow-sm">
             <BCardBody>
               <p class="text-muted mb-1">Total Setoran</p>
@@ -169,7 +174,7 @@ export default {
             </BCardBody>
           </BCard>
         </BCol>
-        <BCol md="3">
+        <BCol md="3" class="col-print-3">
           <BCard no-body class="border-0 shadow-sm">
             <BCardBody>
               <p class="text-muted mb-1">Cash</p>
@@ -177,7 +182,7 @@ export default {
             </BCardBody>
           </BCard>
         </BCol>
-        <BCol md="3">
+        <BCol md="3" class="col-print-3">
           <BCard no-body class="border-0 shadow-sm">
             <BCardBody>
               <p class="text-muted mb-1">QRIS</p>
@@ -185,7 +190,7 @@ export default {
             </BCardBody>
           </BCard>
         </BCol>
-        <BCol md="3">
+        <BCol md="3" class="col-print-3">
           <BCard no-body class="border-0 shadow-sm">
             <BCardBody>
               <p class="text-muted mb-1">Jumlah Shift</p>
@@ -195,15 +200,13 @@ export default {
         </BCol>
       </BRow>
 
-      <BCard no-body class="border-0 shadow-sm">
+      <BCard no-body class="border-0 shadow-sm mb-5">
         <BCardBody>
           <div class="table-responsive table-card">
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr>
                   <th>No. Setoran</th>
-                  <th>Kode Shift</th>
-                  <th>Tanggal</th>
                   <th>Jukir</th>
                   <th>Zona</th>
                   <th class="text-end">Cash</th>
@@ -215,8 +218,6 @@ export default {
               <tbody>
                 <tr v-for="item in revenuePerShift" :key="item.id">
                   <td class="fw-semibold">{{ item.settlement_number }}</td>
-                  <td>{{ item.shift_code || "-" }}</td>
-                  <td>{{ item.shift_date || "-" }}</td>
                   <td>{{ item.jukir_name }}</td>
                   <td>{{ item.zone_name }}</td>
                   <td class="text-end">{{ money(item.cash_amount) }}</td>
@@ -226,9 +227,6 @@ export default {
                     <span class="badge" :class="`bg-${badge(item.status)}-subtle text-${badge(item.status)}`">{{ item.status }}</span>
                   </td>
                 </tr>
-                <tr v-if="!revenuePerShift.length">
-                  <td colspan="9" class="text-center text-muted py-4">Belum ada setoran pada periode ini.</td>
-                </tr>
               </tbody>
             </table>
           </div>
@@ -236,9 +234,10 @@ export default {
       </BCard>
     </div>
 
-    <div v-show="activeTab === 'zone'">
+    <div v-show="activeTab === 'zone' || isPrinting">
+      <h5 class="print-only mb-3 mt-4">Rekap Per Zona</h5>
       <BRow class="g-3 mb-4">
-        <BCol md="4">
+        <BCol md="4" class="col-print-4">
           <BCard no-body class="border-0 shadow-sm">
             <BCardBody>
               <p class="text-muted mb-1">Total Transaksi</p>
@@ -246,7 +245,7 @@ export default {
             </BCardBody>
           </BCard>
         </BCol>
-        <BCol md="4">
+        <BCol md="4" class="col-print-4">
           <BCard no-body class="border-0 shadow-sm">
             <BCardBody>
               <p class="text-muted mb-1">Total Setoran</p>
@@ -254,7 +253,7 @@ export default {
             </BCardBody>
           </BCard>
         </BCol>
-        <BCol md="4">
+        <BCol md="4" class="col-print-4">
           <BCard no-body class="border-0 shadow-sm">
             <BCardBody>
               <p class="text-muted mb-1">Jumlah Zona</p>
@@ -264,7 +263,7 @@ export default {
         </BCol>
       </BRow>
 
-      <BCard no-body class="border-0 shadow-sm">
+      <BCard no-body class="border-0 shadow-sm mb-5">
         <BCardBody>
           <div class="table-responsive table-card">
             <table class="table table-hover align-middle mb-0">
@@ -272,7 +271,6 @@ export default {
                 <tr>
                   <th>#</th>
                   <th>Zona</th>
-                  <th>Kode</th>
                   <th>Kota</th>
                   <th class="text-end">Total Transaksi</th>
                   <th class="text-end">Total Setoran</th>
@@ -283,14 +281,10 @@ export default {
                 <tr v-for="(item, i) in revenuePerZone" :key="item.zone_id">
                   <td class="text-muted">{{ i + 1 }}</td>
                   <td class="fw-semibold">{{ item.zone_name }}</td>
-                  <td>{{ item.zone_code }}</td>
                   <td>{{ item.city || "-" }}</td>
                   <td class="text-end">{{ money(item.total_amount) }}</td>
                   <td class="text-end">{{ money(item.total_settlement) }}</td>
                   <td class="text-center">{{ item.transaction_count }}</td>
-                </tr>
-                <tr v-if="!revenuePerZone.length">
-                  <td colspan="7" class="text-center text-muted py-4">Belum ada data transaksi pada periode ini.</td>
                 </tr>
               </tbody>
             </table>
@@ -298,19 +292,24 @@ export default {
         </BCardBody>
       </BCard>
     </div>
+    </div>
   </Layout>
 </template>
 
 <style scoped>
 @media print {
-  .nav-tabs, .btn, .card-header, .page-title-box, .app-menu, .navbar-header, footer, .footer {
+  .no-print, .nav-tabs, .btn, .card-header, .page-title-box, .app-menu, .navbar-header, footer, .footer {
     display: none !important;
   }
   .main-content { margin-left: 0 !important; padding: 0 !important; }
   .page-content { padding: 0 !important; }
-  .card { border: none !important; box-shadow: none !important; }
+  .card { border: 1px solid #eee !important; box-shadow: none !important; margin-bottom: 10px !important; }
   .print-only { display: block !important; }
-  .print-area { width: 100%; }
+  .print-area { width: 100%; padding: 20px; }
+  .col-print-4 { width: 33.333% !important; float: left; }
+  .col-print-3 { width: 25% !important; float: left; }
+  .row { display: block !important; }
+  .table-responsive { overflow: visible !important; }
 }
 .print-only { display: none; }
 </style>
