@@ -39,14 +39,15 @@ class AdminController extends Controller
 
             $zones = Zone::with('vehicleTypes')
                 ->withCount(['jukirs'])
-                ->withCount(['shifts' => fn ($q) => $q->whereBetween('shift_date', [Carbon::parse($dateFrom)->startOfDay(), Carbon::parse($dateTo)->endOfDay()])])
+                ->withCount(['parkingSessions as parkir_out_count' => fn ($q) => $q->whereBetween('exit_at', [$dateFrom, $dateTo])])
                 ->withCount(['parkingSessions as active_sessions_count' => fn ($q) => $q->where('status', 'active')])
                 ->withSum(['transactions as revenue_sum' => fn ($q) => $q->whereBetween('created_at', [$dateFrom, $dateTo])], 'amount')
-                ->withSum(['parkingSessions as penalty_sum' => fn ($q) => $q->whereBetween('exit_at', [$dateFrom, $dateTo])], 'penalty_fee')
                 ->latest()
                 ->get();
 
             $zoneIds = $zones->pluck('id');
+            
+            // Per-type active count for gauges
             $activeByZoneType = ParkingSession::where('status', 'active')
                 ->whereIn('zone_id', $zoneIds)
                 ->groupBy('zone_id', 'vehicle_type_id')
@@ -61,6 +62,9 @@ class AdminController extends Controller
                 });
             });
 
+            // Multi-line Chart Data (Per Zone)
+            $chartData = $this->prepareRevenueChartData($period, $zones);
+
             $recentSessions = ParkingSession::with(['zone', 'jukir', 'vehicleTypeMaster'])->latest()->limit(8)->get();
             $recentTransactions = Transaction::with(['zone', 'jukir', 'parkingSession'])->latest()->limit(8)->get();
         } catch (\Exception $e) {
@@ -74,6 +78,7 @@ class AdminController extends Controller
                 'settlements_period' => 0,
             ];
             $zones = collect();
+            $chartData = ['labels' => [], 'series' => []];
             $recentSessions = collect();
             $recentTransactions = collect();
         }
@@ -81,10 +86,72 @@ class AdminController extends Controller
         return Inertia::render('parkirgo/Dashboard', [
             'summary' => $summary,
             'zones' => $zones,
+            'chartData' => $chartData,
             'recentSessions' => $recentSessions,
             'recentTransactions' => $recentTransactions,
             'period' => $period,
         ]);
+    }
+
+    private function prepareRevenueChartData(string $period, $zones): array
+    {
+        $dates = $this->getPeriodRange($period);
+        $start = Carbon::parse($dates['from']);
+        $end = Carbon::parse($dates['to']);
+
+        $format = match ($period) {
+            'today' => 'H:00',
+            'week' => 'D',
+            'month' => 'd M',
+            'year' => 'M Y',
+            default => 'Y-m-d'
+        };
+
+        $sqlFormat = match ($period) {
+            'today' => '%H:00',
+            'week' => '%a',
+            'month' => '%d %b',
+            'year' => '%b %Y',
+            default => '%Y-%m-%d'
+        };
+
+        // Get all labels first to ensure continuity
+        $labels = [];
+        $current = $start->copy();
+        while ($current <= $end) {
+            $labels[] = $current->format($format);
+            match ($period) {
+                'today' => $current->addHour(),
+                'week', 'month' => $current->addDay(),
+                'year' => $current->addMonth(),
+                default => $current->addDay()
+            };
+        }
+
+        $series = [];
+        foreach ($zones as $zone) {
+            $data = Transaction::where('zone_id', $zone->id)
+                ->whereBetween('created_at', [$dates['from'], $dates['to']])
+                ->selectRaw("DATE_FORMAT(created_at, '$sqlFormat') as time_label")
+                ->selectRaw("SUM(amount) as total")
+                ->groupBy('time_label')
+                ->pluck('total', 'time_label');
+
+            $zoneSeries = [];
+            foreach ($labels as $label) {
+                $zoneSeries[] = (int) ($data[$label] ?? 0);
+            }
+
+            $series[] = [
+                'name' => $zone->name,
+                'data' => $zoneSeries
+            ];
+        }
+
+        return [
+            'labels' => $labels,
+            'series' => $series
+        ];
     }
 
     private function getPeriodRange(string $period): array

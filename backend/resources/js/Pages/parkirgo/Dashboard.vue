@@ -11,6 +11,7 @@ export default {
   props: {
     summary: { type: Object, default: () => ({}) },
     zones: { type: Array, default: () => [] },
+    chartData: { type: Object, default: () => ({ labels: [], series: [] }) },
     recentSessions: { type: Array, default: () => [] },
     recentTransactions: { type: Array, default: () => [] },
     period: { type: String, default: "today" },
@@ -19,14 +20,31 @@ export default {
     periodLabel() {
       return { today: "Hari Ini", week: "Minggu Ini", month: "Bulan Ini", year: "Tahun Ini" }[this.period] || "Hari Ini";
     },
+    apexChartOptions() {
+      return {
+        chart: { height: 380, type: "line", zoom: { enabled: false }, toolbar: { show: false } },
+        dataLabels: { enabled: true, style: { fontSize: '10px' } },
+        stroke: { width: 3, curve: "smooth" },
+        markers: { size: 5 },
+        xaxis: { categories: this.chartData.labels, title: { text: "Waktu" } },
+        yaxis: { title: { text: "Pendapatan (Rp)" }, labels: { formatter: (v) => this.moneyShort(v) } },
+        legend: { position: "top", horizontalAlign: "center" },
+        tooltip: { y: { formatter: (v) => this.money(v) } }
+      };
+    }
   },
   methods: {
     money(v) { return currency.format(Number(v || 0)); },
+    moneyShort(v) {
+      if (v >= 1000000) return (v / 1000000).toFixed(1) + ' jt';
+      if (v >= 1000) return (v / 1000).toFixed(0) + ' rb';
+      return v;
+    },
     statusClass(s) {
-      return { active: "success", paid: "success", unpaid: "warning", recorded: "info", verified: "primary", exited: "secondary" }[s] || "dark";
+      return { active: "success", paid: "success", unpaid: "warning", recorded: "info", verified: "primary", exited: "secondary", completed: "primary" }[s] || "dark";
     },
     duration(v) {
-      if (!v) return "-";
+      if (!v && v !== 0) return "-";
       const m = Math.floor(v / 60);
       const s = v % 60;
       return m > 0 ? `${m}m ${s}s` : `${s}s`;
@@ -37,7 +55,7 @@ export default {
       return {
         series: [{
           type: "gauge",
-          center: ["50%", "55%"],
+          center: ["50%", "60%"],
           radius: "100%",
           startAngle: 200,
           endAngle: -20,
@@ -140,40 +158,75 @@ export default {
       </BCol>
     </BRow>
 
+    <BRow class="mb-4">
+      <BCol lg="12">
+        <BCard no-body class="border-0 shadow-sm">
+          <BCardHeader>
+            <BCardTitle class="mb-0">Tren Pendapatan per Zona ({{ periodLabel }})</BCardTitle>
+          </BCardHeader>
+          <BCardBody>
+            <apexchart
+              class="apex-charts"
+              height="380"
+              dir="ltr"
+              :series="chartData.series"
+              :options="apexChartOptions"
+            ></apexchart>
+          </BCardBody>
+        </BCard>
+      </BCol>
+    </BRow>
+
     <BRow class="g-3 mb-4">
       <BCol v-for="zone in zones" :key="zone.id" xl="4" md="6">
         <BCard no-body class="border-0 shadow-sm h-100 zone-card">
           <BCardBody>
-            <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="d-flex justify-content-between align-items-start mb-3">
               <div>
-                <h5 class="mb-0">{{ zone.name }}</h5>
+                <h5 class="mb-0 fw-bold">{{ zone.name }}</h5>
                 <span class="badge bg-primary-subtle text-primary">{{ zone.code }}</span>
                 <span v-if="zone.city" class="ms-1 text-muted small">{{ zone.city }}</span>
               </div>
-              <div class="text-end">
-                <span class="badge bg-success-subtle text-success d-block mb-1">{{ zone.status }}</span>
-                <small class="text-muted"><i class="ri-user-smile-line me-1"></i>Jukir: {{ zone.jukirs_count || 0 }}</small>
-              </div>
+              <span class="badge bg-success-subtle text-success">{{ zone.status }}</span>
             </div>
 
-            <div class="mb-3 border-bottom pb-3">
-              <div class="text-muted small mb-1">Pendapatan</div>
-              <h3 class="fw-bold text-success mb-1">{{ money(zone.revenue_sum) }}</h3>
-              <div class="text-danger small">
-                <i class="ri-error-warning-line me-1"></i>Denda: {{ money(zone.penalty_sum) }}
-              </div>
+            <div class="table-responsive mb-3">
+              <table class="table table-sm table-borderless align-middle mb-0 text-center">
+                <thead>
+                  <tr class="text-muted small border-bottom">
+                    <th class="pb-1">PENDAPATAN</th>
+                    <th class="pb-1">KENDARAAN</th>
+                    <th class="pb-1">JUKIR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="pt-2">
+                      <h4 class="fw-bold text-success mb-0">{{ money(zone.revenue_sum) }}</h4>
+                    </td>
+                    <td class="pt-2">
+                      <h4 class="fw-semibold mb-0">{{ zone.parkir_out_count || 0 }}</h4>
+                    </td>
+                    <td class="pt-2">
+                      <h4 class="fw-semibold mb-0">{{ zone.jukirs_count || 0 }}</h4>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+
+            <hr class="my-3" />
 
             <div class="d-flex" style="gap:1px;overflow-x:auto">
               <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center flex-fill px-1">
-                <i :class="vt.icon || 'ri-car-line'" class="fs-22 d-block mb-1"></i>
-                <span class="small fw-medium d-block">{{ vt.name }}</span>
+                <i :class="vt.icon || 'ri-car-line'" class="fs-22 d-block mb-1 text-primary"></i>
+                <span class="small fw-medium d-block text-truncate" style="max-width:80px">{{ vt.name }}</span>
                 <div class="d-flex justify-content-center" style="height:55px">
-                  <VueEcharts :option="gaugeOption(vt.active_count, vt.pivot.capacity)" style="width:60px;height:55px" />
+                  <VueEcharts :option="gaugeOption(vt.active_count, vt.pivot.capacity)" style="width:65px;height:55px" />
                 </div>
                 <div class="small fw-semibold mt-1">{{ vt.active_count || 0 }}<span class="text-muted fw-normal">/{{ vt.pivot.capacity }}</span></div>
                 <div class="small" :class="(vt.pivot.capacity - vt.active_count) > 0 ? 'text-success' : 'text-danger'">
-                  {{ (vt.pivot.capacity - vt.active_count) || 0 }} sisa
+                  {{ Math.max(0, vt.pivot.capacity - vt.active_count) }} sisa
                 </div>
               </div>
             </div>
@@ -243,7 +296,7 @@ export default {
   box-shadow: 0 18px 45px rgba(14, 165, 233, 0.22);
 }
 .text-white-75 { color: rgba(255,255,255,.75); }
-.zone-card { transition: transform .2s ease, box-shadow .2s ease; }
+.zone-card { transition: transform .2s ease, box-shadow .2s ease; border-radius: 12px; }
 .zone-card:hover { transform: translateY(-4px); box-shadow: 0 18px 45px rgba(15, 23, 42, .12) !important; }
 .avatar-xs { width: 32px; height: 32px; object-fit: cover; }
 </style>
