@@ -185,7 +185,7 @@ export default {
         <li class="nav-item">
           <Link href="/" class="nav-link menu-link" :class="{ active: $page.url === '/' }">
             <i class="ri-dashboard-3-line"></i>
-            <span>Command Center</span>
+            <span>Dashboard</span>
           </Link>
         </li>
         <li class="nav-item">

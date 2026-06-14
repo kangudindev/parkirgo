@@ -3,6 +3,7 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import DataTable from "@/Components/DataTable.vue";
 import { router } from "@inertiajs/vue3";
+import Swal from "sweetalert2";
 
 export default {
   components: { Layout, PageHeader, DataTable },
@@ -57,8 +58,15 @@ export default {
       else router.post(route("parkirgo.shifts.store"), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
     },
     remove(s) {
-      if (!confirm("Hapus shift ini?")) return;
-      router.delete(route("parkirgo.shifts.destroy", s.id), { preserveScroll: true });
+      Swal.fire({
+        title: "Hapus Shift?",
+        text: "Shift yang dihapus tidak bisa dikembalikan.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#f06548",
+        confirmButtonText: "Ya, Hapus",
+        cancelButtonText: "Batal",
+      }).then((r) => { if (r.isConfirmed) router.delete(route("parkirgo.shifts.destroy", s.id), { preserveScroll: true }); });
     },
     onSort(field, dir) {
       this.tableSortField = field;

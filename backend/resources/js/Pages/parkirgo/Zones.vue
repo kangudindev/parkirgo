@@ -3,6 +3,7 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import DataTable from "@/Components/DataTable.vue";
 import { router } from "@inertiajs/vue3";
+import Swal from "sweetalert2";
 
 export default {
   components: { Layout, PageHeader, DataTable },
@@ -110,8 +111,15 @@ export default {
       }
     },
     deleteZone(z) {
-      if (!confirm(`Hapus zona ${z.name}?`)) return;
-      router.delete(route("parkirgo.zones.destroy", z.id), { preserveScroll: true });
+      Swal.fire({
+        title: "Hapus Zona?",
+        text: `Yakin ingin menghapus zona ${z.name}? Data terkait akan ikut terhapus.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#f06548",
+        confirmButtonText: "Ya, Hapus",
+        cancelButtonText: "Batal",
+      }).then((r) => { if (r.isConfirmed) router.delete(route("parkirgo.zones.destroy", z.id), { preserveScroll: true }); });
     },
     capForZone(zone, vtId) {
       const vt = (zone.vehicle_types || []).find(v => v.id === vtId);
@@ -139,8 +147,15 @@ export default {
       else router.post(route("parkirgo.tariffs.store"), this.tariffForm, { preserveScroll: true, onSuccess: () => this.showTariffModal = false });
     },
     deleteTariff(t) {
-      if (!confirm("Hapus tarif ini?")) return;
-      router.delete(route("parkirgo.tariffs.destroy", t.id), { preserveScroll: true });
+      Swal.fire({
+        title: "Hapus Tarif?",
+        text: "Tarif yang dihapus tidak bisa dikembalikan.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#f06548",
+        confirmButtonText: "Ya, Hapus",
+        cancelButtonText: "Batal",
+      }).then((r) => { if (r.isConfirmed) router.delete(route("parkirgo.tariffs.destroy", t.id), { preserveScroll: true }); });
     },
     vtName(id) {
       const vt = this.vehicleTypes.find(v => v.id === id);

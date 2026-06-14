@@ -2,6 +2,7 @@
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import { router } from "@inertiajs/vue3";
+import Swal from "sweetalert2";
 
 export default {
   components: { Layout, PageHeader },
@@ -77,8 +78,15 @@ export default {
       }
     },
     remove(p) {
-      if (!confirm(`Hapus denda ${p.penalty_type} untuk ${p.zone?.name || 'zona'}?`)) return;
-      router.delete(route('parkirgo.penalties.destroy', p.id), { preserveScroll: true });
+      Swal.fire({
+        title: "Hapus Denda?",
+        text: `Yakin ingin menghapus denda ${p.penalty_type} untuk ${p.zone?.name || 'zona'}?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#f06548",
+        confirmButtonText: "Ya, Hapus",
+        cancelButtonText: "Batal",
+      }).then((r) => { if (r.isConfirmed) router.delete(route('parkirgo.penalties.destroy', p.id), { preserveScroll: true }); });
     },
     typeLabel(t) {
       return t === 'card_lost' ? 'Karcis Hilang' : 'Tidak Tercatat';

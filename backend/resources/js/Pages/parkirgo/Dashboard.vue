@@ -47,7 +47,7 @@ export default {
 
 <template>
   <Layout>
-    <PageHeader title="Command Center" pageTitle="ParkirGo" />
+    <PageHeader title="Dashboard" pageTitle="ParkirGo" />
 
     <BRow class="g-3 mb-4">
       <BCol xl="4" md="6">

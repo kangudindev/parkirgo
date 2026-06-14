@@ -1,12 +1,13 @@
 <script>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import DateRangeFilter from "@/Components/DateRangeFilter.vue";
 import { router } from "@inertiajs/vue3";
 
 const currency = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
 
 export default {
-  components: { Layout, PageHeader },
+  components: { Layout, PageHeader, DateRangeFilter },
   props: {
     revenuePerUser: { type: Array, default: () => [] },
     revenuePerShift: { type: Array, default: () => [] },
@@ -16,8 +17,6 @@ export default {
   data() {
     return {
       activeTab: "user",
-      dateFrom: this.filters.date_from,
-      dateTo: this.filters.date_to,
     };
   },
   computed: {
@@ -48,11 +47,11 @@ export default {
     money(value) {
       return currency.format(Number(value || 0));
     },
-    applyFilter() {
-      router.get("/parkirgo/reports", { date_from: this.dateFrom, date_to: this.dateTo }, { preserveState: true });
+    onDateRangeChange(range) {
+      router.get("/parkirgo/reports", { date_from: range.date_from, date_to: range.date_to }, { preserveState: true });
     },
     badge(status) {
-      return { recorded: "info", verified: "success", rejected: "danger", submitted: "warning", approved: "success" }[status] || "secondary";
+      return { recorded: "info", verified: "success", rejected: "danger", approved: "success" }[status] || "secondary";
     },
     pct(num) {
       return Number(num || 0).toFixed(1);
@@ -67,21 +66,7 @@ export default {
 
     <BCard no-body class="border-0 shadow-sm mb-4">
       <BCardBody>
-        <BRow class="align-items-end g-3">
-          <BCol md="3">
-            <label class="form-label mb-1 text-muted small">Dari Tanggal</label>
-            <input type="date" v-model="dateFrom" class="form-control" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label mb-1 text-muted small">Sampai Tanggal</label>
-            <input type="date" v-model="dateTo" class="form-control" />
-          </BCol>
-          <BCol md="3">
-            <BButton variant="primary" @click="applyFilter">
-              <i class="ri-filter-2-line me-1"></i>Tampilkan
-            </BButton>
-          </BCol>
-        </BRow>
+        <DateRangeFilter :date-from="filters.date_from" :date-to="filters.date_to" @change="onDateRangeChange" />
       </BCardBody>
     </BCard>
 

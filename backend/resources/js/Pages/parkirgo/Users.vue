@@ -4,6 +4,7 @@ import PageHeader from "@/Components/page-header.vue";
 import DataTable from "@/Components/DataTable.vue";
 import JukirIdCard from "@/Components/JukirIdCard.vue";
 import { router } from "@inertiajs/vue3";
+import Swal from "sweetalert2";
 
 export default {
   components: { Layout, PageHeader, DataTable, JukirIdCard },
@@ -80,16 +81,37 @@ export default {
       }
     },
     remove(u) {
-      if (!confirm(`Hapus pengguna ${u.name}?`)) return;
-      router.delete(route("parkirgo.users.destroy", u.id), { preserveScroll: true });
+      Swal.fire({
+        title: "Hapus Pengguna?",
+        text: `Yakin ingin menghapus ${u.name}?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#f06548",
+        confirmButtonText: "Ya, Hapus",
+        cancelButtonText: "Batal",
+      }).then((r) => { if (r.isConfirmed) router.delete(route("parkirgo.users.destroy", u.id), { preserveScroll: true }); });
     },
     generateQr(userId) {
-      if (!confirm("Generate QR ID Card baru untuk pengguna ini? Kartu lama akan tidak berlaku.")) return;
-      router.post(route("parkirgo.users.generate-qr", userId), {}, { preserveScroll: true });
+      Swal.fire({
+        title: "Generate QR ID Card?",
+        text: "Kartu lama akan tidak berlaku. Lanjutkan?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#405189",
+        confirmButtonText: "Ya, Generate",
+        cancelButtonText: "Batal",
+      }).then((r) => { if (r.isConfirmed) router.post(route("parkirgo.users.generate-qr", userId), {}, { preserveScroll: true }); });
     },
     revokeQr(userId) {
-      if (!confirm("Cabut QR ID Card?")) return;
-      router.post(route("parkirgo.users.revoke-qr", userId), {}, { preserveScroll: true });
+      Swal.fire({
+        title: "Cabut QR ID Card?",
+        text: "QR ID Card pengguna ini akan dinonaktifkan.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#f06548",
+        confirmButtonText: "Ya, Cabut",
+        cancelButtonText: "Batal",
+      }).then((r) => { if (r.isConfirmed) router.post(route("parkirgo.users.revoke-qr", userId), {}, { preserveScroll: true }); });
     },
     showIdCard(user) {
       this.cardUser = user;
