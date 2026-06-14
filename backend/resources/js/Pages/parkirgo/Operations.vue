@@ -35,6 +35,16 @@ export default {
     };
   },
   computed: {
+    selectedZoneName() {
+      if (!this.filterForm.zone_id) return "Semua Zona";
+      const zone = this.zones.find(z => z.id === parseInt(this.filterForm.zone_id));
+      return zone ? zone.name : "Semua Zona";
+    },
+    selectedVehicleName() {
+      if (!this.filterForm.vehicle_type_id) return "Semua Jenis Kendaraan";
+      const vt = this.vehicleTypes.find(v => v.id === parseInt(this.filterForm.vehicle_type_id));
+      return vt ? vt.name : "Semua Jenis Kendaraan";
+    },
     columns() {
       return [
         { key: "ticket_number", label: "Tiket" },
@@ -125,9 +135,15 @@ export default {
         </div>
         <h3 class="text-center fw-bold mb-1">DATA SESI PARKIR</h3>
         <p class="text-center text-muted small mb-0">Sistem Manajemen Perparkiran Digital</p>
-        <div class="text-center mt-2">
-          <span class="badge bg-light text-dark border px-3">
-            Periode: {{ filterForm.date_from }} s/d {{ filterForm.date_to }}
+        <div class="text-center mt-2 d-flex justify-content-center gap-2">
+          <span class="badge bg-light text-dark border px-2">
+            Periode: {{ filterForm.date_from }} - {{ filterForm.date_to }}
+          </span>
+          <span class="badge bg-light text-dark border px-2">
+            Zona: {{ selectedZoneName }}
+          </span>
+          <span class="badge bg-light text-dark border px-2">
+            Kendaraan: {{ selectedVehicleName }}
           </span>
         </div>
         <hr />
