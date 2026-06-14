@@ -158,7 +158,7 @@ export default {
 
 <template>
   <Layout>
-    <PageHeader title="Manajemen Pengguna" pageTitle="ParkirGo" />
+    <PageHeader title="User" pageTitle="ParkirGo" />
 
     <BRow class="g-3 mb-4">
       <BCol md="4">

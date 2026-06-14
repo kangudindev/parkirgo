@@ -230,7 +230,7 @@ export default {
         <li class="nav-item">
           <Link href="/parkirgo/users" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/users') }">
             <i class="ri-user-settings-line"></i>
-            <span>Manajemen Pengguna</span>
+            <span>User</span>
           </Link>
         </li>
         <li class="nav-item">
