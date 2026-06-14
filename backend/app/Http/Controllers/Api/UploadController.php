@@ -12,7 +12,7 @@ class UploadController extends Controller
     {
         $data = $request->validate([
             'file' => ['required', 'image', 'max:5120'],
-            'type' => ['required', 'in:selfie,entry_photo,exit_photo,proof_image'],
+            'type' => ['required', 'in:selfie,entry_photo,exit_photo,proof_image,qris_image'],
         ]);
 
         $path = $request->file('file')->store("parkirgo/{$data['type']}", 'public');

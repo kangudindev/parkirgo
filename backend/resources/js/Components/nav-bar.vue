@@ -213,19 +213,19 @@ export default {
           <div class="navbar-brand-box horizontal-logo">
             <Link href="/" class="logo logo-dark">
               <span class="logo-sm">
-                <h3 class="mt-4">PG</h3>
+                <img src="/images/logo_parkirgo.png" alt="PG" height="28" />
               </span>
               <span class="logo-lg">
-                <h3 class="mt-4">ParkirGo</h3>
+                <img src="/images/logo_parkirgo.png" alt="ParkirGo" height="28" />
               </span>
             </Link>
 
             <Link href="/" class="logo logo-light">
               <span class="logo-sm">
-                <h3 class="text-white mt-4">PG</h3>
+                <img src="/images/logo_parkirgo.png" alt="PG" height="28" />
               </span>
               <span class="logo-lg">
-                <h3 class="text-white mt-4">ParkirGo</h3>
+                <img src="/images/logo_parkirgo.png" alt="ParkirGo" height="28" />
               </span>
             </Link>
           </div>

@@ -114,25 +114,23 @@ export default {
       <!-- ========== App Menu ========== -->
       <div class="app-menu navbar-menu">
         <!-- LOGO -->
-        <div class="navbar-brand-box">
-          <!-- Dark Logo-->
-          <Link href="/" class="logo logo-dark">
-            <span class="logo-sm">
-              <span class="parkirgo-logo-mark">PG</span>
-            </span>
-            <span class="logo-lg">
-              <span class="parkirgo-logo-text text-dark">ParkirGo</span>
-            </span>
-          </Link>
-          <!-- Light Logo-->
-          <Link href="/" class="logo logo-light">
-            <span class="logo-sm">
-              <span class="parkirgo-logo-mark text-white">PG</span>
-            </span>
-            <span class="logo-lg">
-              <span class="parkirgo-logo-text text-white">ParkirGo</span>
-            </span>
-          </Link>
+          <div class="navbar-brand-box">
+            <Link href="/" class="logo logo-dark">
+              <span class="logo-sm">
+                <img src="/images/logo_parkirgo.png" alt="PG" height="28" />
+              </span>
+              <span class="logo-lg">
+                <img src="/images/logo_parkirgo.png" alt="ParkirGo" height="28" />
+              </span>
+            </Link>
+            <Link href="/" class="logo logo-light">
+              <span class="logo-sm">
+                <img src="/images/logo_parkirgo.png" alt="PG" height="28" />
+              </span>
+              <span class="logo-lg">
+                <img src="/images/logo_parkirgo.png" alt="ParkirGo" height="28" />
+              </span>
+            </Link>
           <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"
             id="vertical-hover" @click="initActiveMenu">
             <i class="ri-record-circle-line"></i>

@@ -135,6 +135,43 @@ class AdminController extends Controller
         ]);
     }
 
+    public function attendances(Request $request)
+    {
+        try {
+            $query = Attendance::with(['user', 'zone', 'shift']);
+
+            if ($request->filled('date_from')) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+            if ($request->filled('date_to')) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
+            $attendances = $this->applySort(
+                $this->applySearch($query, $request, ['user.name', 'zone.name', 'shift.code']),
+                $request,
+                ['created_at', 'check_in_at', 'check_out_at', 'sync_status']
+            )->paginate($this->perPage($request));
+
+            $zones = Zone::where('status', 'active')->orderBy('name')->get(['id', 'name']);
+        } catch (\Exception $e) {
+            report($e);
+            $attendances = collect();
+            $zones = collect();
+        }
+
+        return Inertia::render('parkirgo/Attendances', [
+            'attendances' => $attendances,
+            'zones' => $zones,
+            'filters' => [
+                'date_from' => $request->date_from,
+                'date_to' => $request->date_to,
+            ],
+            'sortField' => $request->sort_field ?? 'created_at',
+            'sortDir' => $request->sort_dir ?? 'desc',
+        ]);
+    }
+
     public function reports(Request $request)
     {
         $dateFrom = $request->input('date_from', now()->startOfMonth()->toDateString());

@@ -58,7 +58,7 @@ export default {
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
                                 <Link href="/" class="d-inline-block auth-logo">
-                                    <span class="auth-logo-text text-white">ParkirGo</span>
+                                    <img src="/images/logo_parkirgo.png" alt="ParkirGo" height="36" />
                                 </Link>
                             </div>
                             <p class="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p>

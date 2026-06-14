@@ -8,7 +8,6 @@ export default {
   components: { Layout, PageHeader, DataTable },
   props: {
     sessions: { type: Object, default: () => ({ data: [] }) },
-    attendances: { type: Array, default: () => [] },
     sortField: { type: String, default: "created_at" },
     sortDir: { type: String, default: "desc" },
   },
@@ -18,8 +17,6 @@ export default {
       perPageVal: 15,
       tableSortField: this.sortField,
       tableSortDir: this.sortDir,
-      searchQuery: "",
-      perPageVal: 15,
     };
   },
   computed: {
@@ -43,8 +40,7 @@ export default {
       return value ? new Date(value).toLocaleString("id-ID") : "-";
     },
     onSort(field, dir) {
-      this.tableSortField = field;
-      this.tableSortDir = dir;
+      this.tableSortField = field; this.tableSortDir = dir;
       router.get("/parkirgo/operations", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
     },
     onSearch(q) {
@@ -67,7 +63,7 @@ export default {
     <PageHeader title="Operasional Lapangan" pageTitle="ParkirGo" />
 
     <BRow>
-      <BCol xl="8">
+      <BCol xl="12">
         <BCard no-body class="border-0 shadow-sm">
           <BCardHeader class="d-flex align-items-center">
             <i class="ri-parking-box-line me-2 fs-18 text-primary"></i>
@@ -75,16 +71,8 @@ export default {
             <span class="badge bg-success-subtle text-success">Flat bayar masuk · Progresif bayar keluar</span>
           </BCardHeader>
           <BCardBody>
-            <DataTable
-              :columns="columns"
-              :data="sessions"
-              :sort-field="tableSortField"
-              :sort-dir="tableSortDir"
-              @sort="onSort"
-              @search="onSearch"
-              @page-change="onPage"
-              @per-page-change="onPerPage"
-            >
+            <DataTable :columns="columns" :data="sessions" :sort-field="tableSortField" :sort-dir="tableSortDir"
+              @sort="onSort" @search="onSearch" @page-change="onPage" @per-page-change="onPerPage">
               <template #cell-zone_name="{ row }">{{ row.zone?.name }}</template>
               <template #cell-jukir_name="{ row }">{{ row.jukir?.name }}</template>
               <template #cell-entry_at="{ row }">{{ date(row.entry_at) }}</template>
@@ -98,31 +86,6 @@ export default {
           </BCardBody>
         </BCard>
       </BCol>
-      <BCol xl="4">
-        <BCard no-body class="border-0 shadow-sm">
-          <BCardHeader>
-            <i class="ri-user-check-line me-2 fs-18 text-info"></i>
-            <BCardTitle class="mb-0">Absensi & Sync</BCardTitle>
-          </BCardHeader>
-          <BCardBody>
-            <div v-for="attendance in attendances" :key="attendance.id" class="timeline-item border-start border-2 ps-3 pb-4">
-              <div class="d-flex justify-content-between">
-                <h6 class="mb-1">{{ attendance.user?.name }}</h6>
-                <span class="badge" :class="`bg-${badge(attendance.sync_status)}-subtle text-${badge(attendance.sync_status)}`">{{ attendance.sync_status }}</span>
-              </div>
-              <p class="text-muted mb-1">{{ attendance.zone?.name }}</p>
-              <small>Check-in: {{ date(attendance.check_in_at) }}</small><br />
-              <small>Check-out: {{ date(attendance.check_out_at) }}</small>
-            </div>
-            <BAlert v-if="attendances.length === 0" variant="info" show class="mb-0">Belum ada data absensi.</BAlert>
-          </BCardBody>
-        </BCard>
-      </BCol>
     </BRow>
   </Layout>
 </template>
-
-<style scoped>
-.timeline-item { position: relative; }
-.timeline-item::before { content: ""; position: absolute; left: -7px; top: 2px; width: 12px; height: 12px; border-radius: 999px; background: #0ab39c; box-shadow: 0 0 0 4px rgba(10,179,156,.12); }
-</style>

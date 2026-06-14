@@ -27,6 +27,7 @@ Route::get('/test-koneksi', function() {
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('parkirgo.dashboard');
     Route::get('/parkirgo/operations', [AdminController::class, 'operations'])->name('parkirgo.operations');
+    Route::get('/parkirgo/attendances', [AdminController::class, 'attendances'])->name('parkirgo.attendances');
     Route::get('/parkirgo/finance', [AdminController::class, 'finance'])->name('parkirgo.finance');
     Route::get('/parkirgo/audit', [AdminController::class, 'audit'])->name('parkirgo.audit');
     Route::get('/parkirgo/reports', [AdminController::class, 'reports'])->name('parkirgo.reports');

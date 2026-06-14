@@ -14,6 +14,9 @@ class Zone extends Model
         'name',
         'city',
         'polygon',
+        'center_lat',
+        'center_lng',
+        'radius_meters',
         'qris_payload',
         'qris_image_path',
         'status',
@@ -21,6 +24,8 @@ class Zone extends Model
 
     protected $casts = [
         'polygon' => 'array',
+        'center_lat' => 'float',
+        'center_lng' => 'float',
     ];
 
     public function tariffs()

@@ -219,6 +219,12 @@ export default {
           </Link>
         </li>
         <li class="nav-item">
+          <Link href="/parkirgo/attendances" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/attendances') }">
+            <i class="ri-user-check-line"></i>
+            <span>Absensi</span>
+          </Link>
+        </li>
+        <li class="nav-item">
           <Link href="/parkirgo/finance" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/finance') }">
             <i class="ri-bank-card-line"></i>
             <span>Finance</span>

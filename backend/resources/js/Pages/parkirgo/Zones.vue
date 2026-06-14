@@ -20,10 +20,9 @@ export default {
       showTariffModal: false,
       editingZone: null,
       editingTariff: null,
-      zoneForm: { code: "", name: "", city: "", capacities: [], qris_payload: "", status: "active" },
+      qrisPreviewUrl: null,
+      zoneForm: { code: "", name: "", city: "", capacities: [], center_lat: null, center_lng: null, radius_meters: 150, qris_payload: "", qris_image: null, status: "active" },
       tariffForm: { zone_id: null, vehicle_type_id: null, pricing_type: "flat", payment_timing: "entry", base_minutes: 60, base_rate: 0, increment_minutes: 60, increment_rate: 0, daily_max_rate: 0, grace_period_minutes: 15, rounding_minutes: 0 },
-      searchQuery: "",
-      perPageVal: 15,
       tableSortField: this.sortField,
       tableSortDir: this.sortDir,
       searchQuery: "",
@@ -41,12 +40,8 @@ export default {
     },
     zoneVehicleTypes() {
       if (!this.tariffForm.zone_id) return [];
-      const zone = this.zones.data?.find(z => z.id === this.tariffForm.zone_id)
-        || this.zones.find(z => z.id === this.tariffForm.zone_id);
-      if (!zone) return [];
-      return this.tariffForm.zone_id
-        ? this.vehicleTypes.filter(vt => (zone.vehicle_types || []).some(zvt => zvt.id === vt.id && (zvt.pivot?.capacity || 0) > 0))
-        : [];
+      const zone = this.zones.data?.find(z => z.id === this.tariffForm.zone_id);
+      return zone ? this.vehicleTypes.filter(vt => (zone.vehicle_types || []).some(zvt => zvt.id === vt.id && (zvt.pivot?.capacity || 0) > 0)) : [];
     },
     columns() {
       return [
@@ -55,18 +50,6 @@ export default {
         { key: "city", label: "Kota" },
         { key: "jukirs_count", label: "Jukir", width: "70px" },
         { key: "status", label: "Status", width: "100px" },
-        { key: "actions", label: "Aksi", sortable: false, width: "100px" },
-      ];
-    },
-    tariffColumns() {
-      return [
-        { key: "zone_name", label: "Zona" },
-        { key: "vehicle", label: "Kendaraan" },
-        { key: "pricing_type", label: "Tipe Tarif", width: "110px" },
-        { key: "payment_timing", label: "Waktu Bayar", width: "110px" },
-        { key: "base_rate", label: "Tarif Dasar", width: "150px" },
-        { key: "increment", label: "Tambahan", width: "150px" },
-        { key: "daily_max_rate", label: "Maks Harian", width: "120px" },
         { key: "actions", label: "Aksi", sortable: false, width: "100px" },
       ];
     },
@@ -81,14 +64,22 @@ export default {
     openZone(z) {
       if (z) {
         this.editingZone = z;
-        this.zoneForm = { code: z.code, name: z.name, city: z.city || "", capacities: [], qris_payload: z.qris_payload || "", status: z.status };
+        this.zoneForm = { code: z.code, name: z.name, city: z.city || "", capacities: [], center_lat: z.center_lat, center_lng: z.center_lng, radius_meters: z.radius_meters ?? 150, qris_payload: z.qris_payload || "", qris_image: null, status: z.status };
+        this.qrisPreviewUrl = z.qris_image_path ? "/storage/" + z.qris_image_path : null;
       } else {
         this.editingZone = null;
-        this.zoneForm = { code: "", name: "", city: "", capacities: [], qris_payload: "", status: "active" };
+        this.zoneForm = { code: "", name: "", city: "", capacities: [], center_lat: null, center_lng: null, radius_meters: 150, qris_payload: "", qris_image: null, status: "active" };
+        this.qrisPreviewUrl = null;
       }
       this.initCapacities();
       this.selectedVehicleTypeId = null;
       this.showZoneModal = true;
+    },
+    onQrisFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      this.zoneForm.qris_image = file;
+      this.qrisPreviewUrl = URL.createObjectURL(file);
     },
     addCapacity() {
       if (!this.selectedVehicleTypeId) return;
@@ -103,37 +94,54 @@ export default {
         this.$page.props.flash = { error: "Kode dan Nama zona harus diisi." };
         return;
       }
-      const payload = { ...this.zoneForm, capacities: this.zoneForm.capacities.filter(c => c.capacity > 0) };
+      const formData = new FormData();
+      formData.append("code", this.zoneForm.code);
+      formData.append("name", this.zoneForm.name);
+      formData.append("city", this.zoneForm.city || "");
+      formData.append("status", this.zoneForm.status);
+      formData.append("qris_payload", this.zoneForm.qris_payload || "");
+      if (this.zoneForm.center_lat) formData.append("center_lat", this.zoneForm.center_lat);
+      if (this.zoneForm.center_lng) formData.append("center_lng", this.zoneForm.center_lng);
+      if (this.zoneForm.radius_meters) formData.append("radius_meters", String(this.zoneForm.radius_meters));
+      if (this.zoneForm.qris_image) formData.append("qris_image", this.zoneForm.qris_image);
+      this.zoneForm.capacities.filter(c => c.capacity > 0).forEach((c, i) => {
+        formData.append(`capacities[${i}][vehicle_type_id]`, c.vehicle_type_id);
+        formData.append(`capacities[${i}][capacity]`, c.capacity);
+      });
+
       if (this.editingZone) {
-        router.post(route("parkirgo.zones.update", this.editingZone.id), payload, { preserveScroll: true, onSuccess: () => this.showZoneModal = false });
+        formData.append("_method", "PUT");
+        router.post(route("parkirgo.zones.update", this.editingZone.id), formData, {
+          preserveScroll: true,
+          onSuccess: () => { this.showZoneModal = false; this.qrisPreviewUrl = null; },
+          headers: { "Content-Type": "multipart/form-data" },
+        });
       } else {
-        router.post(route("parkirgo.zones.store"), payload, { preserveScroll: true, onSuccess: () => this.showZoneModal = false });
+        router.post(route("parkirgo.zones.store"), formData, {
+          preserveScroll: true,
+          onSuccess: () => { this.showZoneModal = false; this.qrisPreviewUrl = null; },
+          headers: { "Content-Type": "multipart/form-data" },
+        });
       }
     },
     deleteZone(z) {
       Swal.fire({
         title: "Hapus Zona?",
-        text: `Yakin ingin menghapus zona ${z.name}? Data terkait akan ikut terhapus.`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#f06548",
-        confirmButtonText: "Ya, Hapus",
-        cancelButtonText: "Batal",
+        text: `Yakin ingin menghapus zona ${z.name}?`,
+        icon: "warning", showCancelButton: true, confirmButtonColor: "#f06548",
+        confirmButtonText: "Ya, Hapus", cancelButtonText: "Batal",
       }).then((r) => { if (r.isConfirmed) router.delete(route("parkirgo.zones.destroy", z.id), { preserveScroll: true }); });
     },
     capForZone(zone, vtId) {
       const vt = (zone.vehicle_types || []).find(v => v.id === vtId);
       return vt ? vt.pivot.capacity : 0;
     },
-    zoneHasVt(zone, vtId) {
-      return this.capForZone(zone, vtId) > 0;
-    },
     openTariff(t) {
       this.editingTariff = t;
       if (t) {
         this.tariffForm = { zone_id: t.zone_id, vehicle_type_id: t.vehicle_type_id, pricing_type: t.pricing_type, payment_timing: t.payment_timing, base_minutes: t.base_minutes, base_rate: t.base_rate, increment_minutes: t.increment_minutes, increment_rate: t.increment_rate, daily_max_rate: t.daily_max_rate, grace_period_minutes: t.grace_period_minutes, rounding_minutes: t.rounding_minutes };
       } else {
-        const firstZone = this.zones.data?.[0] || this.zones[0];
+        const firstZone = this.zones.data?.[0];
         this.tariffForm = { zone_id: firstZone?.id || null, vehicle_type_id: null, pricing_type: "flat", payment_timing: "entry", base_minutes: 60, base_rate: 0, increment_minutes: 60, increment_rate: 0, daily_max_rate: 0, grace_period_minutes: 15, rounding_minutes: 0 };
       }
       this.showTariffModal = true;
@@ -148,13 +156,9 @@ export default {
     },
     deleteTariff(t) {
       Swal.fire({
-        title: "Hapus Tarif?",
-        text: "Tarif yang dihapus tidak bisa dikembalikan.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#f06548",
-        confirmButtonText: "Ya, Hapus",
-        cancelButtonText: "Batal",
+        title: "Hapus Tarif?", text: "Tarif yang dihapus tidak bisa dikembalikan.",
+        icon: "warning", showCancelButton: true, confirmButtonColor: "#f06548",
+        confirmButtonText: "Ya, Hapus", cancelButtonText: "Batal",
       }).then((r) => { if (r.isConfirmed) router.delete(route("parkirgo.tariffs.destroy", t.id), { preserveScroll: true }); });
     },
     vtName(id) {
@@ -164,9 +168,9 @@ export default {
     typeLabel(t) { return t === "flat" ? "Flat" : "Progresif"; },
     timingLabel(t) { return t === "entry" ? "Bayar Masuk" : "Bayar Keluar"; },
     formatRp(v) { return "Rp " + Number(v).toLocaleString("id-ID"); },
+    openMap() { window.open(`https://www.google.com/maps/@${this.zoneForm.center_lat || 0},${this.zoneForm.center_lng || 0},18z`, "_blank"); },
     onSort(field, dir) {
-      this.tableSortField = field;
-      this.tableSortDir = dir;
+      this.tableSortField = field; this.tableSortDir = dir;
       router.get("/parkirgo/zones", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
     },
     onSearch(q) {
@@ -196,20 +200,10 @@ export default {
         </BButton>
       </BCardHeader>
       <BCardBody>
-        <DataTable
-          :columns="columns"
-          :data="zones"
-          :sort-field="tableSortField"
-          :sort-dir="tableSortDir"
-          @sort="onSort"
-          @search="onSearch"
-          @page-change="onPage"
-          @per-page-change="onPerPage"
-        >
+        <DataTable :columns="columns" :data="zones" :sort-field="tableSortField" :sort-dir="tableSortDir"
+          @sort="onSort" @search="onSearch" @page-change="onPage" @per-page-change="onPerPage">
           <template #cell-city="{ row }">{{ row.city || "-" }}</template>
-          <template #cell-status="{ row }">
-            <span class="badge bg-success-subtle text-success">{{ row.status }}</span>
-          </template>
+          <template #cell-status="{ row }"><span class="badge bg-success-subtle text-success">{{ row.status }}</span></template>
           <template #cell-actions="{ row }">
             <div class="d-flex gap-1">
               <BButton size="sm" variant="outline-secondary" @click="openZone(row)"><i class="ri-pencil-line"></i></BButton>
@@ -223,24 +217,13 @@ export default {
     <BCard no-body class="border-0 shadow-sm mb-4">
       <BCardHeader class="d-flex align-items-center justify-content-between">
         <BCardTitle class="mb-0">Matriks Tarif</BCardTitle>
-        <BButton variant="outline-primary" @click="openTariff(null)">
-          <i class="ri-add-line me-1"></i>Tambah Tarif
-        </BButton>
+        <BButton variant="outline-primary" @click="openTariff(null)"><i class="ri-add-line me-1"></i>Tambah Tarif</BButton>
       </BCardHeader>
       <BCardBody>
         <div class="table-responsive">
           <table class="table table-hover">
             <thead class="table-light">
-              <tr>
-                <th>Zona</th>
-                <th>Kendaraan</th>
-                <th>Tipe Tarif</th>
-                <th>Waktu Bayar</th>
-                <th>Tarif Dasar</th>
-                <th>Tambahan</th>
-                <th>Maks Harian</th>
-                <th>Aksi</th>
-              </tr>
+              <tr><th>Zona</th><th>Kendaraan</th><th>Tipe Tarif</th><th>Waktu Bayar</th><th>Tarif Dasar</th><th>Tambahan</th><th>Maks Harian</th><th>Aksi</th></tr>
             </thead>
             <tbody>
               <tr v-for="t in tariffs" :key="t.id">
@@ -263,10 +246,12 @@ export default {
       </BCardBody>
     </BCard>
 
-    <BModal v-model="showZoneModal" :title="editingZone ? 'Edit Zona' : 'Tambah Zona'" hide-footer>
-      <div class="mb-2"><label class="form-label">Kode Zona</label><input v-model="zoneForm.code" class="form-control" maxlength="3" /></div>
-      <div class="mb-2"><label class="form-label">Nama Zona</label><input v-model="zoneForm.name" class="form-control" /></div>
-      <div class="mb-2"><label class="form-label">Kota</label><input v-model="zoneForm.city" class="form-control" /></div>
+    <BModal v-model="showZoneModal" :title="editingZone ? 'Edit Zona' : 'Tambah Zona'" hide-footer size="lg">
+      <div class="row mb-2">
+        <div class="col-4"><label class="form-label">Kode Zona</label><input v-model="zoneForm.code" class="form-control" maxlength="3" /></div>
+        <div class="col-4"><label class="form-label">Nama Zona</label><input v-model="zoneForm.name" class="form-control" /></div>
+        <div class="col-4"><label class="form-label">Kota</label><input v-model="zoneForm.city" class="form-control" /></div>
+      </div>
 
       <div class="mb-2">
         <label class="form-label">Kapasitas Kendaraan</label>
@@ -280,14 +265,41 @@ export default {
             <option value="">-- Pilih Kendaraan --</option>
             <option v-for="vt in availableVehicleTypes" :key="vt.id" :value="vt.id">{{ vt.name }}</option>
           </select>
-          <BButton size="sm" variant="outline-primary" @click="addCapacity">
-            <i class="ri-add-line"></i>Tambah
-          </BButton>
+          <BButton size="sm" variant="outline-primary" @click="addCapacity"><i class="ri-add-line"></i>Tambah</BButton>
         </div>
-        <small v-if="!availableVehicleTypes.length && zoneForm.capacities.length" class="text-muted">Semua kendaraan sudah ditambahkan.</small>
       </div>
 
-      <div class="mb-2"><label class="form-label">QRIS Payload</label><textarea v-model="zoneForm.qris_payload" class="form-control" rows="2"></textarea></div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Kozdinat & Radius Absensi</label>
+        <div class="row g-2">
+          <div class="col-4"><label class="form-label small">Latitude</label><input v-model.number="zoneForm.center_lat" type="number" step="any" class="form-control" placeholder="-6.175110" /></div>
+          <div class="col-4"><label class="form-label small">Longitude</label><input v-model.number="zoneForm.center_lng" type="number" step="any" class="form-control" placeholder="106.827153" /></div>
+          <div class="col-3"><label class="form-label small">Radius (meter)</label><input v-model.number="zoneForm.radius_meters" type="number" min="50" max="5000" class="form-control" /></div>
+          <div class="col-1 d-flex align-items-end">
+            <BButton size="sm" variant="outline-info" title="Buka Google Maps" @click="openMap">
+              <i class="ri-map-pin-2-line"></i>
+            </BButton>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label fw-semibold">QRIS</label>
+        <div class="row g-2 align-items-end">
+          <div class="col-6">
+            <label class="form-label small">Upload Gambar QRIS</label>
+            <input type="file" accept="image/*" class="form-control" @change="onQrisFile" />
+          </div>
+          <div class="col-6">
+            <label class="form-label small">QRIS Payload (auto-detected)</label>
+            <input v-model="zoneForm.qris_payload" class="form-control" placeholder="Hasil deteksi otomatis..." />
+          </div>
+        </div>
+        <div v-if="qrisPreviewUrl" class="mt-2">
+          <img :src="qrisPreviewUrl" class="rounded border" style="max-height:100px" alt="QRIS preview" />
+        </div>
+      </div>
+
       <div class="mb-3"><label class="form-label">Status</label><select v-model="zoneForm.status" class="form-select"><option value="active">Aktif</option><option value="inactive">Nonaktif</option></select></div>
       <div class="d-flex justify-content-end gap-2">
         <BButton variant="light" @click="showZoneModal=false">Batal</BButton>
@@ -308,13 +320,15 @@ export default {
         <div class="col-6"><label class="form-label">Waktu Bayar</label><select v-model="tariffForm.payment_timing" class="form-select"><option value="entry">Masuk</option><option value="exit">Keluar</option></select></div>
       </div>
       <div class="row mb-2">
-        <div class="col-4"><label class="form-label">Tarif Dasar</label><input v-model.number="tariffForm.base_rate" type="number" class="form-control" /></div>
-        <div class="col-4"><label class="form-label">Menit Dasar</label><input v-model.number="tariffForm.base_minutes" type="number" class="form-control" /></div>
-        <div class="col-4"><label class="form-label">Maks Harian</label><input v-model.number="tariffForm.daily_max_rate" type="number" class="form-control" /></div>
+        <div class="col-6"><label class="form-label">Tarif Dasar</label><input v-model.number="tariffForm.base_rate" type="number" class="form-control" /></div>
+        <div class="col-6"><label class="form-label">Menit Dasar</label><input v-model.number="tariffForm.base_minutes" type="number" class="form-control" /></div>
       </div>
-      <div class="row mb-2">
+      <div v-if="tariffForm.pricing_type === 'progressive'" class="row mb-2">
         <div class="col-6"><label class="form-label">Tarif Tambahan</label><input v-model.number="tariffForm.increment_rate" type="number" class="form-control" /></div>
         <div class="col-6"><label class="form-label">Menit Tambahan</label><input v-model.number="tariffForm.increment_minutes" type="number" class="form-control" /></div>
+      </div>
+      <div v-if="tariffForm.pricing_type === 'progressive'" class="row mb-2">
+        <div class="col-4"><label class="form-label">Maks Harian</label><input v-model.number="tariffForm.daily_max_rate" type="number" class="form-control" /></div>
       </div>
       <div class="mb-3"><label class="form-label">Masa Tenggang (menit)</label><input v-model.number="tariffForm.grace_period_minutes" type="number" class="form-control" /></div>
       <div class="d-flex justify-content-end gap-2">
