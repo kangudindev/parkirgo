@@ -33,37 +33,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $zone = Zone::updateOrCreate(
-            ['code' => 'ZONA-MONAS'],
-            [
-                'name' => 'Zona Monas Timur',
-                'city' => 'Jakarta Pusat',
-                'qris_payload' => '00020101021126680016ID.CO.PARKIRGO0112ZONA-MONAS5204599953033605802ID5911ParkirGo6007Jakarta6304DEMO',
-                'status' => 'active',
-            ]
-        );
-
-        $zone->vehicleTypes()->sync([
-            $motor->id => ['capacity' => 120],
-            $mobil->id => ['capacity' => 48],
-        ]);
-
-        $jukir = User::updateOrCreate(
-            ['email' => 'jukir@parkirgo.test'],
-            [
-                'name' => 'Budi Jukir',
-                'password' => Hash::make('password'),
-                'role' => 'jukir',
-                'nik' => '3173000000000001',
-                'phone' => '081234567890',
-                'status' => 'active',
-                'assigned_zone_id' => $zone->id,
-                'qr_auth_token' => 'QR-' . strtoupper(bin2hex(random_bytes(12))),
-                'email_verified_at' => now(),
-                'last_seen_at' => now()->subMinutes(8),
-            ]
-        );
-
+        // Define Vehicle Types First
         $motor = VehicleType::updateOrCreate(
             ['code' => 'motor'],
             [
@@ -84,7 +54,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        VehicleType::updateOrCreate(
+        $truk = VehicleType::updateOrCreate(
             ['code' => 'truk'],
             [
                 'name' => 'Truk',
@@ -94,6 +64,43 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Create Main Zone
+        $zone = Zone::updateOrCreate(
+            ['code' => 'ZONA-MONAS'],
+            [
+                'name' => 'Zona Monas Timur',
+                'city' => 'Jakarta Pusat',
+                'center_lat' => -6.175110,
+                'center_lng' => 106.827153,
+                'radius_meters' => 150,
+                'qris_payload' => '00020101021126680016ID.CO.PARKIRGO0112ZONA-MONAS5204599953033605802ID5911ParkirGo6007Jakarta6304DEMO',
+                'status' => 'active',
+            ]
+        );
+
+        $zone->vehicleTypes()->sync([
+            $motor->id => ['capacity' => 120],
+            $mobil->id => ['capacity' => 48],
+            $truk->id => ['capacity' => 10],
+        ]);
+
+        $jukir = User::updateOrCreate(
+            ['email' => 'jukir@parkirgo.test'],
+            [
+                'name' => 'Budi Jukir',
+                'password' => Hash::make('password'),
+                'role' => 'jukir',
+                'nik' => '3173000000000001',
+                'phone' => '081234567890',
+                'status' => 'active',
+                'assigned_zone_id' => $zone->id,
+                'qr_auth_token' => 'QR-' . strtoupper(bin2hex(random_bytes(12))),
+                'email_verified_at' => now(),
+                'last_seen_at' => now()->subMinutes(8),
+            ]
+        );
+
+        // Tariffs
         $flatMotor = ZoneTariff::updateOrCreate(
             ['zone_id' => $zone->id, 'vehicle_type_id' => $motor->id, 'pricing_type' => ZoneTariff::TYPE_FLAT],
             [
@@ -117,106 +124,63 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $shift = Shift::updateOrCreate(
-            ['code' => 'SHIFT-MONAS-PAGI'],
+        ZoneTariff::updateOrCreate(
+            ['zone_id' => $zone->id, 'vehicle_type_id' => $truk->id, 'pricing_type' => ZoneTariff::TYPE_FLAT],
             [
-                'zone_id' => $zone->id,
-                'user_id' => $jukir->id,
-                'shift_date' => Carbon::today(),
-                'start_time' => '07:00:00',
-                'end_time' => '15:00:00',
+                'payment_timing' => ZoneTariff::PAYMENT_ENTRY,
+                'base_minutes' => 60,
+                'base_rate' => 10000,
                 'status' => 'active',
             ]
         );
 
-        ParkingSession::updateOrCreate(
-            ['ticket_number' => 'TMR-' . now()->format('ymd') . '-0001'],
-            [
-                'zone_id' => $zone->id,
-                'tariff_id' => $flatMotor->id,
-                'jukir_id' => $jukir->id,
-                'plate_number' => 'B 1234 PGO',
-                'vehicle_type_id' => $motor->id,
-                'vehicle_type' => $motor->code,
-                'entry_at' => now()->subMinutes(32),
-                'estimated_amount' => 3000,
-                'final_amount' => 3000,
-                'status' => 'active',
-                'payment_status' => 'paid',
-            ]
-        );
-
-        $session = ParkingSession::updateOrCreate(
-            ['ticket_number' => 'TMR-' . now()->format('ymd') . '-0002'],
-            [
-                'zone_id' => $zone->id,
-                'tariff_id' => $progressiveCar->id,
-                'jukir_id' => $jukir->id,
-                'plate_number' => 'B 9876 GO',
-                'vehicle_type_id' => $mobil->id,
-                'vehicle_type' => $mobil->code,
-                'entry_at' => now()->subHours(2),
-                'estimated_amount' => 9000,
-                'status' => 'active',
-                'payment_status' => 'unpaid',
-            ]
-        );
-
-        Transaction::updateOrCreate(
-            ['transaction_number' => 'TRX-' . now()->format('Ymd') . '-0001'],
-            [
-                'parking_session_id' => $session->id,
-                'zone_id' => $zone->id,
-                'jukir_id' => $jukir->id,
-                'payment_method' => 'qris',
-                'amount' => 9000,
-                'status' => 'recorded',
-                'qris_payload' => $zone->qris_payload,
-            ]
-        );
-
-        Settlement::updateOrCreate(
-            ['settlement_number' => 'SET-' . now()->format('Ymd') . '-0001'],
-            [
-                'shift_id' => $shift->id,
-                'zone_id' => $zone->id,
-                'jukir_id' => $jukir->id,
-                'settlement_date' => Carbon::today(),
-                'cash_amount' => 3000,
-                'qris_amount' => 9000,
-                'total_amount' => 12000,
-                'status' => 'submitted',
-            ]
-        );
-
-        // Add 5 more zones across Jakarta
-        $zoneCapacities = [
-            ['code' => 'ZONA-BLOK-M',       'motor' => 200, 'mobil' => 100],
-            ['code' => 'ZONA-KOTA-TUA',     'motor' => 300, 'mobil' => 20],
-            ['code' => 'ZONA-KELAPA-GADING','motor' => 150, 'mobil' => 80],
-            ['code' => 'ZONA-PASAR-BARU',   'motor' => 100, 'mobil' => 30],
-            ['code' => 'ZONA-TEBET',        'motor' => 180, 'mobil' => 40],
-        ];
-
+        // Additional Zones with Coordinates
         $zonesData = [
-            ['code' => 'ZONA-BLOK-M',       'name' => 'Blok M Square',           'city' => 'Jakarta Selatan', 'status' => 'active'],
-            ['code' => 'ZONA-KOTA-TUA',     'name' => 'Kota Tua Museum Fatahillah', 'city' => 'Jakarta Barat', 'status' => 'active'],
-            ['code' => 'ZONA-KELAPA-GADING','name' => 'Boulevard Kelapa Gading', 'city' => 'Jakarta Utara', 'status' => 'active'],
-            ['code' => 'ZONA-PASAR-BARU',   'name' => 'Pasar Baru Area',         'city' => 'Jakarta Pusat', 'status' => 'active'],
-            ['code' => 'ZONA-TEBET',        'name' => 'Tebet Eco Park West',     'city' => 'Jakarta Selatan', 'status' => 'active'],
+            ['code' => 'ZONA-BLOK-M',       'name' => 'Blok M Square',           'city' => 'Jakarta Selatan', 'lat' => -6.244187, 'lng' => 106.798783, 'rad' => 200],
+            ['code' => 'ZONA-KOTA-TUA',     'name' => 'Kota Tua Fatahillah',     'city' => 'Jakarta Barat',   'lat' => -6.135769, 'lng' => 106.814038, 'rad' => 200],
+            ['code' => 'ZONA-KELAPA-GADING','name' => 'Boulevard Gading',        'city' => 'Jakarta Utara',   'lat' => -6.159539, 'lng' => 106.908660, 'rad' => 150],
+            ['code' => 'ZONA-PASAR-BARU',   'name' => 'Pasar Baru Area',         'city' => 'Jakarta Pusat',   'lat' => -6.160468, 'lng' => 106.832977, 'rad' => 150],
+            ['code' => 'ZONA-TEBET',        'name' => 'Tebet Eco Park',          'city' => 'Jakarta Selatan', 'lat' => -6.226809, 'lng' => 106.855305, 'rad' => 150],
         ];
 
         $createdZones = [$zone];
         foreach ($zonesData as $zData) {
-            $createdZone = Zone::updateOrCreate(['code' => $zData['code']], $zData);
-            $capEntry = collect($zoneCapacities)->firstWhere('code', $zData['code']);
-            if ($capEntry) {
-                $createdZone->vehicleTypes()->sync([
-                    $motor->id => ['capacity' => $capEntry['motor']],
-                    $mobil->id => ['capacity' => $capEntry['mobil']],
-                ]);
-            }
-            $createdZones[] = $createdZone;
+            $newZone = Zone::updateOrCreate(['code' => $zData['code']], [
+                'name' => $zData['name'],
+                'city' => $zData['city'],
+                'center_lat' => $zData['lat'],
+                'center_lng' => $zData['lng'],
+                'radius_meters' => $zData['rad'],
+                'status' => 'active',
+            ]);
+            
+            $newZone->vehicleTypes()->sync([
+                $motor->id => ['capacity' => rand(100, 300)],
+                $mobil->id => ['capacity' => rand(20, 100)],
+                $truk->id => ['capacity' => rand(5, 20)],
+            ]);
+
+            // Add standard tariffs for each zone
+            ZoneTariff::updateOrCreate(
+                ['zone_id' => $newZone->id, 'vehicle_type_id' => $motor->id, 'pricing_type' => ZoneTariff::TYPE_FLAT],
+                ['payment_timing' => ZoneTariff::PAYMENT_ENTRY, 'base_rate' => 3000, 'status' => 'active']
+            );
+            ZoneTariff::updateOrCreate(
+                ['zone_id' => $newZone->id, 'vehicle_type_id' => $mobil->id, 'pricing_type' => ZoneTariff::TYPE_PROGRESSIVE],
+                ['payment_timing' => ZoneTariff::PAYMENT_EXIT, 'base_rate' => 5000, 'increment_minutes' => 60, 'increment_rate' => 4000, 'status' => 'active']
+            );
+
+            // Add Penalties for each zone
+            \App\Models\ZonePenalty::updateOrCreate(
+                ['zone_id' => $newZone->id, 'penalty_type' => 'card_lost', 'vehicle_type' => 'motor'],
+                ['amount' => 50000, 'status' => 'active']
+            );
+            \App\Models\ZonePenalty::updateOrCreate(
+                ['zone_id' => $newZone->id, 'penalty_type' => 'card_lost', 'vehicle_type' => 'mobil'],
+                ['amount' => 100000, 'status' => 'active']
+            );
+
+            $createdZones[] = $newZone;
         }
 
         // Add more jukirs
@@ -232,7 +196,7 @@ class DatabaseSeeder extends Seeder
                     'nik' => '3173' . str_pad($index + 2, 12, '0', STR_PAD_LEFT),
                     'phone' => '08' . str_pad(rand(1000000000, 9999999999), 10, '0', STR_PAD_LEFT),
                     'status' => 'active',
-                    'assigned_zone_id' => $createdZones[array_rand($createdZones)]->id,
+                    'assigned_zone_id' => $createdZones[$index % count($createdZones)]->id,
                     'qr_auth_token' => 'QR-' . strtoupper(bin2hex(random_bytes(12))),
                     'email_verified_at' => now(),
                     'last_seen_at' => now()->subMinutes(rand(1, 120)),
@@ -240,14 +204,13 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        // Create historical sessions, transactions, and settlements for the last 7 days
+        // Create historical data
         foreach ($createdZones as $z) {
             $jukirInZone = User::where('assigned_zone_id', $z->id)->first() ?? $jukir;
             
             for ($i = 7; $i >= 0; $i--) {
                 $date = Carbon::today()->subDays($i);
                 
-                // Create a shift for each day
                 $dailyShift = Shift::updateOrCreate(
                     ['code' => 'SHIFT-' . $z->code . '-' . $date->format('Ymd')],
                     [
@@ -260,24 +223,33 @@ class DatabaseSeeder extends Seeder
                     ]
                 );
 
+                // Create Attendance for each shift
+                \App\Models\Attendance::create([
+                    'shift_id' => $dailyShift->id,
+                    'zone_id' => $z->id,
+                    'user_id' => $jukirInZone->id,
+                    'check_in_at' => $date->copy()->setTime(6, 50 + rand(0, 15)),
+                    'check_out_at' => $i == 0 ? null : $date->copy()->setTime(15, 0 + rand(0, 20)),
+                    'check_in_latitude' => $z->center_lat + (rand(-100, 100) / 1000000),
+                    'check_in_longitude' => $z->center_lng + (rand(-100, 100) / 1000000),
+                    'sync_status' => 'synced',
+                ]);
+
                 $dailyCash = 0;
                 $dailyQris = 0;
 
-                // Create some sessions for each day
-                $sessionCount = rand(10, 30);
+                $sessionCount = rand(15, 40);
                 for ($j = 1; $j <= $sessionCount; $j++) {
-                    $vType = rand(0, 1) == 0 ? $motor : $mobil;
-                    $tariff = $vType->code == 'motor' ? $flatMotor : $progressiveCar;
-                    $entryTime = (clone $date)->setTime(rand(7, 14), rand(0, 59));
+                    $vType = rand(0, 10) > 2 ? (rand(0, 1) == 0 ? $motor : $mobil) : $truk;
+                    $tariff = ZoneTariff::where('zone_id', $z->id)->where('vehicle_type_id', $vType->id)->first() ?? $flatMotor;
                     
+                    $entryTime = $date->copy()->setTime(rand(7, 14), rand(0, 59));
                     $isCompleted = $i > 0 || rand(0, 1) == 1;
-                    $exitTime = $isCompleted ? (clone $entryTime)->addMinutes(rand(30, 240)) : null;
+                    $exitTime = $isCompleted ? $entryTime->copy()->addMinutes(rand(30, 300)) : null;
                     
-                    $amount = 3000; // default for motor
-                    if ($vType->code == 'mobil') {
-                        $durationInMinutes = $exitTime ? $exitTime->diffInMinutes($entryTime, false) : 60;
-                        if ($durationInMinutes < 0) $durationInMinutes = rand(30, 240);
-                        $hours = max(1, ceil($durationInMinutes / 60));
+                    $amount = $vType->code == 'motor' ? 3000 : 5000;
+                    if ($vType->code == 'mobil' && $exitTime) {
+                        $hours = max(1, ceil($exitTime->diffInMinutes($entryTime) / 60));
                         $amount = 5000 + (($hours - 1) * 4000);
                     }
 
@@ -307,16 +279,12 @@ class DatabaseSeeder extends Seeder
                             'payment_method' => $method,
                             'amount' => $amount,
                             'status' => 'recorded',
-                            'qris_payload' => $method == 'qris' ? $z->qris_payload : null,
                             'created_at' => $exitTime,
                         ]);
-
-                        if ($method == 'cash') $dailyCash += $amount;
-                        else $dailyQris += $amount;
+                        if ($method == 'cash') $dailyCash += $amount; else $dailyQris += $amount;
                     }
                 }
 
-                // Create settlement for past days
                 if ($i > 0) {
                     Settlement::create([
                         'settlement_number' => 'SET-' . $date->format('Ymd') . '-' . $z->id,
@@ -336,7 +304,7 @@ class DatabaseSeeder extends Seeder
         $admin->auditLogs()->create([
             'action' => 'seeded',
             'entity_type' => 'database',
-            'new_values' => ['message' => 'ParkirGo demo data initialized'],
+            'new_values' => ['message' => 'ParkirGo complete demo data initialized'],
         ]);
     }
 }

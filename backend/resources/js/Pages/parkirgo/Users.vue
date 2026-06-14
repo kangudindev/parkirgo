@@ -3,11 +3,16 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import DataTable from "@/Components/DataTable.vue";
 import JukirIdCard from "@/Components/JukirIdCard.vue";
+import { ref } from "vue";
 import { router } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 
 export default {
   components: { Layout, PageHeader, DataTable, JukirIdCard },
+  setup() {
+    const idCardRef = ref(null);
+    return { idCardRef };
+  },
   props: {
     users: { type: Object, default: () => ({ data: [] }) },
     zones: { type: Array, default: () => [] },
@@ -117,24 +122,10 @@ export default {
       this.cardUser = user;
       this.showIdCardModal = true;
     },
-    printIdCard() {
-      const printContents = document.getElementById("id-card-print-area").innerHTML;
-      const printWindow = window.open("", "_blank");
-      printWindow.document.write("<html><head><title>Print ID Card</title>");
-      const styles = Array.from(document.styleSheets)
-        .map(styleSheet => {
-          try { return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join(""); }
-          catch (e) { return ""; }
-        }).join("");
-      printWindow.document.write(`<style>${styles}</style>`);
-      printWindow.document.write("</head><body>");
-      printWindow.document.write(printContents);
-      printWindow.document.write("</body></html>");
-      printWindow.document.close();
-      printWindow.print();
-    },
-    copyToken(token) {
-      navigator.clipboard.writeText(token);
+    downloadIdCard() {
+      if (this.idCardRef) {
+        this.idCardRef.downloadCard();
+      }
     },
     onSort(field, dir) {
       this.tableSortField = field;
@@ -298,17 +289,15 @@ export default {
     <BModal v-model="showIdCardModal" title="Preview ID Card Juru Parkir" hide-footer centered size="xl">
       <div v-if="cardUser" class="text-center py-3">
         <div class="d-flex justify-content-center mb-4">
-          <div id="id-card-print-area">
-            <JukirIdCard :user="cardUser" />
-          </div>
+          <JukirIdCard ref="idCardRef" :user="cardUser" />
         </div>
         <div class="d-flex justify-content-center gap-3">
           <BButton variant="light" @click="showIdCardModal=false">Tutup</BButton>
-          <BButton variant="primary" @click="printIdCard">
-            <i class="ri-printer-line me-1"></i>Cetak ID Card
+          <BButton variant="primary" @click="downloadIdCard">
+            <i class="ri-download-2-line me-1"></i>Download ID Card (PNG)
           </BButton>
         </div>
-        <p class="text-muted small mt-3">Pastikan printer terhubung dan gunakan kertas ID Card standar (CR80) untuk hasil maksimal.</p>
+        <p class="text-muted small mt-3">ID Card dapat diunduh dalam format gambar berkualitas tinggi untuk dicetak.</p>
       </div>
     </BModal>
   </Layout>
