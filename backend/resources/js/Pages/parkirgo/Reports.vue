@@ -56,17 +56,29 @@ export default {
     pct(num) {
       return Number(num || 0).toFixed(1);
     },
+    printReport() {
+      window.print();
+    },
   },
 };
 </script>
 
 <template>
   <Layout>
-    <PageHeader title="Laporan Pendapatan" pageTitle="ParkirGo" />
+    <div class="print-area">
+      <PageHeader title="Laporan Pendapatan" pageTitle="ParkirGo" />
+
+      <div class="print-only mb-4">
+        <h4 class="mb-1 text-center">Laporan Pendapatan ParkirGo</h4>
+        <p class="text-center text-muted">Periode: {{ filters.date_from }} s/d {{ filters.date_to }}</p>
+      </div>
 
     <BCard no-body class="border-0 shadow-sm mb-4">
-      <BCardBody>
-        <DateRangeFilter :date-from="filters.date_from" :date-to="filters.date_to" @change="onDateRangeChange" />
+      <BCardBody class="d-flex justify-content-between align-items-center">
+        <DateRangeFilter :date-from="filters.date_from" :date-to="filters.date_to" @change="onDateRangeChange" class="flex-grow-1" />
+        <BButton variant="soft-secondary" @click="printReport" class="ms-3">
+          <i class="ri-printer-line me-1"></i>Cetak Laporan
+        </BButton>
       </BCardBody>
     </BCard>
 
@@ -288,3 +300,17 @@ export default {
     </div>
   </Layout>
 </template>
+
+<style scoped>
+@media print {
+  .nav-tabs, .btn, .card-header, .page-title-box, .app-menu, .navbar-header, footer, .footer {
+    display: none !important;
+  }
+  .main-content { margin-left: 0 !important; padding: 0 !important; }
+  .page-content { padding: 0 !important; }
+  .card { border: none !important; box-shadow: none !important; }
+  .print-only { display: block !important; }
+  .print-area { width: 100%; }
+}
+.print-only { display: none; }
+</style>

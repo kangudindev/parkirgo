@@ -150,15 +150,17 @@ export default {
                 <span class="badge bg-primary-subtle text-primary">{{ zone.code }}</span>
                 <span v-if="zone.city" class="ms-1 text-muted small">{{ zone.city }}</span>
               </div>
-              <span class="badge bg-success-subtle text-success">{{ zone.status }}</span>
+              <div class="text-end">
+                <span class="badge bg-success-subtle text-success d-block mb-1">{{ zone.status }}</span>
+                <small class="text-muted"><i class="ri-user-smile-line me-1"></i>Jukir: {{ zone.jukirs_count || 0 }}</small>
+              </div>
             </div>
 
             <div class="mb-3 border-bottom pb-3">
               <div class="text-muted small mb-1">Pendapatan</div>
-              <h3 class="fw-bold text-success mb-0">{{ money(zone.revenue_sum) }}</h3>
-              <div class="d-flex gap-3 mt-2 text-muted small">
-                <div><i class="ri-calendar-event-line me-1"></i>Shift: {{ zone.shifts_count || 0 }}</div>
-                <div><i class="ri-user-smile-line me-1"></i>Jukir: {{ zone.jukirs_count || 0 }}</div>
+              <h3 class="fw-bold text-success mb-1">{{ money(zone.revenue_sum) }}</h3>
+              <div class="text-danger small">
+                <i class="ri-error-warning-line me-1"></i>Denda: {{ money(zone.penalty_sum) }}
               </div>
             </div>
 

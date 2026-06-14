@@ -42,6 +42,7 @@ class AdminController extends Controller
                 ->withCount(['shifts' => fn ($q) => $q->whereBetween('shift_date', [Carbon::parse($dateFrom)->startOfDay(), Carbon::parse($dateTo)->endOfDay()])])
                 ->withCount(['parkingSessions as active_sessions_count' => fn ($q) => $q->where('status', 'active')])
                 ->withSum(['transactions as revenue_sum' => fn ($q) => $q->whereBetween('created_at', [$dateFrom, $dateTo])], 'amount')
+                ->withSum(['parkingSessions as penalty_sum' => fn ($q) => $q->whereBetween('exit_at', [$dateFrom, $dateTo])], 'penalty_fee')
                 ->latest()
                 ->get();
 
