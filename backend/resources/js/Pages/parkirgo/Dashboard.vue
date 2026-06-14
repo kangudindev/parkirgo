@@ -230,12 +230,6 @@ export default {
                 </div>
               </div>
             </div>
-                <div class="small fw-semibold mt-1" style="font-size: 11px;">{{ vt.active_count || 0 }}<span class="text-muted fw-normal">/{{ vt.pivot.capacity }}</span></div>
-                <div class="small" :class="(vt.pivot.capacity - vt.active_count) > 0 ? 'text-success' : 'text-danger'" style="font-size: 10px;">
-                  {{ Math.max(0, vt.pivot.capacity - vt.active_count) }} sisa
-                </div>
-              </div>
-            </div>
           </BCardBody>
         </BCard>
       </BCol>
