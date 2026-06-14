@@ -9,7 +9,4 @@ class SupervisorRepository {
   Future<List<Map<String, dynamic>>> getPendingQris() => _remote.getPendingQris();
   Future<void> verifyQris(int transactionId, String action, {String? note}) =>
       _remote.verifyQris(transactionId, action, note: note);
-  Future<List<Map<String, dynamic>>> getPendingSettlements() => _remote.getPendingSettlements();
-  Future<void> approveSettlement(int settlementId, String action, {String? note}) =>
-      _remote.approveSettlement(settlementId, action, note: note);
 }

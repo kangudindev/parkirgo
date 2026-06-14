@@ -126,7 +126,6 @@ class _HomeJukirPageState extends State<HomeJukirPage> {
               const SizedBox(height: 8),
               _menuItem(context, Icons.people, 'Monitoring Jukir', '/monitoring'),
               _menuItem(context, Icons.verified, 'Verifikasi QRIS', '/verify-qris'),
-              _menuItem(context, Icons.approval, 'Verifikasi Setoran', '/verify-settlement'),
               _menuItem(context, Icons.bar_chart, 'Laporan Zona', '/report'),
             ],
           ],

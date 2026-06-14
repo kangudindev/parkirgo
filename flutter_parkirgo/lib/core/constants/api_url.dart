@@ -3,7 +3,7 @@ class ApiUrl {
 
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'http://parkirgo.localhost/api',
+    defaultValue: 'https://parkirgo.eu.cc/api',
   );
 
   static const String v1 = '$baseUrl/v1';
@@ -45,6 +45,4 @@ class ApiUrl {
   static const String supervisorMonitoring = '$v1/supervisor/monitoring';
   static const String supervisorQrisPending = '$v1/supervisor/qris-pending';
   static const String supervisorVerifyQris = '$v1/supervisor/verify-qris';
-  static const String supervisorSettlementsPending = '$v1/supervisor/settlements-pending';
-  static const String supervisorApproveSettlement = '$v1/supervisor/approve-settlement';
 }

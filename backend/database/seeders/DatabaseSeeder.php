@@ -38,12 +38,15 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Zona Monas Timur',
                 'city' => 'Jakarta Pusat',
-                'capacity_motor' => 120,
-                'capacity_car' => 48,
                 'qris_payload' => '00020101021126680016ID.CO.PARKIRGO0112ZONA-MONAS5204599953033605802ID5911ParkirGo6007Jakarta6304DEMO',
                 'status' => 'active',
             ]
         );
+
+        $zone->vehicleTypes()->sync([
+            $motor->id => ['capacity' => 120],
+            $mobil->id => ['capacity' => 48],
+        ]);
 
         $jukir = User::updateOrCreate(
             ['email' => 'jukir@parkirgo.test'],
@@ -94,7 +97,6 @@ class DatabaseSeeder extends Seeder
         $flatMotor = ZoneTariff::updateOrCreate(
             ['zone_id' => $zone->id, 'vehicle_type_id' => $motor->id, 'pricing_type' => ZoneTariff::TYPE_FLAT],
             [
-                'vehicle_type' => $motor->code,
                 'payment_timing' => ZoneTariff::PAYMENT_ENTRY,
                 'base_minutes' => 60,
                 'base_rate' => 3000,
@@ -105,7 +107,6 @@ class DatabaseSeeder extends Seeder
         $progressiveCar = ZoneTariff::updateOrCreate(
             ['zone_id' => $zone->id, 'vehicle_type_id' => $mobil->id, 'pricing_type' => ZoneTariff::TYPE_PROGRESSIVE],
             [
-                'vehicle_type' => $mobil->code,
                 'payment_timing' => ZoneTariff::PAYMENT_EXIT,
                 'base_minutes' => 60,
                 'base_rate' => 5000,
@@ -189,52 +190,33 @@ class DatabaseSeeder extends Seeder
         );
 
         // Add 5 more zones across Jakarta
-        $zones = [
-            [
-                'code' => 'ZONA-BLOK-M',
-                'name' => 'Blok M Square',
-                'city' => 'Jakarta Selatan',
-                'capacity_motor' => 200,
-                'capacity_car' => 100,
-                'status' => 'active'
-            ],
-            [
-                'code' => 'ZONA-KOTA-TUA',
-                'name' => 'Kota Tua Museum Fatahillah',
-                'city' => 'Jakarta Barat',
-                'capacity_motor' => 300,
-                'capacity_car' => 20,
-                'status' => 'active'
-            ],
-            [
-                'code' => 'ZONA-KELAPA-GADING',
-                'name' => 'Boulevard Kelapa Gading',
-                'city' => 'Jakarta Utara',
-                'capacity_motor' => 150,
-                'capacity_car' => 80,
-                'status' => 'active'
-            ],
-            [
-                'code' => 'ZONA-PASAR-BARU',
-                'name' => 'Pasar Baru Area',
-                'city' => 'Jakarta Pusat',
-                'capacity_motor' => 100,
-                'capacity_car' => 30,
-                'status' => 'active'
-            ],
-            [
-                'code' => 'ZONA-TEBET',
-                'name' => 'Tebet Eco Park West',
-                'city' => 'Jakarta Selatan',
-                'capacity_motor' => 180,
-                'capacity_car' => 40,
-                'status' => 'active'
-            ]
+        $zoneCapacities = [
+            ['code' => 'ZONA-BLOK-M',       'motor' => 200, 'mobil' => 100],
+            ['code' => 'ZONA-KOTA-TUA',     'motor' => 300, 'mobil' => 20],
+            ['code' => 'ZONA-KELAPA-GADING','motor' => 150, 'mobil' => 80],
+            ['code' => 'ZONA-PASAR-BARU',   'motor' => 100, 'mobil' => 30],
+            ['code' => 'ZONA-TEBET',        'motor' => 180, 'mobil' => 40],
+        ];
+
+        $zonesData = [
+            ['code' => 'ZONA-BLOK-M',       'name' => 'Blok M Square',           'city' => 'Jakarta Selatan', 'status' => 'active'],
+            ['code' => 'ZONA-KOTA-TUA',     'name' => 'Kota Tua Museum Fatahillah', 'city' => 'Jakarta Barat', 'status' => 'active'],
+            ['code' => 'ZONA-KELAPA-GADING','name' => 'Boulevard Kelapa Gading', 'city' => 'Jakarta Utara', 'status' => 'active'],
+            ['code' => 'ZONA-PASAR-BARU',   'name' => 'Pasar Baru Area',         'city' => 'Jakarta Pusat', 'status' => 'active'],
+            ['code' => 'ZONA-TEBET',        'name' => 'Tebet Eco Park West',     'city' => 'Jakarta Selatan', 'status' => 'active'],
         ];
 
         $createdZones = [$zone];
-        foreach ($zones as $zData) {
-            $createdZones[] = Zone::updateOrCreate(['code' => $zData['code']], $zData);
+        foreach ($zonesData as $zData) {
+            $createdZone = Zone::updateOrCreate(['code' => $zData['code']], $zData);
+            $capEntry = collect($zoneCapacities)->firstWhere('code', $zData['code']);
+            if ($capEntry) {
+                $createdZone->vehicleTypes()->sync([
+                    $motor->id => ['capacity' => $capEntry['motor']],
+                    $mobil->id => ['capacity' => $capEntry['mobil']],
+                ]);
+            }
+            $createdZones[] = $createdZone;
         }
 
         // Add more jukirs

@@ -56,6 +56,14 @@ export default {
       this.showModal = true;
     },
     save() {
+      if (!this.form.zone_id || !this.form.amount) {
+        this.$page.props.flash = { error: 'Zona dan nominal denda harus diisi.' };
+        return;
+      }
+      if (this.form.amount < 0) {
+        this.$page.props.flash = { error: 'Nominal denda tidak boleh negatif.' };
+        return;
+      }
       if (this.editing) {
         router.put(route('parkirgo.penalties.update', this.editing.id), this.form, {
           preserveScroll: true,
@@ -85,6 +93,24 @@ export default {
 <template>
   <Layout>
     <PageHeader title="Manajemen Denda" pageTitle="ParkirGo" />
+
+    <BRow class="g-3 mb-4">
+      <BCol md="4">
+        <BCard no-body class="border-0 shadow-sm stat-card">
+          <BCardBody>
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <p class="text-muted mb-1">Total Konfigurasi Denda</p>
+                <h3 class="mb-0">{{ penalties.length }}</h3>
+              </div>
+              <div class="avatar-sm rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center">
+                <i class="ri-alert-line fs-22"></i>
+              </div>
+            </div>
+          </BCardBody>
+        </BCard>
+      </BCol>
+    </BRow>
 
     <BCard no-body class="border-0 shadow-sm">
       <BCardHeader class="d-flex align-items-center justify-content-between">
@@ -183,3 +209,9 @@ export default {
     </BModal>
   </Layout>
 </template>
+
+<style scoped>
+.stat-card { transition: transform .2s ease, box-shadow .2s ease; }
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 18px 45px rgba(15, 23, 42, .12) !important; }
+.avatar-sm { width: 48px; height: 48px; }
+</style>

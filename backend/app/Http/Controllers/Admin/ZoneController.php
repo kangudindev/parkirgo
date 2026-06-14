@@ -13,7 +13,7 @@ class ZoneController extends Controller
 {
     public function index()
     {
-        $zones = Zone::with(['tariffs.vehicleTypeMaster'])
+        $zones = Zone::with(['tariffs.vehicleTypeMaster', 'vehicleTypes'])
             ->withCount('jukirs')
             ->latest()
             ->get();
@@ -37,13 +37,16 @@ class ZoneController extends Controller
             'code' => ['required', 'string', 'max:20', 'unique:zones,code'],
             'name' => ['required', 'string', 'max:100'],
             'city' => ['nullable', 'string', 'max:100'],
-            'capacity_motor' => ['nullable', 'integer', 'min:0'],
-            'capacity_car' => ['nullable', 'integer', 'min:0'],
             'qris_payload' => ['nullable', 'string'],
             'status' => ['nullable', 'in:active,inactive'],
+            'capacities' => ['nullable', 'array'],
+            'capacities.*.vehicle_type_id' => ['required', 'exists:vehicle_types,id'],
+            'capacities.*.capacity' => ['required', 'integer', 'min:0'],
         ]);
 
-        Zone::create(array_merge($data, ['status' => $data['status'] ?? 'active']));
+        $zone = Zone::create(array_merge($data, ['status' => $data['status'] ?? 'active']));
+
+        $this->syncCapacities($zone, $data['capacities'] ?? []);
 
         return back()->with('success', 'Zona berhasil ditambahkan.');
     }
@@ -54,15 +57,29 @@ class ZoneController extends Controller
             'code' => ['required', 'string', 'max:20', 'unique:zones,code,' . $zone->id],
             'name' => ['required', 'string', 'max:100'],
             'city' => ['nullable', 'string', 'max:100'],
-            'capacity_motor' => ['nullable', 'integer', 'min:0'],
-            'capacity_car' => ['nullable', 'integer', 'min:0'],
             'qris_payload' => ['nullable', 'string'],
             'status' => ['required', 'in:active,inactive'],
+            'capacities' => ['nullable', 'array'],
+            'capacities.*.vehicle_type_id' => ['required', 'exists:vehicle_types,id'],
+            'capacities.*.capacity' => ['required', 'integer', 'min:0'],
         ]);
 
         $zone->update($data);
 
+        $this->syncCapacities($zone, $data['capacities'] ?? []);
+
         return back()->with('success', 'Zona berhasil diperbarui.');
+    }
+
+    private function syncCapacities(Zone $zone, array $capacities): void
+    {
+        $pivot = [];
+        foreach ($capacities as $cap) {
+            if (($cap['capacity'] ?? 0) > 0) {
+                $pivot[$cap['vehicle_type_id']] = ['capacity' => $cap['capacity']];
+            }
+        }
+        $zone->vehicleTypes()->sync($pivot);
     }
 
     public function destroy(Zone $zone)

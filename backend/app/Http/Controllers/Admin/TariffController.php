@@ -36,8 +36,7 @@ class TariffController extends Controller
     {
         $data = $request->validate([
             'zone_id' => ['required', 'exists:zones,id'],
-            'vehicle_type_id' => ['nullable', 'exists:vehicle_types,id'],
-            'vehicle_type' => ['required', 'string', 'max:30'],
+            'vehicle_type_id' => ['required', 'exists:vehicle_types,id'],
             'pricing_type' => ['required', 'in:flat,progressive'],
             'payment_timing' => ['required', 'in:entry,exit'],
             'base_minutes' => ['nullable', 'integer', 'min:0'],
@@ -57,8 +56,7 @@ class TariffController extends Controller
     public function update(Request $request, ZoneTariff $tariff)
     {
         $data = $request->validate([
-            'vehicle_type_id' => ['nullable', 'exists:vehicle_types,id'],
-            'vehicle_type' => ['required', 'string', 'max:30'],
+            'vehicle_type_id' => ['required', 'exists:vehicle_types,id'],
             'pricing_type' => ['required', 'in:flat,progressive'],
             'payment_timing' => ['required', 'in:entry,exit'],
             'base_minutes' => ['nullable', 'integer', 'min:0'],

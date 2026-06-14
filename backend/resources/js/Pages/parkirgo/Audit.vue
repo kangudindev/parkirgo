@@ -41,7 +41,7 @@ export default {
                 <h3 class="mb-0">{{ logs.total || logs.data?.length || 0 }}</h3>
               </div>
               <div class="avatar-sm rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center">
-                <i class="ri-shield-check-line fs-22"></i>
+                <i class="ri-history-line fs-22"></i>
               </div>
             </div>
           </BCardBody>

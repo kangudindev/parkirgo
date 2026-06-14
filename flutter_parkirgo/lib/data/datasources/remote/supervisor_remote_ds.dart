@@ -48,31 +48,4 @@ class SupervisorRemoteDatasource {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getPendingSettlements() async {
-    try {
-      final response = await _dio.get(ApiUrl.supervisorSettlementsPending);
-      final data = response.data['settlements'] as Map<String, dynamic>?;
-      return (data?['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    } on DioException catch (e) {
-      throw ApiException(
-        e.response?.data['message'] as String? ?? 'Gagal memuat setoran pending',
-        statusCode: e.response?.statusCode,
-      );
-    }
-  }
-
-  Future<void> approveSettlement(int settlementId, String action, {String? note}) async {
-    try {
-      await _dio.post(ApiUrl.supervisorApproveSettlement, data: {
-        'settlement_id': settlementId,
-        'action': action,
-        if (note != null) 'note': note,
-      });
-    } on DioException catch (e) {
-      throw ApiException(
-        e.response?.data['message'] as String? ?? 'Gagal approve setoran',
-        statusCode: e.response?.statusCode,
-      );
-    }
-  }
 }

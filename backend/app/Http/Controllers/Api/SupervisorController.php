@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
-use App\Models\Settlement;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -70,32 +69,4 @@ class SupervisorController extends Controller
         return response()->json(['transaction' => $transaction->fresh()]);
     }
 
-    public function pendingSettlements(Request $request)
-    {
-        $settlements = Settlement::with(['zone', 'jukir', 'shift'])
-            ->where('status', 'submitted')
-            ->latest()
-            ->paginate(50);
-
-        return response()->json(['settlements' => $settlements]);
-    }
-
-    public function approveSettlement(Request $request)
-    {
-        $data = $request->validate([
-            'settlement_id' => ['required', 'exists:settlements,id'],
-            'action' => ['required', 'in:approve,reject'],
-            'note' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $settlement = Settlement::findOrFail($data['settlement_id']);
-        $settlement->update([
-            'status' => $data['action'] === 'approve' ? 'approved' : 'rejected',
-            'approved_by' => $request->user()->id,
-            'approved_at' => now(),
-            'approval_note' => $data['note'] ?? null,
-        ]);
-
-        return response()->json(['settlement' => $settlement->fresh()]);
-    }
 }

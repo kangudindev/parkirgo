@@ -49,7 +49,10 @@ class PenaltyController extends Controller
     {
         $data = $request->validate([
             'amount' => ['required', 'integer', 'min:0'],
-            'status' => ['required', 'in:active,inactive'],
+            'vehicle_type' => ['nullable', 'string', 'max:30'],
+            'penalty_type' => ['nullable', 'in:card_lost,unregistered'],
+            'zone_id' => ['nullable', 'exists:zones,id'],
+            'status' => ['nullable', 'in:active,inactive'],
         ]);
 
         $penalty->update($data);

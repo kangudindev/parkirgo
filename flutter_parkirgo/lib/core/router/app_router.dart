@@ -15,7 +15,6 @@ import '../../features/settlement/pages/settlement_page.dart';
 import '../../features/supervisor/monitoring/pages/monitoring_page.dart';
 import '../../features/supervisor/reports/pages/zone_report_page.dart';
 import '../../features/supervisor/verification/pages/verify_qris_page.dart';
-import '../../features/supervisor/verification/pages/verify_settlement_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -37,7 +36,6 @@ class AppRouter {
         GoRoute(path: '/settlement', builder: (_, __) => const SettlementPage()),
         GoRoute(path: '/monitoring', builder: (_, __) => const MonitoringPage()),
         GoRoute(path: '/verify-qris', builder: (_, __) => const VerifyQrisPage()),
-        GoRoute(path: '/verify-settlement', builder: (_, __) => const VerifySettlementPage()),
         GoRoute(path: '/report', builder: (_, __) => const ZoneReportPage()),
         GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
       ],

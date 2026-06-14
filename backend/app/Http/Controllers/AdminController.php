@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -27,11 +28,12 @@ class AdminController extends Controller
                 'zones_active' => Zone::where('status', 'active')->count(),
                 'jukirs_online' => User::where('role', 'jukir')->where('status', 'active')->count(),
                 'pending_qris' => Transaction::where('payment_method', 'qris')->where('status', 'recorded')->count(),
-                'pending_settlements' => Settlement::where('status', 'submitted')->count(),
+                'settlements_today' => Settlement::whereBetween('created_at', [$today->startOfDay(), $today->endOfDay()])->count(),
             ];
 
             $zones = Zone::withCount(['parkingSessions as active_sessions_count' => fn ($query) => $query->where('status', 'active')])
                 ->withSum(['transactions as revenue_sum' => fn ($query) => $query->whereBetween('created_at', [$today->startOfDay(), $today->endOfDay()])], 'amount')
+                ->with('vehicleTypes')
                 ->latest()
                 ->get();
 
@@ -45,7 +47,7 @@ class AdminController extends Controller
                 'zones_active' => 0,
                 'jukirs_online' => 0,
                 'pending_qris' => 0,
-                'pending_settlements' => 0,
+                'settlements_today' => 0,
             ];
             $zones = collect();
             $recentSessions = collect();
@@ -124,6 +126,96 @@ class AdminController extends Controller
 
         return Inertia::render('parkirgo/Audit', [
             'logs' => $logs,
+        ]);
+    }
+
+    public function reports(Request $request)
+    {
+        $dateFrom = $request->input('date_from', now()->startOfMonth()->toDateString());
+        $dateTo = $request->input('date_to', now()->toDateString());
+
+        try {
+            $revenuePerUser = Transaction::select('jukir_id', DB::raw('SUM(amount) as total_amount'), DB::raw('COUNT(*) as transaction_count'))
+                ->with('jukir:id,name')
+                ->whereBetween('created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
+                ->groupBy('jukir_id')
+                ->get()
+                ->map(fn($item) => [
+                    'jukir_id' => $item->jukir_id,
+                    'jukir_name' => $item->jukir?->name ?? 'Unknown',
+                    'total_amount' => (int) $item->total_amount,
+                    'transaction_count' => $item->transaction_count,
+                ])
+                ->sortByDesc('total_amount')
+                ->values();
+
+            $settlementPerUser = Settlement::select('jukir_id', DB::raw('SUM(total_amount) as total_settlement'))
+                ->whereBetween('created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
+                ->groupBy('jukir_id')
+                ->get()
+                ->keyBy('jukir_id');
+
+            $revenuePerUser = $revenuePerUser->map(function($item) use ($settlementPerUser) {
+                $item['total_settlement'] = (int) ($settlementPerUser[$item['jukir_id']]['total_settlement'] ?? 0);
+                return $item;
+            });
+
+            $revenuePerShift = Settlement::with(['shift.user:id,name', 'shift.zone:id,name', 'jukir:id,name', 'zone:id,name'])
+                ->whereBetween('created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
+                ->get()
+                ->map(fn($item) => [
+                    'id' => $item->id,
+                    'settlement_number' => $item->settlement_number,
+                    'shift_code' => $item->shift?->code,
+                    'shift_date' => $item->shift?->shift_date?->toDateString(),
+                    'jukir_name' => $item->jukir?->name ?? 'Unknown',
+                    'zone_name' => $item->zone?->name ?? 'Unknown',
+                    'cash_amount' => (int) $item->cash_amount,
+                    'qris_amount' => (int) $item->qris_amount,
+                    'total_amount' => (int) $item->total_amount,
+                    'status' => $item->status,
+                ])
+                ->sortByDesc(fn($s) => $s['total_amount'])
+                ->values();
+
+            $revenuePerZone = Transaction::select('zone_id', DB::raw('SUM(amount) as total_amount'), DB::raw('COUNT(*) as transaction_count'))
+                ->with('zone:id,name,code,city')
+                ->whereBetween('created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
+                ->groupBy('zone_id')
+                ->get()
+                ->map(fn($item) => [
+                    'zone_id' => $item->zone_id,
+                    'zone_name' => $item->zone?->name ?? 'Unknown',
+                    'zone_code' => $item->zone?->code ?? '',
+                    'city' => $item->zone?->city ?? '',
+                    'total_amount' => (int) $item->total_amount,
+                    'transaction_count' => $item->transaction_count,
+                ])
+                ->sortByDesc('total_amount')
+                ->values();
+
+            $settlementPerZone = Settlement::select('zone_id', DB::raw('SUM(total_amount) as total_settlement'))
+                ->whereBetween('created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
+                ->groupBy('zone_id')
+                ->get()
+                ->keyBy('zone_id');
+
+            $revenuePerZone = $revenuePerZone->map(function($item) use ($settlementPerZone) {
+                $item['total_settlement'] = (int) ($settlementPerZone[$item['zone_id']]['total_settlement'] ?? 0);
+                return $item;
+            });
+        } catch (\Exception $e) {
+            report($e);
+            $revenuePerUser = collect();
+            $revenuePerShift = collect();
+            $revenuePerZone = collect();
+        }
+
+        return Inertia::render('parkirgo/Reports', [
+            'revenuePerUser' => $revenuePerUser,
+            'revenuePerShift' => $revenuePerShift,
+            'revenuePerZone' => $revenuePerZone,
+            'filters' => ['date_from' => $dateFrom, 'date_to' => $dateTo],
         ]);
     }
 

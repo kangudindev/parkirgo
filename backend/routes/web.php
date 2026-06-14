@@ -29,6 +29,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/parkirgo/operations', [AdminController::class, 'operations'])->name('parkirgo.operations');
     Route::get('/parkirgo/finance', [AdminController::class, 'finance'])->name('parkirgo.finance');
     Route::get('/parkirgo/audit', [AdminController::class, 'audit'])->name('parkirgo.audit');
+    Route::get('/parkirgo/reports', [AdminController::class, 'reports'])->name('parkirgo.reports');
 
     // Zones CRUD
     Route::get('/parkirgo/zones', [ZoneController::class, 'index'])->name('parkirgo.zones');

@@ -17,7 +17,6 @@ class ZoneTariff extends Model
     protected $fillable = [
         'zone_id',
         'vehicle_type_id',
-        'vehicle_type',
         'pricing_type',
         'payment_timing',
         'base_minutes',

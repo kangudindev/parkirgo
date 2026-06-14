@@ -40,8 +40,20 @@ export default {
       this.showModal = true;
     },
     save() {
+      if (!this.form.name || !this.form.email) {
+        this.$page.props.flash = { error: 'Nama dan Email harus diisi.' };
+        return;
+      }
+      if (!this.editing && !this.form.password) {
+        this.$page.props.flash = { error: 'Password harus diisi untuk pengguna baru.' };
+        return;
+      }
+      if (this.form.password && this.form.password.length < 6) {
+        this.$page.props.flash = { error: 'Password minimal 6 karakter.' };
+        return;
+      }
       if (this.editing) {
-        router.post(route('parkirgo.users.update', this.editing.id), { ...this.form, _method: 'PUT' }, { preserveScroll: true, onSuccess: () => this.showModal = false });
+        router.post(route('parkirgo.users.update', this.editing.id), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
       } else {
         router.post(route('parkirgo.users.store'), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
       }
@@ -112,7 +124,7 @@ export default {
                 <h3 class="mb-0">{{ users.total || users.data?.length || 0 }}</h3>
               </div>
               <div class="avatar-sm rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center">
-                <i class="ri-team-line fs-22"></i>
+                <i class="ri-user-settings-line fs-22"></i>
               </div>
             </div>
           </BCardBody>
@@ -175,10 +187,10 @@ export default {
                 <td>
                   <span v-if="user.role === 'admin'" class="text-muted fst-italic">N/A</span>
                   <span v-else-if="user.has_qr_token" class="badge bg-success-subtle text-success">
-                    <i class="ri-qr-code-line me-1"></i>Aktif
+                    <i class="ri-scanner-2-line me-1"></i>Aktif
                   </span>
                   <span v-else class="badge bg-warning-subtle text-warning">
-                    <i class="ri-qr-code-line me-1"></i>Belum
+                    <i class="ri-scanner-2-line me-1"></i>Belum
                   </span>
                 </td>
                 <td>{{ formatDate(user.last_seen_at) }}</td>
@@ -186,7 +198,7 @@ export default {
                   <div v-if="user.role !== 'admin'" class="d-flex gap-1">
                     <BButton size="sm" variant="outline-secondary" @click="open(user)"><i class="ri-pencil-line"></i></BButton>
                     <BButton v-if="!user.has_qr_token" size="sm" variant="primary" @click="generateQr(user.id)">
-                      <i class="ri-qr-code-line me-1"></i>Generate QR
+                      <i class="ri-scanner-2-line me-1"></i>Generate QR
                     </BButton>
                     <BButton v-if="user.has_qr_token" size="sm" variant="outline-info" @click="showIdCard(user)" title="Cetak ID Card">
                       <i class="ri-id-card-line"></i>

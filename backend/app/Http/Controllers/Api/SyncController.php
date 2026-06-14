@@ -190,7 +190,7 @@ class SyncController extends Controller
                 'qris_amount' => $payload['qris_amount'] ?? 0,
                 'total_amount' => ($payload['cash_amount'] ?? 0) + ($payload['qris_amount'] ?? 0),
                 'proof_image_path' => $payload['proof_image_path'] ?? null,
-                'status' => 'submitted',
+                'status' => 'approved',
                 'local_id' => $payload['local_id'] ?? null,
                 'sync_status' => 'synced',
             ]

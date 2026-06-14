@@ -231,6 +231,12 @@ export default {
           </Link>
         </li>
         <li class="nav-item">
+          <Link href="/parkirgo/reports" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/reports') }">
+            <i class="ri-bar-chart-2-line"></i>
+            <span>Laporan</span>
+          </Link>
+        </li>
+        <li class="nav-item">
           <Link href="/parkirgo/audit" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/audit') }">
             <i class="ri-history-line"></i>
             <span>Audit Log</span>

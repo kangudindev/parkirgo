@@ -8,13 +8,14 @@ import NavBar from "@/Components/nav-bar.vue";
 import Menu from "@/Components/menu.vue";
 import RightBar from "@/Components/right-bar.vue";
 import Footer from "@/Components/footer.vue";
+import FlashToast from "@/Components/FlashToast.vue";
 localStorage.setItem('hoverd', false);
 
 /**
  * Vertical layout
  */
 export default {
-  components: { NavBar, RightBar, Footer, simplebar, Menu, Link },
+  components: { NavBar, RightBar, Footer, simplebar, Menu, Link, FlashToast },
   data() {
     return {
       isMenuCondensed: false,
@@ -158,8 +159,9 @@ export default {
           <slot />
         </b-container>
       </div>
-      <Footer />
-    </div>
-    <RightBar />
+    <Footer />
   </div>
+  <RightBar />
+  <FlashToast />
+</div>
 </template>

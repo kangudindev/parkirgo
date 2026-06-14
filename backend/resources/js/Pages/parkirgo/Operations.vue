@@ -27,6 +27,7 @@ export default {
       <BCol xl="8">
         <BCard no-body class="border-0 shadow-sm">
           <BCardHeader class="d-flex align-items-center">
+            <i class="ri-parking-box-line me-2 fs-18 text-primary"></i>
             <BCardTitle class="mb-0 flex-grow-1">Sesi Parkir</BCardTitle>
             <span class="badge bg-success-subtle text-success">Flat bayar masuk · Progresif bayar keluar</span>
           </BCardHeader>
@@ -63,6 +64,7 @@ export default {
       <BCol xl="4">
         <BCard no-body class="border-0 shadow-sm">
           <BCardHeader>
+            <i class="ri-user-check-line me-2 fs-18 text-info"></i>
             <BCardTitle class="mb-0">Absensi & Sync</BCardTitle>
           </BCardHeader>
           <BCardBody>

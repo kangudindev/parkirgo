@@ -25,7 +25,15 @@ export default {
       this.showModal = true;
     },
     save() {
-      if (this.editing) router.post(route('parkirgo.shifts.update', this.editing.id), { ...this.form, _method: 'PUT' }, { preserveScroll: true, onSuccess: () => this.showModal = false });
+      if (!this.form.zone_id || !this.form.user_id || !this.form.shift_date || !this.form.start_time || !this.form.end_time) {
+        this.$page.props.flash = { error: 'Semua field harus diisi.' };
+        return;
+      }
+      if (this.form.start_time >= this.form.end_time) {
+        this.$page.props.flash = { error: 'Jam selesai harus setelah jam mulai.' };
+        return;
+      }
+      if (this.editing) router.post(route('parkirgo.shifts.update', this.editing.id), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
       else router.post(route('parkirgo.shifts.store'), this.form, { preserveScroll: true, onSuccess: () => this.showModal = false });
     },
     remove(s) {
@@ -43,6 +51,24 @@ export default {
 <template>
   <Layout>
     <PageHeader title="Manajemen Shift" pageTitle="ParkirGo" />
+    <BRow class="g-3 mb-4">
+      <BCol md="4">
+        <BCard no-body class="border-0 shadow-sm stat-card">
+          <BCardBody>
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <p class="text-muted mb-1">Total Shift</p>
+                <h3 class="mb-0">{{ shifts.total || shifts.data?.length || 0 }}</h3>
+              </div>
+              <div class="avatar-sm rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center">
+                <i class="ri-calendar-line fs-22"></i>
+              </div>
+            </div>
+          </BCardBody>
+        </BCard>
+      </BCol>
+    </BRow>
+
     <BCard no-body class="border-0 shadow-sm">
       <BCardHeader class="d-flex align-items-center justify-content-between">
         <div>
@@ -116,3 +142,9 @@ export default {
     </BModal>
   </Layout>
 </template>
+
+<style scoped>
+.stat-card { transition: transform .2s ease, box-shadow .2s ease; }
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 18px 45px rgba(15, 23, 42, .12) !important; }
+.avatar-sm { width: 48px; height: 48px; }
+</style>

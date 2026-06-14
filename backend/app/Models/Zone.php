@@ -14,8 +14,6 @@ class Zone extends Model
         'name',
         'city',
         'polygon',
-        'capacity_motor',
-        'capacity_car',
         'qris_payload',
         'qris_image_path',
         'status',
@@ -28,6 +26,13 @@ class Zone extends Model
     public function tariffs()
     {
         return $this->hasMany(ZoneTariff::class);
+    }
+
+    public function vehicleTypes()
+    {
+        return $this->belongsToMany(VehicleType::class, 'zone_vehicle_types')
+            ->withPivot('capacity')
+            ->withTimestamps();
     }
 
     public function jukirs()

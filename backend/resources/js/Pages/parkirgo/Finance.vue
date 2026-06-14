@@ -1,8 +1,6 @@
 <script>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
-import { router } from "@inertiajs/vue3";
-
 const currency = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
 
 export default {
@@ -25,21 +23,7 @@ export default {
       return currency.format(Number(value || 0));
     },
     badge(status) {
-      return { recorded: "info", verified: "success", rejected: "danger", submitted: "warning", approved: "success" }[status] || "secondary";
-    },
-    approve(id) {
-      if (!confirm("Setujui setoran ini?")) return;
-      router.post(route('api.v1.supervisor.approve-settlement'), { settlement_id: id, action: "approve" }, { 
-        preserveScroll: true,
-        onError: (errors) => console.error(errors)
-      });
-    },
-    reject(id) {
-      if (!confirm("Tolak setoran ini?")) return;
-      router.post(route('api.v1.supervisor.approve-settlement'), { settlement_id: id, action: "reject" }, { 
-        preserveScroll: true,
-        onError: (errors) => console.error(errors)
-      });
+      return { recorded: "info", verified: "success", rejected: "danger", approved: "success" }[status] || "secondary";
     },
   },
 };
@@ -53,24 +37,45 @@ export default {
       <BCol md="4">
         <BCard no-body class="border-0 shadow-sm metric-card qris">
           <BCardBody>
-            <p class="text-muted mb-1">Total QRIS</p>
-            <h3 class="mb-0">{{ money(totals.qris) }}</h3>
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <p class="text-muted mb-1">Total QRIS</p>
+                <h3 class="mb-0">{{ money(totals.qris) }}</h3>
+              </div>
+              <div class="avatar-sm rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center">
+                <i class="ri-qr-code-line fs-22"></i>
+              </div>
+            </div>
           </BCardBody>
         </BCard>
       </BCol>
       <BCol md="4">
         <BCard no-body class="border-0 shadow-sm metric-card cash">
           <BCardBody>
-            <p class="text-muted mb-1">Total Cash</p>
-            <h3 class="mb-0">{{ money(totals.cash) }}</h3>
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <p class="text-muted mb-1">Total Cash</p>
+                <h3 class="mb-0">{{ money(totals.cash) }}</h3>
+              </div>
+              <div class="avatar-sm rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center">
+                <i class="ri-cash-line fs-22"></i>
+              </div>
+            </div>
           </BCardBody>
         </BCard>
       </BCol>
       <BCol md="4">
         <BCard no-body class="border-0 shadow-sm metric-card total">
           <BCardBody>
-            <p class="text-muted mb-1">Total Tercatat</p>
-            <h3 class="mb-0">{{ money(totals.all) }}</h3>
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <p class="text-muted mb-1">Total Tercatat</p>
+                <h3 class="mb-0">{{ money(totals.all) }}</h3>
+              </div>
+              <div class="avatar-sm rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center">
+                <i class="ri-bank-card-line fs-22"></i>
+              </div>
+            </div>
           </BCardBody>
         </BCard>
       </BCol>
@@ -126,14 +131,7 @@ export default {
               <div class="progress mt-3" style="height: 6px">
                 <div class="progress-bar bg-success" :style="{ width: `${settlement.total_amount ? (settlement.qris_amount / settlement.total_amount) * 100 : 0}%` }"></div>
               </div>
-              <div v-if="settlement.status === 'submitted'" class="mt-2 d-flex gap-2">
-                <BButton size="sm" variant="success" @click="approve(settlement.id)">
-                  <i class="ri-check-line me-1"></i>Setujui
-                </BButton>
-                <BButton size="sm" variant="danger" @click="reject(settlement.id)">
-                  <i class="ri-close-line me-1"></i>Tolak
-                </BButton>
-              </div>
+
             </div>
             <div v-if="!settlements.length" class="text-center text-muted py-3">Belum ada setoran.</div>
           </BCardBody>

@@ -27,7 +27,7 @@ class SettlementController extends Controller
             'settlement_number' => 'SET-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6)),
             'settlement_date' => $data['settlement_date'] ?? now()->toDateString(),
             'total_amount' => (int) $data['cash_amount'] + (int) $data['qris_amount'],
-            'status' => 'submitted',
+            'status' => 'approved',
             'sync_status' => 'synced',
         ]);
 
