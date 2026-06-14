@@ -45,6 +45,21 @@ class AdminController extends Controller
                 ->latest()
                 ->get();
 
+            $zoneIds = $zones->pluck('id');
+            $activeByZoneType = ParkingSession::where('status', 'active')
+                ->whereIn('zone_id', $zoneIds)
+                ->groupBy('zone_id', 'vehicle_type_id')
+                ->selectRaw('zone_id, vehicle_type_id, COUNT(*) as count')
+                ->get()
+                ->groupBy('zone_id');
+
+            $zones->each(function ($zone) use ($activeByZoneType) {
+                $typeCounts = $activeByZoneType->get($zone->id, collect())->keyBy('vehicle_type_id');
+                $zone->vehicle_types->each(function ($vt) use ($typeCounts) {
+                    $vt->active_count = (int) ($typeCounts[$vt->id]['count'] ?? 0);
+                });
+            });
+
             $recentSessions = ParkingSession::with(['zone', 'jukir', 'vehicleTypeMaster'])->latest()->limit(8)->get();
             $recentTransactions = Transaction::with(['zone', 'jukir', 'parkingSession'])->latest()->limit(8)->get();
         } catch (\Exception $e) {

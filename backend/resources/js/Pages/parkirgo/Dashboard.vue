@@ -2,11 +2,12 @@
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import { Link, router } from "@inertiajs/vue3";
+import { VueEcharts } from "vue3-echarts";
 
 const currency = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
 
 export default {
-  components: { Layout, PageHeader, Link },
+  components: { Layout, PageHeader, Link, VueEcharts },
   props: {
     summary: { type: Object, default: () => ({}) },
     zones: { type: Array, default: () => [] },
@@ -16,41 +17,46 @@ export default {
   },
   computed: {
     periodLabel() {
-      const labels = { today: "Hari Ini", week: "Minggu Ini", month: "Bulan Ini", year: "Tahun Ini" };
-      return labels[this.period] || "Hari Ini";
+      return { today: "Hari Ini", week: "Minggu Ini", month: "Bulan Ini", year: "Tahun Ini" }[this.period] || "Hari Ini";
     },
   },
   methods: {
-    money(value) {
-      return currency.format(Number(value || 0));
+    money(v) { return currency.format(Number(v || 0)); },
+    statusClass(s) {
+      return { active: "success", paid: "success", unpaid: "warning", recorded: "info", verified: "primary", exited: "secondary" }[s] || "dark";
     },
-    statusClass(status) {
-      return { active: "success", paid: "success", unpaid: "warning", recorded: "info", verified: "primary", exited: "secondary" }[status] || "dark";
+    duration(v) {
+      if (!v) return "-";
+      const m = Math.floor(v / 60);
+      const s = v % 60;
+      return m > 0 ? `${m}m ${s}s` : `${s}s`;
     },
-    totalCap(zone) {
-      return (zone.vehicle_types || []).reduce((s, vt) => s + (vt.pivot?.capacity || 0), 0);
-    },
-    usagePct(zone) {
-      const cap = this.totalCap(zone);
-      if (!cap) return null;
-      return Math.round((zone.active_sessions_count || 0) / cap * 100);
-    },
-    vtCap(zone, vtId) {
-      const vt = (zone.vehicle_types || []).find(v => v.id === vtId);
-      return vt ? vt.pivot.capacity : 0;
-    },
-    duration(value) {
-      if (!value) return "-";
-      const min = Math.floor(value / 60);
-      const sec = value % 60;
-      return min > 0 ? `${min}m ${sec}s` : `${sec}s`;
+    gaugeOption(active, capacity) {
+      const pct = capacity ? active / capacity : 0;
+      const color = pct > 0.9 ? "#f06548" : pct > 0.7 ? "#f7b84b" : "#0ab39c";
+      return {
+        series: [{
+          type: "gauge",
+          center: ["50%", "50%"],
+          radius: "90%",
+          startAngle: 220,
+          endAngle: -40,
+          min: 0,
+          max: capacity || 1,
+          axisLine: {
+            lineStyle: { width: 6, color: [[0.7, "#0ab39c"], [0.9, "#f7b84b"], [1, "#f06548"]] }
+          },
+          axisTick: { show: false },
+          splitLine: { show: false },
+          axisLabel: { show: false },
+          pointer: { show: false },
+          detail: { show: false },
+          data: [{ value: active || 0 }]
+        }]
+      };
     },
     switchPeriod(p) {
       router.get("/", { period: p }, { preserveState: true });
-    },
-    colorBy(idx) {
-      const colors = ["primary", "success", "info", "warning", "danger", "secondary"];
-      return colors[idx % colors.length];
     },
   },
 };
@@ -136,7 +142,7 @@ export default {
     </BRow>
 
     <BRow class="g-3 mb-4">
-      <BCol v-for="(zone, idx) in zones" :key="zone.id" xl="4" md="6">
+      <BCol v-for="zone in zones" :key="zone.id" xl="4" md="6">
         <BCard no-body class="border-0 shadow-sm h-100 zone-card">
           <BCardBody>
             <div class="d-flex justify-content-between align-items-start mb-2">
@@ -148,37 +154,33 @@ export default {
               <span class="badge bg-success-subtle text-success">{{ zone.status }}</span>
             </div>
 
-            <div class="row g-2 mb-3">
-              <div class="col-6">
-                <div class="p-2 rounded bg-light">
-                  <small class="text-muted">Pendapatan</small>
-                  <div class="fw-bold text-success">{{ money(zone.revenue_sum) }}</div>
+            <div class="d-flex" style="gap:1px;overflow-x:auto">
+              <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center flex-fill px-1">
+                <i :class="vt.icon || 'ri-car-line'" class="fs-22 d-block mb-1"></i>
+                <span class="small fw-medium d-block">{{ vt.name }}</span>
+                <div class="d-flex justify-content-center" style="height:55px">
+                  <VueEcharts :option="gaugeOption(vt.active_count, vt.pivot.capacity)" style="width:60px;height:55px" />
                 </div>
-              </div>
-              <div class="col-3">
-                <div class="p-2 rounded bg-light text-center">
-                  <small class="text-muted">Shift</small>
-                  <div class="fw-bold">{{ zone.shifts_count || 0 }}</div>
-                </div>
-              </div>
-              <div class="col-3">
-                <div class="p-2 rounded bg-light text-center">
-                  <small class="text-muted">Jukir</small>
-                  <div class="fw-bold">{{ zone.jukirs_count || 0 }}</div>
+                <div class="small fw-semibold mt-1">{{ vt.active_count || 0 }}<span class="text-muted fw-normal">/{{ vt.pivot.capacity }}</span></div>
+                <div class="small" :class="(vt.pivot.capacity - vt.active_count) > 0 ? 'text-success' : 'text-danger'">
+                  {{ (vt.pivot.capacity - vt.active_count) || 0 }} sisa
                 </div>
               </div>
             </div>
 
-            <div v-for="vt in zone.vehicle_types || []" :key="vt.id" class="mb-2">
-              <div class="d-flex justify-content-between small mb-1">
-                <span>{{ vt.name }}</span>
-                <span class="text-muted">{{ vt.pivot.capacity }} slot</span>
+            <hr class="my-2" />
+            <div class="row g-1 text-center small">
+              <div class="col-6">
+                <div class="text-muted">Pendapatan</div>
+                <div class="fw-semibold text-success">{{ money(zone.revenue_sum) }}</div>
               </div>
-              <div class="d-flex align-items-center gap-2">
-                <div class="progress flex-grow-1" style="height:8px">
-                  <div class="progress-bar" :class="`bg-${colorBy(idx)}`" :style="{ width: Math.min(100, (zone.active_sessions_count || 0) / (vt.pivot.capacity || 1) * 100) + '%' }"></div>
-                </div>
-                <small class="fw-medium">{{ zone.active_sessions_count || 0 }}/{{ vt.pivot.capacity }}</small>
+              <div class="col-3">
+                <div class="text-muted">Shift</div>
+                <div class="fw-semibold">{{ zone.shifts_count || 0 }}</div>
+              </div>
+              <div class="col-3">
+                <div class="text-muted">Jukir</div>
+                <div class="fw-semibold">{{ zone.jukirs_count || 0 }}</div>
               </div>
             </div>
           </BCardBody>
@@ -193,7 +195,8 @@ export default {
             <BCardTitle class="mb-0">Transaksi Terbaru</BCardTitle>
           </BCardHeader>
           <BCardBody>
-            <div v-for="trx in recentTransactions" :key="trx.id" class="d-flex align-items-center border-bottom pb-3 mb-3">
+            <template v-if="recentTransactions.length">
+              <div v-for="trx in recentTransactions" :key="trx.id" class="d-flex align-items-center border-bottom pb-3 mb-3">
               <div class="avatar-xs me-3 rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center">
                 <i class="ri-bank-card-line"></i>
               </div>
@@ -206,6 +209,8 @@ export default {
                 <span class="badge" :class="`bg-${statusClass(trx.status)}-subtle text-${statusClass(trx.status)}`">{{ trx.status }}</span>
               </div>
             </div>
+            </template>
+            <div v-if="!recentTransactions.length" class="text-center text-muted py-3">Belum ada transaksi.</div>
           </BCardBody>
         </BCard>
       </BCol>
@@ -215,7 +220,8 @@ export default {
             <BCardTitle class="mb-0">Sesi Aktif Terbaru</BCardTitle>
           </BCardHeader>
           <BCardBody>
-            <div v-for="session in recentSessions" :key="session.id" class="d-flex align-items-center border-bottom pb-3 mb-3">
+            <template v-if="recentSessions.length">
+              <div v-for="session in recentSessions" :key="session.id" class="d-flex align-items-center border-bottom pb-3 mb-3">
               <div class="avatar-xs me-3 rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center">
                 <i class="ri-parking-box-line"></i>
               </div>
@@ -228,6 +234,8 @@ export default {
                 <span class="badge" :class="`bg-${statusClass(session.status)}-subtle text-${statusClass(session.status)}`">{{ session.status }}</span>
               </div>
             </div>
+            </template>
+            <div v-if="!recentSessions.length" class="text-center text-muted py-3">Belum ada sesi.</div>
           </BCardBody>
         </BCard>
       </BCol>
