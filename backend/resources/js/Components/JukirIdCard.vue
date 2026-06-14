@@ -339,4 +339,3 @@ defineExpose({ downloadCard });
   font-weight: 700;
 }
 </style>
-</style>
