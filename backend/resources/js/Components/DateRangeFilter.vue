@@ -24,13 +24,28 @@ export default {
       presets: [
         { key: "hari_ini", label: "Hari ini", get: () => ({ from: today, to: today }) },
         { key: "kemarin", label: "Kemarin", get: () => ({ from: yesterday, to: yesterday }) },
-        { key: "7_hari", label: "7 hari", get: () => ({ from: this.fmt(new Date(y, m, d.getDate() - 6)), to: today }) },
-        { key: "30_hari", label: "30 hari", get: () => ({ from: this.fmt(new Date(y, m, d.getDate() - 29)), to: today }) },
+        { key: "7_hari", label: "7 hari", get: () => ({ from: this.fmt(new Date(new Date().setDate(new Date().getDate() - 6))), to: today }) },
+        { key: "30_hari", label: "30 hari", get: () => ({ from: this.fmt(new Date(new Date().setDate(new Date().getDate() - 29))), to: today }) },
         { key: "bulan_ini", label: "Bulan ini", get: () => ({ from: this.fmt(new Date(y, m, 1)), to: today }) },
         { key: "bulan_lalu", label: "Bulan lalu", get: () => ({ from: this.fmt(new Date(y, m - 1, 1)), to: this.fmt(new Date(y, m, 0)) }) },
         { key: "tahun_ini", label: "Tahun ini", get: () => ({ from: this.fmt(new Date(y, 0, 1)), to: today }) },
       ],
     };
+  },
+  mounted() {
+    // If props are provided, set initial values and active preset
+    if (this.dateFrom && this.dateTo) {
+      this.fromDate = this.dateFrom;
+      this.toDate = this.dateTo;
+      
+      const today = this.fmt(new Date());
+      if (this.dateFrom === today && this.dateTo === today) {
+        this.activePreset = "hari_ini";
+      } else {
+        this.activePreset = "custom";
+        this.customMode = true;
+      }
+    }
   },
   watch: {
     customMode(val) {

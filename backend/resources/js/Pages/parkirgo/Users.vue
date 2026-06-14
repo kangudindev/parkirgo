@@ -151,6 +151,24 @@ export default {
   <Layout>
     <PageHeader title="User" pageTitle="ParkirGo" />
 
+    <div class="row mb-4" v-if="$page.props.auth.user.role === 'admin'">
+      <div class="col-md-12">
+        <BCard no-body class="border-0 shadow-sm bg-primary-subtle">
+          <BCardBody class="p-3">
+             <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                   <img :src="$page.props.auth.user.profile_photo_url" class="rounded-circle avatar-md img-thumbnail" alt="">
+                </div>
+                <div class="flex-grow-1 ms-3">
+                   <h4 class="mb-1 text-primary fw-bold">{{ $page.props.auth.user.name }}</h4>
+                   <p class="text-muted mb-0 text-capitalize">{{ $page.props.auth.user.role }} Dashboard Control</p>
+                </div>
+             </div>
+          </BCardBody>
+        </BCard>
+      </div>
+    </div>
+
     <BRow class="g-3 mb-4">
       <BCol md="4">
         <BCard no-body class="border-0 shadow-sm stat-card">
@@ -235,7 +253,7 @@ export default {
                 <i class="ri-scanner-2-line"></i>
               </BButton>
               <BButton v-if="row.has_qr_token" size="sm" variant="outline-info" @click="showIdCard(row)" title="Cetak ID Card">
-                <i class="ri-id-card-line"></i>
+                <i class="ri-printer-line"></i>
               </BButton>
               <BButton v-if="row.has_qr_token" size="sm" variant="outline-danger" @click="revokeQr(row.id)" title="Cabut QR">
                 <i class="ri-forbid-line"></i>

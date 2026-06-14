@@ -118,9 +118,9 @@ export default {
           </button>
 
           <!-- Real-time Clock -->
-          <div class="ms-3 d-none d-md-flex align-items-center text-dark fw-bold">
-            <i class="ri-time-line me-2 fs-18 text-primary"></i>
-            <span class="fs-15">{{ currentTime }}</span>
+          <div class="ms-3 d-none d-md-flex align-items-center text-muted">
+            <i class="ri-time-line me-2 fs-18"></i>
+            <span class="fs-14">{{ currentTime }}</span>
           </div>
         </div>
 

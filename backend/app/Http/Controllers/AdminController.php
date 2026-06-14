@@ -23,9 +23,15 @@ class AdminController extends Controller
     public function dashboard(Request $request)
     {
         $period = $request->input('period', 'today');
-        $dates = $this->getPeriodRange($period);
-        $dateFrom = $dates['from'];
-        $dateTo = $dates['to'];
+        
+        if ($period === 'custom' && $request->filled('date_from') && $request->filled('date_to')) {
+            $dateFrom = $request->date_from . ' 00:00:00';
+            $dateTo = $request->date_to . ' 23:59:59';
+        } else {
+            $dates = $this->getPeriodRange($period);
+            $dateFrom = $dates['from'];
+            $dateTo = $dates['to'];
+        }
 
         try {
             $summary = [
@@ -90,6 +96,10 @@ class AdminController extends Controller
             'recentSessions' => $recentSessions,
             'recentTransactions' => $recentTransactions,
             'period' => $period,
+            'filters' => [
+                'date_from' => $request->date_from,
+                'date_to' => $request->date_to,
+            ]
         ]);
     }
 
@@ -158,7 +168,9 @@ class AdminController extends Controller
     {
         $now = now();
         return match ($period) {
-            'week' => ['from' => $now->copy()->startOfWeek()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
+            'today' => ['from' => $now->copy()->startOfDay()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
+            'yesterday' => ['from' => $now->copy()->subDay()->startOfDay()->toDateTimeString(), 'to' => $now->copy()->subDay()->endOfDay()->toDateTimeString()],
+            'week' => ['from' => $now->copy()->subDays(6)->startOfDay()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
             'month' => ['from' => $now->copy()->startOfMonth()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
             'year' => ['from' => $now->copy()->startOfYear()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
             default => ['from' => $now->copy()->startOfDay()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
@@ -168,8 +180,25 @@ class AdminController extends Controller
     public function operations(Request $request)
     {
         try {
+            $query = ParkingSession::with(['zone', 'jukir', 'tariff.vehicleTypeMaster', 'vehicleTypeMaster']);
+
+            if ($request->filled('zone_id')) {
+                $query->where('zone_id', $request->zone_id);
+            }
+
+            if ($request->filled('vehicle_type_id')) {
+                $query->where('vehicle_type_id', $request->vehicle_type_id);
+            }
+
+            if ($request->filled('date_from')) {
+                $query->whereDate('entry_at', '>=', $request->date_from);
+            }
+            if ($request->filled('date_to')) {
+                $query->whereDate('entry_at', '<=', $request->date_to);
+            }
+
             $sessions = $this->applySort(
-                $this->applySearch(ParkingSession::with(['zone', 'jukir', 'tariff.vehicleTypeMaster', 'vehicleTypeMaster']), $request, ['ticket_number', 'plate_number']),
+                $this->applySearch($query, $request, ['ticket_number', 'plate_number']),
                 $request,
                 ['created_at', 'ticket_number', 'plate_number', 'status', 'payment_status']
             )->paginate($this->perPage($request));
@@ -178,15 +207,28 @@ class AdminController extends Controller
                 ->latest()
                 ->limit(10)
                 ->get();
+
+            $zones = Zone::where('status', 'active')->orderBy('name')->get(['id', 'name']);
+            $vehicleTypes = \App\Models\VehicleType::where('status', 'active')->orderBy('sort_order')->get(['id', 'name']);
         } catch (\Exception $e) {
             report($e);
             $sessions = collect();
             $attendances = collect();
+            $zones = collect();
+            $vehicleTypes = collect();
         }
 
         return Inertia::render('parkirgo/Operations', [
             'sessions' => $sessions,
             'attendances' => $attendances,
+            'zones' => $zones,
+            'vehicleTypes' => $vehicleTypes,
+            'filters' => [
+                'zone_id' => $request->zone_id,
+                'vehicle_type_id' => $request->vehicle_type_id,
+                'date_from' => $request->date_from,
+                'date_to' => $request->date_to,
+            ]
         ]);
     }
 

@@ -2,14 +2,19 @@
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import DataTable from "@/Components/DataTable.vue";
+import DateRangeFilter from "@/Components/DateRangeFilter.vue";
 import { router } from "@inertiajs/vue3";
 
 const currency = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
 
 export default {
-  components: { Layout, PageHeader, DataTable },
+  components: { Layout, PageHeader, DataTable, DateRangeFilter },
   props: {
     sessions: { type: Object, default: () => ({ data: [] }) },
+    attendances: { type: Array, default: () => [] },
+    zones: { type: Array, default: () => [] },
+    vehicleTypes: { type: Array, default: () => [] },
+    filters: { type: Object, default: () => ({}) },
     sortField: { type: String, default: "created_at" },
     sortDir: { type: String, default: "desc" },
   },
@@ -21,6 +26,12 @@ export default {
       tableSortDir: this.sortDir,
       showDetailModal: false,
       detailSession: null,
+      filterForm: {
+        zone_id: this.filters.zone_id || "",
+        vehicle_type_id: this.filters.vehicle_type_id || "",
+        date_from: this.filters.date_from || new Date().toISOString().split('T')[0],
+        date_to: this.filters.date_to || new Date().toISOString().split('T')[0],
+      }
     };
   },
   computed: {
@@ -60,20 +71,41 @@ export default {
       this.detailSession = s;
       this.showDetailModal = true;
     },
+    onDateRangeChange(range) {
+      this.filterForm.date_from = range.date_from;
+      this.filterForm.date_to = range.date_to;
+      this.applyFilters();
+    },
+    applyFilters() {
+      router.get("/parkirgo/operations", { 
+        ...this.filterForm,
+        search: this.searchQuery, 
+        sort_field: this.tableSortField, 
+        sort_dir: this.tableSortDir, 
+        per_page: this.perPageVal 
+      }, { preserveState: true });
+    },
     onSort(field, dir) {
       this.tableSortField = field; this.tableSortDir = dir;
-      router.get("/parkirgo/operations", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+      this.applyFilters();
     },
     onSearch(q) {
       this.searchQuery = q;
-      router.get("/parkirgo/operations", { search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
+      this.applyFilters();
     },
     onPage(page) {
-      router.get("/parkirgo/operations", { page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+      router.get("/parkirgo/operations", { 
+        page, 
+        ...this.filterForm,
+        search: this.searchQuery, 
+        sort_field: this.tableSortField, 
+        sort_dir: this.tableSortDir, 
+        per_page: this.perPageVal 
+      }, { preserveState: true });
     },
     onPerPage(val) {
       this.perPageVal = val;
-      router.get("/parkirgo/operations", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
+      this.applyFilters();
     },
   },
 };
@@ -82,6 +114,35 @@ export default {
 <template>
   <Layout>
     <PageHeader title="Sesi Parkir" pageTitle="ParkirGo" />
+
+    <BCard no-body class="border-0 shadow-sm mb-4">
+      <BCardBody>
+        <BRow class="g-3">
+          <BCol md="4">
+            <label class="form-label text-muted small mb-1">Pilih Zona</label>
+            <select v-model="filterForm.zone_id" class="form-select" @change="applyFilters">
+              <option value="">Semua Zona</option>
+              <option v-for="z in zones" :key="z.id" :value="z.id">{{ z.name }}</option>
+            </select>
+          </BCol>
+          <BCol md="4">
+            <label class="form-label text-muted small mb-1">Jenis Kendaraan</label>
+            <select v-model="filterForm.vehicle_type_id" class="form-select" @change="applyFilters">
+              <option value="">Semua Jenis</option>
+              <option v-for="vt in vehicleTypes" :key="vt.id" :value="vt.id">{{ vt.name }}</option>
+            </select>
+          </BCol>
+          <BCol md="4">
+            <label class="form-label text-muted small mb-1">Filter Tanggal</label>
+            <DateRangeFilter 
+              :date-from="filterForm.date_from" 
+              :date-to="filterForm.date_to" 
+              @change="onDateRangeChange" 
+            />
+          </BCol>
+        </BRow>
+      </BCardBody>
+    </BCard>
 
     <BRow>
       <BCol xl="12">
