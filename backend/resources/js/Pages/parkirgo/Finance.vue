@@ -20,8 +20,6 @@ export default {
       perPageVal: 15,
       tableSortField: this.sortField,
       tableSortDir: this.sortDir,
-      searchQuery: "",
-      perPageVal: 15,
     };
   },
   computed: {
@@ -59,48 +57,6 @@ export default {
     },
     onSort(field, dir) {
       this.tableSortField = field; this.tableSortDir = dir;
-      router.get("/parkirgo/finance", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
-    },
-    onSearch(q) {
-      this.searchQuery = q;
-      router.get("/parkirgo/finance", { search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
-    },
-    onPage(page) {
-      router.get("/parkirgo/finance", { page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
-    },
-    onPerPage(val) {
-      this.perPageVal = val;
-      router.get("/parkirgo/finance", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
-    },
-    onSortSet(field, dir) {
-      this.tableSortField = field; this.tableSortDir = dir;
-      router.get("/parkirgo/finance", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
-    },
-    onSearchSet(q) {
-      this.searchQuery = q;
-      router.get("/parkirgo/finance", { search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
-    },
-    onPageSet(page) {
-      router.get("/parkirgo/finance", { page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
-    },
-    onPerPageSet(val) {
-      this.perPageVal = val;
-      router.get("/parkirgo/finance", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
-    },
-  },
-    formatDateShort(v) {
-      if (!v) return "-";
-      return new Intl.DateTimeFormat("id-ID", { 
-        day: "2-digit", month: "2-digit", year: "numeric",
-        hour: "2-digit", minute: "2-digit"
-      }).format(new Date(v));
-    },
-    badge(status) {
-      return { recorded: "info", verified: "success", rejected: "danger", approved: "success" }[status] || "secondary";
-    },
-    onSort(field, dir) {
-      this.tableSortField = field;
-      this.tableSortDir = dir;
       router.get("/parkirgo/finance", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
     },
     onSearch(q) {
@@ -219,10 +175,10 @@ export default {
               :data="settlements"
               :sort-field="tableSortField"
               :sort-dir="tableSortDir"
-              @sort="onSortSet"
-              @search="onSearchSet"
-              @page-change="onPageSet"
-              @per-page-change="onPerPageSet"
+              @sort="onSort"
+              @search="onSearch"
+              @page-change="onPage"
+              @per-page-change="onPerPage"
             >
               <template #cell-created_at="{ row }">{{ formatDateShort(row.created_at) }}</template>
               <template #cell-jukir_name="{ row }">{{ row.jukir?.name }}</template>
@@ -234,7 +190,6 @@ export default {
                 <span class="badge" :class="`bg-${badge(row.status)}-subtle text-${badge(row.status)}`">{{ row.status }}</span>
               </template>
             </DataTable>
-            <div v-if="!settlements.data?.length" class="text-center text-muted py-3">Belum ada setoran.</div>
           </BCardBody>
         </BCard>
       </BCol>
