@@ -1,18 +1,8 @@
 <script>
-import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet";
-import { latLng, Icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-
-// Fix leaflet default marker icon path issue with bundler
-delete Icon.Default.prototype._getIconUrl;
-Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
+import L from "leaflet";
 
 export default {
-  components: { LMap, LTileLayer, LMarker },
   props: {
     visible: { type: Boolean, default: false },
     currentLat: { type: Number, default: null },
@@ -21,47 +11,84 @@ export default {
   emits: ["close", "select"],
   data() {
     return {
+      map: null,
+      marker: null,
       zoom: 13,
-      center: latLng(this.currentLat || -6.2, this.currentLng || 106.8),
-      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-      marker: this.currentLat && this.currentLng ? { lat: this.currentLat, lng: this.currentLng } : null,
+      center: [this.currentLat || -6.2, this.currentLng || 106.8],
       searchQuery: "",
       searching: false,
       searchResults: [],
-      mapInstance: null,
+      selectedLabel: "",
     };
   },
   computed: {
     isVisible: {
       get() { return this.visible; },
-      set(val) { if (!val) this.$emit('close'); }
+      set(val) { if (!val) this.$emit("close"); }
     }
   },
   watch: {
     visible(val) {
       if (val) {
         this.$nextTick(() => {
-          setTimeout(() => {
-            if (this.mapInstance) this.mapInstance.invalidateSize();
-          }, 200);
+          setTimeout(() => this.initMap(), 150);
         });
+      } else {
+        this.destroyMap();
       }
     },
   },
   methods: {
-    onMapReady(mapInstance) {
-      this.mapInstance = mapInstance;
-      setTimeout(() => {
-        mapInstance.invalidateSize();
-      }, 300);
+    initMap() {
+      this.destroyMap();
+      const el = this.$el?.querySelector("#leaflet-map");
+      if (!el) return;
+
+      this.map = L.map(el, {
+        center: this.center,
+        zoom: this.zoom,
+        zoomControl: true,
+      });
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(this.map);
+
+      setTimeout(() => this.map.invalidateSize(), 250);
+
+      if (this.currentLat && this.currentLng) {
+        this.placeMarker(this.currentLat, this.currentLng);
+      }
+
+      this.map.on("click", (e) => {
+        this.placeMarker(e.latlng.lat, e.latlng.lng);
+      });
     },
-    onMapClick(e) {
-      this.marker = { lat: e.latlng.lat, lng: e.latlng.lng };
-      this.center = latLng(e.latlng.lat, e.latlng.lng);
+    destroyMap() {
+      if (this.map) {
+        this.map.remove();
+        this.map = null;
+        this.marker = null;
+      }
     },
-    onMarkerDrag(e) {
-      this.marker = { lat: e.latlng.lat, lng: e.latlng.lng };
+    placeMarker(lat, lng) {
+      if (this.marker) this.map.removeLayer(this.marker);
+      const icon = L.icon({
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      });
+      this.marker = L.marker([lat, lng], { icon, draggable: true }).addTo(this.map);
+      this.marker.on("dragend", () => {
+        const pos = this.marker.getLatLng();
+        this.center = [pos.lat, pos.lng];
+      });
+      this.center = [lat, lng];
     },
     async searchLocation() {
       if (!this.searchQuery.trim()) return;
@@ -75,27 +102,30 @@ export default {
         const data = await res.json();
         this.searchResults = data;
       } catch (e) {
-        console.warn("Nominatim search error:", e);
+        console.warn("Search error:", e);
         this.searchResults = [];
       } finally {
         this.searching = false;
       }
-      this.$nextTick(() => {
-        if (this.mapInstance) setTimeout(() => this.mapInstance.invalidateSize(), 100);
-      });
     },
     selectResult(item) {
       const lat = parseFloat(item.lat);
       const lng = parseFloat(item.lon);
-      this.center = latLng(lat, lng);
-      this.zoom = 15;
-      this.marker = { lat, lng };
       this.searchResults = [];
       this.searchQuery = item.display_name;
+      this.selectedLabel = item.display_name;
+
+      if (this.map) {
+        this.map.flyTo([lat, lng], 16, { duration: 1 });
+        setTimeout(() => this.placeMarker(lat, lng), 1200);
+      } else {
+        this.center = [lat, lng];
+        this.zoom = 16;
+      }
     },
     confirm() {
-      if (this.marker) {
-        this.$emit("select", { lat: this.marker.lat, lng: this.marker.lng, label: this.searchQuery || "Lokasi dipilih" });
+      if (this.center) {
+        this.$emit("select", { lat: this.center[0], lng: this.center[1], label: this.selectedLabel || this.searchQuery });
       }
       this.$emit("close");
     },
@@ -103,11 +133,14 @@ export default {
       this.$emit("close");
     },
   },
+  beforeUnmount() {
+    this.destroyMap();
+  },
 };
 </script>
 
 <template>
-  <BModal v-model="isVisible" title="Pilih Lokasi Zona" hide-footer centered size="xl">
+  <BModal v-model="isVisible" title="Pilih Lokasi Zona" hide-footer centered size="xl" @hidden="destroyMap">
     <div class="mb-3">
       <div class="input-group">
         <input
@@ -123,7 +156,7 @@ export default {
           Cari
         </BButton>
       </div>
-      <div v-if="searchResults.length" class="list-group mt-2" style="max-height:200px;overflow-y:auto">
+      <div v-if="searchResults.length" class="list-group mt-2" style="max-height:180px;overflow-y:auto">
         <button
           v-for="(item, i) in searchResults"
           :key="i"
@@ -136,32 +169,16 @@ export default {
       </div>
     </div>
 
-    <div style="height:450px;width:100%;border-radius:8px;overflow:hidden;background:#e9ecef">
-      <l-map
-        style="height:100%;width:100%"
-        :zoom="zoom"
-        :center="center"
-        @click="onMapClick"
-        @ready="onMapReady"
-      >
-        <l-tile-layer :url="url" :attribution="attribution" />
-        <l-marker
-          v-if="marker"
-          :lat-lng="latLng(marker.lat, marker.lng)"
-          :draggable="true"
-          @moveend="onMarkerDrag"
-        ></l-marker>
-      </l-map>
-    </div>
+    <div id="leaflet-map" style="height:450px;width:100%;border-radius:8px;overflow:hidden;background:#e9ecef;z-index:1"></div>
 
-    <div v-if="marker" class="mt-2 small text-muted">
+    <div v-if="center" class="mt-2 small text-muted">
       <i class="ri-map-pin-2-line me-1"></i>
-      Lat: {{ marker.lat.toFixed(6) }}, Lng: {{ marker.lng.toFixed(6) }}
+      Lat: {{ center[0].toFixed(6) }}, Lng: {{ center[1].toFixed(6) }}
     </div>
 
     <div class="d-flex justify-content-end gap-2 mt-3">
       <BButton variant="light" @click="close">Batal</BButton>
-      <BButton variant="primary" @click="confirm" :disabled="!marker">
+      <BButton variant="primary" @click="confirm" :disabled="!center">
         <i class="ri-check-line me-1"></i>Gunakan Lokasi
       </BButton>
     </div>
@@ -171,4 +188,6 @@ export default {
 <style scoped>
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+#leaflet-map { position: relative; }
+:deep(.leaflet-container) { border-radius: 8px; z-index: 1; }
 </style>
