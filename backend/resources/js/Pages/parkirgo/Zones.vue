@@ -48,8 +48,9 @@ export default {
     columns() {
       return [
         { key: "name", label: "Zona" },
-        { key: "code", label: "Kode", width: "100px" },
+        { key: "code", label: "Kode", width: "80px" },
         { key: "city", label: "Kota" },
+        { key: "vehicle_capacities", label: "Kendaraan (Kapasitas)", sortable: false },
         { key: "jukirs_count", label: "Jukir", width: "70px" },
         { key: "status", label: "Status", width: "100px" },
         { key: "actions", label: "Aksi", sortable: false, width: "100px" },
@@ -227,6 +228,17 @@ export default {
         <DataTable :columns="columns" :data="zones" :sort-field="tableSortField" :sort-dir="tableSortDir"
           @sort="onSort" @search="onSearch" @page-change="onPage" @per-page-change="onPerPage">
           <template #cell-city="{ row }">{{ row.city || "-" }}</template>
+          <template #cell-vehicle_capacities="{ row }">
+            <div class="d-flex flex-wrap gap-1">
+              <span v-for="vt in row.vehicle_types" :key="vt.id" 
+                class="badge bg-light text-dark border fw-normal"
+                v-show="vt.pivot?.capacity > 0"
+              >
+                {{ vt.name }}: {{ vt.pivot.capacity }}
+              </span>
+              <span v-if="!(row.vehicle_types || []).some(vt => vt.pivot?.capacity > 0)" class="text-muted small">-</span>
+            </div>
+          </template>
           <template #cell-status="{ row }"><span class="badge bg-success-subtle text-success">{{ row.status }}</span></template>
           <template #cell-actions="{ row }">
             <div class="d-flex gap-1">
