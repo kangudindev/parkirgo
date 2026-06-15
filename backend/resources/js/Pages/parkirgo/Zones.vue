@@ -2,11 +2,12 @@
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import DataTable from "@/Components/DataTable.vue";
+import MapPickerModal from "@/Components/MapPickerModal.vue";
 import { router } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 
 export default {
-  components: { Layout, PageHeader, DataTable },
+  components: { Layout, PageHeader, DataTable, MapPickerModal },
   props: {
     zones: { type: Object, default: () => ({ data: [] }) },
     tariffs: { type: Array, default: () => [] },
@@ -18,6 +19,7 @@ export default {
     return {
       showZoneModal: false,
       showTariffModal: false,
+      showMapModal: false,
       editingZone: null,
       editingTariff: null,
       qrisPreviewUrl: null,
@@ -177,7 +179,20 @@ export default {
     typeLabel(t) { return t === "flat" ? "Flat" : "Progresif"; },
     timingLabel(t) { return t === "entry" ? "Bayar Masuk" : "Bayar Keluar"; },
     formatRp(v) { return "Rp " + Number(v).toLocaleString("id-ID"); },
-    openMap() { window.open(`https://www.google.com/maps/@${this.zoneForm.center_lat || 0},${this.zoneForm.center_lng || 0},18z`, "_blank"); },
+    openMap() {
+      if (!this.zoneForm.center_lat || !this.zoneForm.center_lng) {
+        this.zoneForm.center_lat = -6.2;
+        this.zoneForm.center_lng = 106.8;
+      }
+      this.showMapModal = true;
+    },
+    onMapSelected(coord) {
+      this.zoneForm.center_lat = coord.lat;
+      this.zoneForm.center_lng = coord.lng;
+      if (!this.zoneForm.city && coord.label) {
+        this.zoneForm.city = coord.label.split(",")[0].trim();
+      }
+    },
     onSort(field, dir) {
       this.tableSortField = field; this.tableSortDir = dir;
       router.get("/parkirgo/zones", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
@@ -285,12 +300,21 @@ export default {
           <div class="col-4"><label class="form-label small">Longitude</label><input v-model.number="zoneForm.center_lng" type="number" step="any" class="form-control" placeholder="106.827153" /></div>
           <div class="col-3"><label class="form-label small">Radius (meter)</label><input v-model.number="zoneForm.radius_meters" type="number" min="50" max="5000" class="form-control" /></div>
           <div class="col-1 d-flex align-items-end">
-            <BButton size="sm" variant="outline-info" title="Buka Google Maps" @click="openMap">
+            <BButton size="sm" variant="outline-info" title="Pilih Lokasi di Peta" @click="openMap">
               <i class="ri-map-pin-2-line"></i>
             </BButton>
           </div>
         </div>
+        <small class="text-muted">Klik tombol pin untuk memilih lokasi di peta interaktif.</small>
       </div>
+
+      <MapPickerModal
+        :visible="showMapModal"
+        :current-lat="zoneForm.center_lat"
+        :current-lng="zoneForm.center_lng"
+        @close="showMapModal = false"
+        @select="onMapSelected"
+      />
 
       <div class="mb-2">
         <label class="form-label fw-semibold">QRIS</label>

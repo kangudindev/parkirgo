@@ -15,8 +15,24 @@ export default {
       deleteModalOpen: false,
       editingType: null,
       deletingType: null,
-      form: useForm(emptyForm()),
+      form: useForm({
+        code: "",
+        name: "",
+        icon: "ri-car-line",
+        sort_order: 0,
+        status: "active",
+      }),
       searchQuery: "",
+      predefinedIcons: [
+        "ri-motorbike-line",
+        "ri-car-line",
+        "ri-taxi-line",
+        "ri-bus-line",
+        "ri-truck-line",
+        "ri-e-bike-2-line",
+        "ri-caravan-line",
+        "ri-ship-2-line"
+      ],
     };
   },
   computed: {
@@ -251,17 +267,28 @@ export default {
             <input id="vehicle-type-name" v-model="form.name" type="text" class="form-control" placeholder="Motor" />
             <div v-if="form.errors.name" class="text-danger small mt-1">{{ form.errors.name }}</div>
           </BCol>
-          <BCol lg="6">
-            <label for="vehicle-type-icon" class="form-label">Icon Remix</label>
-            <input id="vehicle-type-icon" v-model="form.icon" type="text" class="form-control" placeholder="ri-motorbike-line" />
+          <BCol lg="12">
+            <label class="form-label mb-2">Pilih Icon Kendaraan</label>
+            <div class="d-flex flex-wrap gap-2">
+              <button 
+                v-for="icon in predefinedIcons" :key="icon"
+                type="button"
+                class="btn btn-outline-light border text-dark d-flex align-items-center justify-content-center p-0"
+                style="width: 48px; height: 48px;"
+                :class="{ 'border-primary text-primary bg-primary-subtle border-2': form.icon === icon }"
+                @click="form.icon = icon"
+              >
+                <i :class="[icon, 'fs-24']"></i>
+              </button>
+            </div>
             <div v-if="form.errors.icon" class="text-danger small mt-1">{{ form.errors.icon }}</div>
           </BCol>
-          <BCol lg="3">
+          <BCol lg="6">
             <label for="vehicle-type-sort" class="form-label">Urutan</label>
             <input id="vehicle-type-sort" v-model.number="form.sort_order" type="number" min="0" class="form-control" />
             <div v-if="form.errors.sort_order" class="text-danger small mt-1">{{ form.errors.sort_order }}</div>
           </BCol>
-          <BCol lg="3">
+          <BCol lg="6">
             <label for="vehicle-type-status" class="form-label">Status</label>
             <select id="vehicle-type-status" v-model="form.status" class="form-select">
               <option value="active">Active</option>
