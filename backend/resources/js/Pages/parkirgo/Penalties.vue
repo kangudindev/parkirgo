@@ -144,34 +144,36 @@ export default {
                   <th style="width:140px">Tipe Denda</th>
                   <th>Motor</th>
                   <th>Mobil</th>
-                  <th>Bus/Truk</th>
+                  <th>Bus</th>
+                  <th>Truk</th>
                   <th>Semua Jenis</th>
-                  <th style="width:100px">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="type in ['card_lost', 'unregistered']" :key="type">
                   <td>{{ typeLabel(type) }}</td>
                   <td v-for="vt in ['motor', 'mobil', 'bus', 'truk']" :key="vt">
-                    <span v-if="group[type][vt]" class="fw-semibold">
-                      {{ formatRp(group[type][vt].amount) }}
-                    </span>
-                    <span v-else class="text-muted">-</span>
-                  </td>
-                  <td>
-                    <div v-if="group[type]['semua']" class="d-flex align-items-center gap-1">
-                      <span class="fw-semibold text-warning">{{ formatRp(group[type]['semua'].amount) }}</span>
-                      <span class="badge bg-warning-subtle text-warning" style="font-size:10px">fallback</span>
+                    <div v-if="group[type][vt]" class="d-flex align-items-center justify-content-between">
+                      <span class="fw-semibold">{{ formatRp(group[type][vt].amount) }}</span>
+                      <div class="d-flex gap-1 ms-2">
+                        <button class="btn btn-sm btn-soft-secondary py-0 px-1" @click="openEdit(group[type][vt])" title="Edit"><i class="ri-pencil-line"></i></button>
+                        <button class="btn btn-sm btn-soft-danger py-0 px-1" @click="remove(group[type][vt])" title="Hapus"><i class="ri-delete-bin-line"></i></button>
+                      </div>
                     </div>
                     <span v-else class="text-muted">-</span>
                   </td>
                   <td>
-                    <div class="d-flex gap-1">
-                      <BButton v-for="(p) in [group[type]['motor'], group[type]['mobil'], group[type]['bus'], group[type]['truk'], group[type]['semua']].filter(Boolean)" :key="p.id"
-                        size="sm" variant="outline-secondary" @click="openEdit(p)">
-                        <i class="ri-pencil-line"></i>
-                      </BButton>
+                    <div v-if="group[type]['semua']" class="d-flex align-items-center justify-content-between">
+                      <div>
+                        <span class="fw-semibold text-warning">{{ formatRp(group[type]['semua'].amount) }}</span>
+                        <span class="badge bg-warning-subtle text-warning ms-1" style="font-size:10px">fallback</span>
+                      </div>
+                      <div class="d-flex gap-1 ms-2">
+                        <button class="btn btn-sm btn-soft-secondary py-0 px-1" @click="openEdit(group[type]['semua'])" title="Edit"><i class="ri-pencil-line"></i></button>
+                        <button class="btn btn-sm btn-soft-danger py-0 px-1" @click="remove(group[type]['semua'])" title="Hapus"><i class="ri-delete-bin-line"></i></button>
+                      </div>
                     </div>
+                    <span v-else class="text-muted">-</span>
                   </td>
                 </tr>
               </tbody>

@@ -109,27 +109,34 @@ class AdminController extends Controller
         $start = Carbon::parse($dates['from']);
         $end = Carbon::parse($dates['to']);
 
-        $format = match ($period) {
-            'today' => 'H:00',
-            'week' => 'D',
-            'month' => 'd M',
-            'year' => 'M Y',
-            default => 'Y-m-d'
-        };
-
         $sqlFormat = match ($period) {
             'today' => '%H:00',
-            'week' => '%a',
-            'month' => '%d %b',
-            'year' => '%b %Y',
+            'week', 'month' => '%Y-%m-%d',
+            'year' => '%Y-%m',
             default => '%Y-%m-%d'
         };
 
         // Get all labels first to ensure continuity
         $labels = [];
-        $current = $start->copy();
+        $matchKeys = [];
+        $current = $start->copy()->locale('id');
+        
         while ($current <= $end) {
-            $labels[] = $current->format($format);
+            $matchKeys[] = match ($period) {
+                'today' => $current->format('H:00'),
+                'week', 'month' => $current->format('Y-m-d'),
+                'year' => $current->format('Y-m'),
+                default => $current->format('Y-m-d')
+            };
+
+            $labels[] = match ($period) {
+                'today' => $current->format('H:00'),
+                'week' => $current->isoFormat('dddd'),
+                'month' => $current->isoFormat('D MMM'),
+                'year' => $current->isoFormat('MMM YYYY'),
+                default => $current->format('Y-m-d')
+            };
+
             match ($period) {
                 'today' => $current->addHour(),
                 'week', 'month' => $current->addDay(),
@@ -148,8 +155,8 @@ class AdminController extends Controller
                 ->pluck('total', 'time_label');
 
             $zoneSeries = [];
-            foreach ($labels as $label) {
-                $zoneSeries[] = (int) ($data[$label] ?? 0);
+            foreach ($matchKeys as $key) {
+                $zoneSeries[] = (int) ($data[$key] ?? 0);
             }
 
             $series[] = [

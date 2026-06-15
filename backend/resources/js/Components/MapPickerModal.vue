@@ -1,10 +1,10 @@
 <script>
-import { LMap, LTileLayer, LMarker, LControl } from "@vue-leaflet/vue-leaflet";
+import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet";
 import { latLng } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 export default {
-  components: { LMap, LTileLayer, LMarker, LControl },
+  components: { LMap, LTileLayer, LMarker },
   props: {
     visible: { type: Boolean, default: false },
     currentLat: { type: Number, default: null },
@@ -21,18 +21,8 @@ export default {
       searchQuery: "",
       searching: false,
       searchResults: [],
-      mapReady: false,
+      mapInstance: null,
     };
-  },
-  watch: {
-    visible(val) {
-      if (val) {
-        this.center = latLng(this.currentLat || -6.2, this.currentLng || 106.8);
-        this.marker = this.currentLat && this.currentLng ? { lat: this.currentLat, lng: this.currentLng } : null;
-      } else {
-        this.mapReady = false;
-      }
-    },
   },
   computed: {
     isVisible: {
@@ -40,12 +30,23 @@ export default {
       set(val) { if (!val) this.$emit('close'); }
     }
   },
+  watch: {
+    visible(val) {
+      if (val) {
+        this.$nextTick(() => {
+          setTimeout(() => {
+            if (this.mapInstance) this.mapInstance.invalidateSize();
+          }, 200);
+        });
+      }
+    },
+  },
   methods: {
-    onModalShown() {
-      // Small delay to ensure the modal's transition has finished and dimensions are calculated
+    onMapReady(mapInstance) {
+      this.mapInstance = mapInstance;
       setTimeout(() => {
-        this.mapReady = true;
-      }, 100);
+        mapInstance.invalidateSize();
+      }, 300);
     },
     onMapClick(e) {
       this.marker = { lat: e.latlng.lat, lng: e.latlng.lng };
@@ -92,7 +93,7 @@ export default {
 </script>
 
 <template>
-  <BModal v-model="isVisible" title="Pilih Lokasi Zona" hide-footer centered size="xl" @shown="onModalShown">
+  <BModal v-model="isVisible" title="Pilih Lokasi Zona" hide-footer centered size="xl">
     <div class="mb-3">
       <div class="input-group">
         <input
@@ -121,16 +122,13 @@ export default {
       </div>
     </div>
 
-    <div style="height:450px;width:100%;border-radius:8px;overflow:hidden;background:#f8f9fa" class="d-flex align-items-center justify-content-center">
-      <div v-if="!mapReady" class="text-muted">
-        <i class="ri-loader-4-line spin fs-2"></i>
-      </div>
+    <div style="height:450px;width:100%;border-radius:8px;overflow:hidden;background:#e9ecef">
       <l-map
-        v-if="mapReady"
         style="height:100%;width:100%"
         :zoom="zoom"
         :center="center"
         @click="onMapClick"
+        @ready="onMapReady"
       >
         <l-tile-layer :url="url" :attribution="attribution" />
         <l-marker
