@@ -13,11 +13,18 @@ class PenaltyController extends Controller
     public function index()
     {
         $penalties = ZonePenalty::with('zone')->latest()->get();
-        $zones = Zone::where('status', 'active')->get(['id', 'name', 'code']);
+        $zones = Zone::where('status', 'active')
+            ->with(['vehicleTypes' => function ($q) {
+                $q->select('vehicle_types.id', 'name', 'code', 'icon')->orderBy('sort_order');
+            }])
+            ->get(['id', 'name', 'code']);
+        
+        $vehicleTypes = \App\Models\VehicleType::where('status', 'active')->orderBy('sort_order')->get(['id', 'name', 'code', 'icon']);
 
         return Inertia::render('parkirgo/Penalties', [
             'penalties' => $penalties,
             'zones' => $zones,
+            'vehicleTypes' => $vehicleTypes,
         ]);
     }
 

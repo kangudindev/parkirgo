@@ -9,6 +9,7 @@ export default {
   props: {
     penalties: { type: Array, default: () => [] },
     zones: { type: Array, default: () => [] },
+    vehicleTypes: { type: Array, default: () => [] },
   },
   data() {
     return {
@@ -29,7 +30,7 @@ export default {
         const key = p.zone?.id || p.zone_id;
         if (!groups[key]) {
           groups[key] = {
-            zone: p.zone,
+            zone: this.zones.find(z => z.id === key) || p.zone,
             card_lost: {},
             unregistered: {},
           };
@@ -39,6 +40,11 @@ export default {
       }
       return Object.values(groups);
     },
+    selectedZoneVehicleTypes() {
+      if (!this.form.zone_id) return this.vehicleTypes;
+      const zone = this.zones.find(z => z.id === this.form.zone_id);
+      return zone && zone.vehicle_types && zone.vehicle_types.length > 0 ? zone.vehicle_types : this.vehicleTypes;
+    }
   },
   methods: {
     openAdd() {
@@ -80,7 +86,7 @@ export default {
     remove(p) {
       Swal.fire({
         title: "Hapus Denda?",
-        text: `Yakin ingin menghapus denda ${p.penalty_type} untuk ${p.zone?.name || 'zona'}?`,
+        text: `Yakin ingin menghapus denda ${this.typeLabel(p.penalty_type)}?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#f06548",
@@ -135,50 +141,55 @@ export default {
           Belum ada konfigurasi denda. Klik "Tambah Denda" untuk memulai.
         </div>
 
-        <div v-for="group in groupedPenalties" :key="group.zone?.id || 0" class="mb-4">
-          <h5 class="mb-2">{{ group.zone?.name || 'Zona' }} ({{ group.zone?.code || '-' }})</h5>
-          <div class="table-responsive">
-            <table class="table table-hover table-bordered align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th style="width:140px">Tipe Denda</th>
-                  <th>Motor</th>
-                  <th>Mobil</th>
-                  <th>Bus</th>
-                  <th>Truk</th>
-                  <th>Semua Jenis</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="type in ['card_lost', 'unregistered']" :key="type">
-                  <td>{{ typeLabel(type) }}</td>
-                  <td v-for="vt in ['motor', 'mobil', 'bus', 'truk']" :key="vt">
-                    <div v-if="group[type][vt]" class="d-flex align-items-center justify-content-between">
-                      <span class="fw-semibold">{{ formatRp(group[type][vt].amount) }}</span>
-                      <div class="d-flex gap-1 ms-2">
-                        <button class="btn btn-sm btn-soft-secondary py-0 px-1" @click="openEdit(group[type][vt])" title="Edit"><i class="ri-pencil-line"></i></button>
-                        <button class="btn btn-sm btn-soft-danger py-0 px-1" @click="remove(group[type][vt])" title="Hapus"><i class="ri-delete-bin-line"></i></button>
+        <div v-for="group in groupedPenalties" :key="group.zone?.id || 0" class="mb-5">
+          <h5 class="mb-3 fw-bold border-bottom pb-2">{{ group.zone?.name || 'Zona' }} <span class="text-muted small fw-normal ms-1">({{ group.zone?.code || '-' }})</span></h5>
+          
+          <BRow class="g-3">
+            <BCol md="6" v-for="type in ['card_lost', 'unregistered']" :key="type">
+              <BCard no-body class="border shadow-none h-100 mb-0">
+                <BCardHeader class="bg-light py-2">
+                  <h6 class="mb-0">{{ typeLabel(type) }}</h6>
+                </BCardHeader>
+                <BCardBody class="p-3">
+                  <div class="d-flex flex-column gap-2">
+                    <!-- Loop actual vehicle types available in this zone -->
+                    <div v-for="vt in (group.zone?.vehicle_types || vehicleTypes)" :key="vt.code" class="d-flex align-items-center justify-content-between p-2 rounded bg-body-tertiary">
+                      <div class="d-flex align-items-center gap-2">
+                        <i :class="vt.icon" class="text-primary"></i>
+                        <span>{{ vt.name }}</span>
                       </div>
+                      
+                      <div v-if="group[type][vt.code]" class="d-flex align-items-center gap-2">
+                        <span class="fw-semibold">{{ formatRp(group[type][vt.code].amount) }}</span>
+                        <div class="d-flex gap-1">
+                          <button class="btn btn-sm btn-soft-secondary py-0 px-1" @click="openEdit(group[type][vt.code])" title="Edit"><i class="ri-pencil-line"></i></button>
+                          <button class="btn btn-sm btn-soft-danger py-0 px-1" @click="remove(group[type][vt.code])" title="Hapus"><i class="ri-delete-bin-line"></i></button>
+                        </div>
+                      </div>
+                      <span v-else class="text-muted small fst-italic">Belum diatur</span>
                     </div>
-                    <span v-else class="text-muted">-</span>
-                  </td>
-                  <td>
-                    <div v-if="group[type]['semua']" class="d-flex align-items-center justify-content-between">
-                      <div>
+
+                    <!-- Fallback / Semua Jenis -->
+                    <div class="d-flex align-items-center justify-content-between p-2 rounded border border-warning-subtle">
+                      <div class="d-flex align-items-center gap-2">
+                        <i class="ri-asterisk text-warning"></i>
+                        <span class="text-warning fw-medium">Semua Jenis / Fallback</span>
+                      </div>
+                      
+                      <div v-if="group[type]['semua']" class="d-flex align-items-center gap-2">
                         <span class="fw-semibold text-warning">{{ formatRp(group[type]['semua'].amount) }}</span>
-                        <span class="badge bg-warning-subtle text-warning ms-1" style="font-size:10px">fallback</span>
+                        <div class="d-flex gap-1">
+                          <button class="btn btn-sm btn-soft-secondary py-0 px-1" @click="openEdit(group[type]['semua'])" title="Edit"><i class="ri-pencil-line"></i></button>
+                          <button class="btn btn-sm btn-soft-danger py-0 px-1" @click="remove(group[type]['semua'])" title="Hapus"><i class="ri-delete-bin-line"></i></button>
+                        </div>
                       </div>
-                      <div class="d-flex gap-1 ms-2">
-                        <button class="btn btn-sm btn-soft-secondary py-0 px-1" @click="openEdit(group[type]['semua'])" title="Edit"><i class="ri-pencil-line"></i></button>
-                        <button class="btn btn-sm btn-soft-danger py-0 px-1" @click="remove(group[type]['semua'])" title="Hapus"><i class="ri-delete-bin-line"></i></button>
-                      </div>
+                      <span v-else class="text-muted small fst-italic">Belum diatur</span>
                     </div>
-                    <span v-else class="text-muted">-</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                  </div>
+                </BCardBody>
+              </BCard>
+            </BCol>
+          </BRow>
         </div>
       </BCardBody>
     </BCard>
@@ -188,18 +199,17 @@ export default {
       <div class="mb-3">
         <label class="form-label">Zona</label>
         <select v-model="form.zone_id" class="form-select">
+          <option :value="null" disabled>Pilih Zona...</option>
           <option v-for="z in zones" :key="z.id" :value="z.id">{{ z.name }} ({{ z.code }})</option>
         </select>
       </div>
       <div class="mb-3">
         <label class="form-label">Jenis Kendaraan</label>
-        <select v-model="form.vehicle_type" class="form-select">
-          <option value="">Semua Jenis</option>
-          <option value="motor">Motor</option>
-          <option value="mobil">Mobil</option>
-          <option value="bus">Bus</option>
-          <option value="truk">Truk</option>
+        <select v-model="form.vehicle_type" class="form-select" :disabled="!form.zone_id">
+          <option :value="null">Semua Jenis (Fallback)</option>
+          <option v-for="vt in selectedZoneVehicleTypes" :key="vt.code" :value="vt.code">{{ vt.name }}</option>
         </select>
+        <div v-if="!form.zone_id" class="form-text text-warning">Pilih zona terlebih dahulu untuk melihat jenis kendaraan yang sesuai.</div>
       </div>
       <div class="mb-3">
         <label class="form-label">Tipe Denda</label>
