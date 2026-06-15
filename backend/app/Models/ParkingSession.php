@@ -13,6 +13,7 @@ class ParkingSession extends Model
         'zone_id',
         'tariff_id',
         'jukir_id',
+        'closed_by',
         'ticket_number',
         'plate_number',
         'vehicle_type_id',
@@ -68,6 +69,11 @@ class ParkingSession extends Model
     public function jukir()
     {
         return $this->belongsTo(User::class, 'jukir_id');
+    }
+
+    public function closer()
+    {
+        return $this->belongsTo(User::class, 'closed_by');
     }
 
     public function transaction()

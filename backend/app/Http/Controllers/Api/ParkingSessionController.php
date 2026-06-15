@@ -15,11 +15,16 @@ class ParkingSessionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ParkingSession::with(['zone', 'tariff'])
-            ->where('jukir_id', $request->user()->id);
+        $query = ParkingSession::with(['zone', 'tariff']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('zone_id')) {
+            $query->where('zone_id', $request->zone_id);
+        } else {
+            $query->where('zone_id', $request->user()->assigned_zone_id);
         }
 
         return response()->json([
@@ -107,6 +112,10 @@ class ParkingSessionController extends Controller
             'status' => 'exited',
         ]);
 
+        if (! $parkingSession->closed_by) {
+            $parkingSession->update(['closed_by' => $request->user()->id]);
+        }
+
         return response()->json(['session' => $parkingSession->fresh(['zone', 'tariff'])]);
     }
 
@@ -146,6 +155,7 @@ class ParkingSessionController extends Controller
             'final_amount' => $parkingFee,
             'penalty_fee' => $penaltyFee,
             'is_card_lost' => true,
+            'closed_by' => $request->user()->id,
             'status' => 'exited',
             'payment_status' => 'unpaid',
         ]));
@@ -204,6 +214,7 @@ class ParkingSessionController extends Controller
         $session = ParkingSession::create([
             'zone_id' => $data['zone_id'],
             'jukir_id' => $request->user()->id,
+            'closed_by' => $request->user()->id,
             'ticket_number' => "{$zoneCode}-{$today}-{$sequence}",
             'plate_number' => $data['plate_number'],
             'vehicle_type' => $data['vehicle_type'],
