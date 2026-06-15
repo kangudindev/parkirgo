@@ -65,7 +65,7 @@ export default {
 
 <template>
   <div>
-    <div v-if="searchable" class="row mb-3">
+    <div v-if="searchable" class="row align-items-center g-3 mb-3">
       <div class="col-md-6">
         <div class="search-box">
           <input
@@ -78,8 +78,8 @@ export default {
           <i class="ri-search-line search-icon"></i>
         </div>
       </div>
-      <div class="col-md-6 text-end">
-        <div class="d-flex align-items-center justify-content-end gap-2">
+      <div class="col-md-6 text-md-end">
+        <div class="d-flex align-items-center justify-content-md-end gap-2">
           <small class="text-muted">Tampilkan</small>
           <select class="form-select form-select-sm" style="width:70px" :value="perPage" @change="changePerPage">
             <option :value="10">10</option>
@@ -92,7 +92,7 @@ export default {
       </div>
     </div>
 
-    <div class="table-responsive table-card">
+    <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
