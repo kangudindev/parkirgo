@@ -80,7 +80,6 @@ export default {
            <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="50" />
         </div>
         <h2 class="fw-bold mb-1">LAPORAN PENDAPATAN</h2>
-        <p class="text-uppercase letter-spacing-1 mb-1">System Manajemen Parkir Digital</p>
         <div class="badge bg-light text-dark border p-2 px-3 mt-2">
            Periode: {{ filters.date_from }} s/d {{ filters.date_to }}
         </div>
@@ -90,17 +89,17 @@ export default {
       <ul class="nav nav-tabs nav-tabs-custom border-bottom-0 mb-0" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link" :class="{ active: activeTab === 'user' }" @click="activeTab = 'user'" type="button">
-            <i class="ri-user-line me-1"></i>Per Pengguna
+            <i class="ri-user-line me-1"></i>Rekap Juru Parkir
           </button>
         </li>
         <li class="nav-item" role="presentation">
           <button class="nav-link" :class="{ active: activeTab === 'shift' }" @click="activeTab = 'shift'" type="button">
-            <i class="ri-calendar-line me-1"></i>Per Shift
+            <i class="ri-calendar-line me-1"></i>Rekap Shift
           </button>
         </li>
         <li class="nav-item" role="presentation">
           <button class="nav-link" :class="{ active: activeTab === 'zone' }" @click="activeTab = 'zone'" type="button">
-            <i class="ri-map-pin-2-line me-1"></i>Per Zona
+            <i class="ri-map-pin-2-line me-1"></i>Rekap Zona
           </button>
         </li>
       </ul>

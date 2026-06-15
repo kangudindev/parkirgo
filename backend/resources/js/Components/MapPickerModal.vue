@@ -21,6 +21,7 @@ export default {
       searchQuery: "",
       searching: false,
       searchResults: [],
+      mapReady: false,
     };
   },
   watch: {
@@ -28,6 +29,8 @@ export default {
       if (val) {
         this.center = latLng(this.currentLat || -6.2, this.currentLng || 106.8);
         this.marker = this.currentLat && this.currentLng ? { lat: this.currentLat, lng: this.currentLng } : null;
+      } else {
+        this.mapReady = false;
       }
     },
   },
@@ -38,6 +41,12 @@ export default {
     }
   },
   methods: {
+    onModalShown() {
+      // Small delay to ensure the modal's transition has finished and dimensions are calculated
+      setTimeout(() => {
+        this.mapReady = true;
+      }, 100);
+    },
     onMapClick(e) {
       this.marker = { lat: e.latlng.lat, lng: e.latlng.lng };
       this.center = latLng(e.latlng.lat, e.latlng.lng);
@@ -83,7 +92,7 @@ export default {
 </script>
 
 <template>
-  <BModal v-model="isVisible" title="Pilih Lokasi Zona" hide-footer centered size="xl">
+  <BModal v-model="isVisible" title="Pilih Lokasi Zona" hide-footer centered size="xl" @shown="onModalShown">
     <div class="mb-3">
       <div class="input-group">
         <input
@@ -112,8 +121,12 @@ export default {
       </div>
     </div>
 
-    <div style="height:450px;width:100%;border-radius:8px;overflow:hidden">
+    <div style="height:450px;width:100%;border-radius:8px;overflow:hidden;background:#f8f9fa" class="d-flex align-items-center justify-content-center">
+      <div v-if="!mapReady" class="text-muted">
+        <i class="ri-loader-4-line spin fs-2"></i>
+      </div>
       <l-map
+        v-if="mapReady"
         style="height:100%;width:100%"
         :zoom="zoom"
         :center="center"
