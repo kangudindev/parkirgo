@@ -6,6 +6,16 @@ export default defineConfig({
     build: {
         chunkSizeWarningLimit: 4000,
         emptyOutDir: false,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'vendor-charts': ['apexcharts', 'vue3-apexcharts', 'echarts', 'vue3-echarts'],
+                    'vendor-ui': ['bootstrap', 'bootstrap-vue-next', '@vueform/slider', '@vueform/multiselect', 'sweetalert2'],
+                    'vendor-maps': ['leaflet', '@vue-leaflet/vue-leaflet'],
+                    'vendor-core': ['vue', 'vuex', 'vue-i18n', '@inertiajs/vue3', 'axios', 'moment', 'ziggy-js'],
+                }
+            }
+        }
     },
     server: {
         host: '0.0.0.0',

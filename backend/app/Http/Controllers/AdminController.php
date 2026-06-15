@@ -43,7 +43,9 @@ class AdminController extends Controller
                 'settlements_period' => Settlement::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
             ];
 
-            $zones = Zone::with('vehicleTypes')->latest()->get();
+            $zones = Zone::select('id', 'name', 'code', 'status')->with(['vehicleTypes' => function($q) {
+                $q->select('vehicle_types.id', 'vehicle_types.name', 'vehicle_types.code');
+            }])->latest()->get();
             $zoneIds = $zones->pluck('id');
 
             $jukirCounts = User::whereIn('assigned_zone_id', $zoneIds)
@@ -85,8 +87,17 @@ class AdminController extends Controller
             // Multi-line Chart Data (Per Zone)
             $chartData = $this->prepareRevenueChartData($period, $zones);
 
-            $recentSessions = ParkingSession::with(['zone', 'jukir', 'vehicleTypeMaster'])->latest()->limit(8)->get();
-            $recentTransactions = Transaction::with(['zone', 'jukir', 'parkingSession'])->latest()->limit(8)->get();
+            $recentSessions = ParkingSession::select('id', 'ticket_number', 'plate_number', 'zone_id', 'jukir_id', 'vehicle_type_id', 'status', 'entry_at')
+                ->with([
+                    'zone:id,name', 
+                    'jukir:id,name', 
+                    'vehicleTypeMaster:id,name'
+                ])->latest()->limit(8)->get();
+            $recentTransactions = Transaction::select('id', 'transaction_number', 'amount', 'payment_method', 'status', 'zone_id', 'jukir_id', 'created_at')
+                ->with([
+                    'zone:id,name', 
+                    'jukir:id,name'
+                ])->latest()->limit(8)->get();
         } catch (\Exception $e) {
             report($e);
             $summary = [

@@ -22,15 +22,19 @@ return new class extends Migration
             $table->index('zone_id');
             $table->index('jukir_id');
             $table->index('status');
+            $table->index('entry_at');
+            $table->index('exit_at');
             $table->index(['zone_id', 'status']);
             $table->index(['jukir_id', 'status']);
             $table->index(['zone_id', 'created_at']);
+            $table->index(['zone_id', 'entry_at']);
         });
 
         Schema::table('settlements', function (Blueprint $table) {
             $table->index('zone_id');
             $table->index('jukir_id');
             $table->index('status');
+            $table->index('created_at');
             $table->index(['jukir_id', 'settlement_date']);
         });
 

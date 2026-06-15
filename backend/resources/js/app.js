@@ -9,7 +9,6 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from 'ziggy-js';
 import BootstrapVueNext from 'bootstrap-vue-next';
 import vClickOutside from "click-outside-vue3";
-import VueApexCharts from "vue3-apexcharts";
 import VueFeather from 'vue-feather';
 import VueTheMask from 'vue-the-mask';
 
@@ -36,7 +35,6 @@ createInertiaApp({
             .use(BootstrapVueNext)
             .component('Link', Link)
             .component('Head', Head)
-            .use(VueApexCharts)
             .use(VueTheMask)
             .use(vClickOutside)
             .component(VueFeather.type, VueFeather)

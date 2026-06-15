@@ -3,11 +3,12 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import { Link, router } from "@inertiajs/vue3";
 import { VueEcharts } from "vue3-echarts";
+import VueApexCharts from "vue3-apexcharts";
 
 const currency = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
 
 export default {
-  components: { Layout, PageHeader, Link, VueEcharts },
+  components: { Layout, PageHeader, Link, VueEcharts, apexchart: VueApexCharts },
   props: {
     summary: { type: Object, default: () => ({}) },
     zones: { type: Array, default: () => [] },
