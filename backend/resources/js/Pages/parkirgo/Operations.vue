@@ -136,22 +136,22 @@ export default {
     <div class="print-area">
       <PageHeader title="Sesi Parkir" pageTitle="ParkirGo" class="no-print" />
 
-      <div class="print-only mb-4 mt-2">
-        <div class="d-flex align-items-center justify-content-center mb-3">
-          <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="40" />
+      <div class="print-only text-center mb-5">
+        <div class="d-flex justify-content-center mb-3">
+          <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="50" />
         </div>
-        <h3 class="text-center fw-bold mb-1">DATA SESI PARKIR</h3>
-        <p class="text-center text-muted small mb-0">System Manajemen Parkir Digital</p>
-        <div class="text-center mt-2 d-flex justify-content-center gap-2">
-          <span class="badge bg-light text-dark border px-2">
+        <h2 class="fw-bold mb-1">DATA SESI PARKIR</h2>
+        <p class="text-uppercase letter-spacing-1 mb-1">System Manajemen Parkir Digital</p>
+        <div class="d-flex justify-content-center gap-2 mt-2">
+          <div class="badge bg-light text-dark border p-2 px-3">
             Periode: {{ filterForm.date_from }} - {{ filterForm.date_to }}
-          </span>
-          <span class="badge bg-light text-dark border px-2">
+          </div>
+          <div class="badge bg-light text-dark border p-2 px-3">
             Zona: {{ selectedZoneName }}
-          </span>
-          <span class="badge bg-light text-dark border px-2">
+          </div>
+          <div class="badge bg-light text-dark border p-2 px-3">
             Kendaraan: {{ selectedVehicleName }}
-          </span>
+          </div>
         </div>
       </div>
 
