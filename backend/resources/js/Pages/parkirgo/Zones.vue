@@ -231,9 +231,10 @@ export default {
           <template #cell-vehicle_capacities="{ row }">
             <div class="d-flex flex-wrap gap-1">
               <span v-for="vt in row.vehicle_types" :key="vt.id" 
-                class="badge bg-light text-dark border fw-normal"
+                class="badge bg-light text-dark border fw-normal d-flex align-items-center gap-1"
                 v-show="vt.pivot?.capacity > 0"
               >
+                <i v-if="vt.icon" :class="vt.icon"></i>
                 {{ vt.name }}: {{ vt.pivot.capacity }}
               </span>
               <span v-if="!(row.vehicle_types || []).some(vt => vt.pivot?.capacity > 0)" class="text-muted small">-</span>
