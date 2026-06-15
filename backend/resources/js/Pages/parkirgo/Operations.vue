@@ -153,7 +153,6 @@ export default {
             Kendaraan: {{ selectedVehicleName }}
           </span>
         </div>
-        <hr />
       </div>
 
       <BCard no-body class="border-0 shadow-sm mb-4 no-print">
@@ -173,18 +172,17 @@ export default {
                 <option v-for="vt in vehicleTypes" :key="vt.id" :value="vt.id">{{ vt.name }}</option>
               </select>
             </BCol>
-            <BCol md="4">
-              <label class="form-label text-muted small mb-1">Filter Tanggal</label>
-              <DateRangeFilter 
-                :date-from="filterForm.date_from" 
-                :date-to="filterForm.date_to" 
-                @change="onDateRangeChange" 
-              />
-            </BCol>
-            <BCol md="2" class="text-end">
-              <BButton variant="soft-secondary" class="w-100 btn-sm" @click="printData">
-                <i class="ri-printer-line me-1"></i> Cetak
-              </BButton>
+            <BCol md="6">
+              <div class="d-flex flex-column flex-md-row justify-content-md-end align-items-md-end h-100 gap-2">
+                <DateRangeFilter 
+                  :date-from="filterForm.date_from" 
+                  :date-to="filterForm.date_to" 
+                  @change="onDateRangeChange" 
+                />
+                <BButton variant="primary" size="sm" class="flex-shrink-0" @click="printData">
+                  <i class="ri-printer-line me-1"></i> Cetak Laporan
+                </BButton>
+              </div>
             </BCol>
           </BRow>
         </BCardBody>
