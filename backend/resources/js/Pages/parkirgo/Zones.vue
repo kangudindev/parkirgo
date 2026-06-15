@@ -55,6 +55,15 @@ export default {
     },
   },
   methods: {
+    nextZoneCode() {
+      const existing = (this.zones.data || this.zones || []);
+      let max = 0;
+      existing.forEach(z => {
+        const num = parseInt(z.code, 10);
+        if (!isNaN(num) && num > max) max = num;
+      });
+      return String(max + 1).padStart(3, "0");
+    },
     initCapacities() {
       const existing = this.editingZone
         ? (this.editingZone.vehicle_types || []).filter(vt => (vt.pivot?.capacity || 0) > 0).map(vt => ({ vehicle_type_id: vt.id, capacity: vt.pivot.capacity }))
@@ -68,7 +77,8 @@ export default {
         this.qrisPreviewUrl = z.qris_image_path ? "/storage/" + z.qris_image_path : null;
       } else {
         this.editingZone = null;
-        this.zoneForm = { code: "", name: "", city: "", capacities: [], center_lat: null, center_lng: null, radius_meters: 150, qris_payload: "", qris_image: null, status: "active" };
+        const nextCode = this.nextZoneCode();
+        this.zoneForm = { code: nextCode, name: "", city: "", capacities: [], center_lat: null, center_lng: null, radius_meters: 150, qris_payload: "", qris_image: null, status: "active" };
         this.qrisPreviewUrl = null;
       }
       this.initCapacities();

@@ -71,19 +71,8 @@ export default {
 <template>
   <Layout>
     <div class="print-area p-4">
-      <div class="page-title-box d-flex align-items-center justify-content-between mb-4 no-print">
-        <h4 class="mb-0">Laporan Pendapatan</h4>
-        <div class="d-flex align-items-center gap-3">
-          <ol class="breadcrumb m-0 d-none d-md-flex">
-            <li class="breadcrumb-item">
-              <a href="javascript: void(0);">ParkirGo</a>
-            </li>
-            <li class="breadcrumb-item active">Laporan Pendapatan</li>
-          </ol>
-          <BButton variant="primary" @click="printReport">
-            <i class="ri-printer-line me-1"></i>Cetak Laporan
-          </BButton>
-        </div>
+      <div class="mb-4 no-print">
+        <PageHeader title="Laporan Pendapatan" pageTitle="ParkirGo" class="mb-0" />
       </div>
 
       <div class="print-only text-center mb-5">
@@ -115,8 +104,11 @@ export default {
           </button>
         </li>
       </ul>
-      <div class="pb-2 mt-3 mt-md-0">
+      <div class="pb-2 mt-3 mt-md-0 d-flex gap-2">
         <DateRangeFilter :date-from="filters.date_from" :date-to="filters.date_to" @change="onDateRangeChange" />
+        <BButton variant="primary" @click="printReport" class="flex-shrink-0">
+          <i class="ri-printer-line me-1"></i>Cetak Laporan
+        </BButton>
       </div>
     </div>
 

@@ -4,14 +4,6 @@ import PageHeader from "@/Components/page-header.vue";
 import DataTable from "@/Components/DataTable.vue";
 import { router, useForm } from "@inertiajs/vue3";
 
-const emptyForm = () => ({
-  code: "",
-  name: "",
-  icon: "ri-car-line",
-  sort_order: 0,
-  status: "active",
-});
-
 export default {
   components: { Layout, PageHeader, DataTable },
   props: {
@@ -56,9 +48,24 @@ export default {
     },
   },
   methods: {
+    nextVehicleCode() {
+      const types = this.vehicleTypes || [];
+      let max = 0;
+      types.forEach(t => {
+        const num = parseInt(t.code, 10);
+        if (!isNaN(num) && num > max) max = num;
+      });
+      return String(max + 1).padStart(3, "0");
+    },
     openCreate() {
       this.editingType = null;
-      this.form = useForm(emptyForm());
+      this.form = useForm({
+        code: this.nextVehicleCode(),
+        name: "",
+        icon: "ri-car-line",
+        sort_order: 0,
+        status: "active",
+      });
       this.modalOpen = true;
     },
     openEdit(type) {
