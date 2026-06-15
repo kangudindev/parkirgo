@@ -5,8 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../core/components/loading_overlay.dart';
-import '../../core/theme/app_colors.dart';
+import '../../../core/components/loading_overlay.dart';
+import '../../../core/theme/app_colors.dart';
 import '../bloc/settlement_bloc.dart';
 import '../bloc/settlement_state.dart';
 
@@ -148,6 +148,7 @@ class _SettlementPageState extends State<SettlementPage> {
                         : () {
                             context.read<SettlementBloc>().submitSettlement(
                                   shiftId: 1,
+                                  zoneId: 1,
                                   proofImagePath: _proofImage?.path,
                                 );
                           },

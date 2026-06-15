@@ -6,8 +6,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../core/components/loading_overlay.dart';
-import '../../core/theme/app_colors.dart';
+import '../../../core/components/loading_overlay.dart';
+import '../../../core/theme/app_colors.dart';
 import '../bloc/attendance_bloc.dart';
 import '../bloc/attendance_state.dart';
 

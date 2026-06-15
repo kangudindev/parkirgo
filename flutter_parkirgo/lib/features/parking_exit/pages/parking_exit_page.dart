@@ -6,10 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import '../../core/components/loading_overlay.dart';
-import '../../core/theme/app_colors.dart';
-import '../../data/models/parking_constants.dart';
-import '../../data/models/parking_session_model.dart';
+import '../../../core/components/loading_overlay.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../data/models/parking_constants.dart';
+import '../../../data/models/parking_session_model.dart';
 import '../bloc/exit_bloc.dart';
 import '../bloc/exit_state.dart';
 import '../widgets/penalty_receipt.dart';

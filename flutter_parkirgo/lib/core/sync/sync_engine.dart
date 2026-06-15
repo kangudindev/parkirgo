@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../../data/datasources/remote/sync_remote_ds.dart';
+import '../../data/models/sync_item_model.dart';
 import '../../data/repositories/auth_repository.dart';
 
 class SyncEngine {

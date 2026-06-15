@@ -43,16 +43,26 @@ class AdminController extends Controller
                 'settlements_period' => Settlement::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
             ];
 
-            $zones = Zone::with('vehicleTypes')
-                ->withCount(['jukirs'])
-                ->withCount(['parkingSessions as parkir_out_count' => fn ($q) => $q->whereBetween('exit_at', [$dateFrom, $dateTo])])
-                ->withCount(['parkingSessions as active_sessions_count' => fn ($q) => $q->where('status', 'active')])
-                ->withSum(['transactions as revenue_sum' => fn ($q) => $q->whereBetween('created_at', [$dateFrom, $dateTo])], 'amount')
-                ->latest()
-                ->get();
-
+            $zones = Zone::with('vehicleTypes')->latest()->get();
             $zoneIds = $zones->pluck('id');
-            
+
+            $jukirCounts = User::whereIn('assigned_zone_id', $zoneIds)
+                ->groupBy('assigned_zone_id')
+                ->selectRaw('assigned_zone_id, count(*) as count')
+                ->pluck('count', 'assigned_zone_id');
+
+            $parkirOutCounts = ParkingSession::whereIn('zone_id', $zoneIds)
+                ->whereBetween('exit_at', [$dateFrom, $dateTo])
+                ->groupBy('zone_id')
+                ->selectRaw('zone_id, count(*) as count')
+                ->pluck('count', 'zone_id');
+
+            $revenueSums = Transaction::whereIn('zone_id', $zoneIds)
+                ->whereBetween('created_at', [$dateFrom, $dateTo])
+                ->groupBy('zone_id')
+                ->selectRaw('zone_id, sum(amount) as sum')
+                ->pluck('sum', 'zone_id');
+
             // Per-type active count for gauges
             $activeByZoneType = ParkingSession::where('status', 'active')
                 ->whereIn('zone_id', $zoneIds)
@@ -61,7 +71,11 @@ class AdminController extends Controller
                 ->get()
                 ->groupBy('zone_id');
 
-            $zones->each(function ($zone) use ($activeByZoneType) {
+            $zones->each(function ($zone) use ($jukirCounts, $parkirOutCounts, $revenueSums, $activeByZoneType) {
+                $zone->jukirs_count = $jukirCounts[$zone->id] ?? 0;
+                $zone->parkir_out_count = $parkirOutCounts[$zone->id] ?? 0;
+                $zone->revenue_sum = (int) ($revenueSums[$zone->id] ?? 0);
+
                 $typeCounts = $activeByZoneType->get($zone->id, collect())->keyBy('vehicle_type_id');
                 $zone->vehicleTypes->each(function ($vt) use ($typeCounts) {
                     $vt->active_count = (int) ($typeCounts[$vt->id]['count'] ?? 0);
@@ -146,17 +160,21 @@ class AdminController extends Controller
         }
 
         $series = [];
+        
+        // Single aggregated query to fix N+1 issue
+        $transactions = Transaction::whereIn('zone_id', $zones->pluck('id'))
+            ->whereBetween('created_at', [$dates['from'], $dates['to']])
+            ->selectRaw("zone_id, DATE_FORMAT(created_at, '$sqlFormat') as time_label, SUM(amount) as total")
+            ->groupBy('zone_id', 'time_label')
+            ->get()
+            ->groupBy('zone_id');
+
         foreach ($zones as $zone) {
-            $data = Transaction::where('zone_id', $zone->id)
-                ->whereBetween('created_at', [$dates['from'], $dates['to']])
-                ->selectRaw("DATE_FORMAT(created_at, '$sqlFormat') as time_label")
-                ->selectRaw("SUM(amount) as total")
-                ->groupBy('time_label')
-                ->pluck('total', 'time_label');
+            $zoneData = $transactions->get($zone->id, collect())->pluck('total', 'time_label');
 
             $zoneSeries = [];
             foreach ($matchKeys as $key) {
-                $zoneSeries[] = (int) ($data[$key] ?? 0);
+                $zoneSeries[] = (int) ($zoneData[$key] ?? 0);
             }
 
             $series[] = [

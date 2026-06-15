@@ -5,7 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../../core/constants/api_url.dart';
 import '../../../core/network/api_exception.dart';
-import '../models/sync_item_model.dart';
+import '../../models/sync_item_model.dart';
 
 class SyncRemoteDatasource {
   SyncRemoteDatasource(this._dio);

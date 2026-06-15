@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../data/models/zone_model.dart';
 import '../../../data/repositories/parking_repository.dart';
 import 'entry_state.dart';
 

@@ -36,12 +36,14 @@ class SettlementBloc extends Cubit<SettlementState> {
 
   Future<void> submitSettlement({
     required int shiftId,
+    required int zoneId,
     required String? proofImagePath,
   }) async {
     emit(state.copyWith(isLoading: true, isSuccess: false));
     try {
       final result = await _settlementRepository.submit(
         shiftId: shiftId,
+        zoneId: zoneId,
         cashAmount: state.totalCash,
         qrisAmount: state.totalQris,
         proofImagePath: proofImagePath,

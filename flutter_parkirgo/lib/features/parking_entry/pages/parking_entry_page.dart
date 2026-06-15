@@ -6,11 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-import '../../core/components/loading_overlay.dart';
-import '../../core/printer/printer_service.dart';
-import '../../core/printer/receipt_builder.dart';
-import '../../core/theme/app_colors.dart';
-import '../../data/models/parking_constants.dart';
+import '../../../core/components/loading_overlay.dart';
+import '../../../core/printer/printer_service.dart';
+import '../../../core/printer/receipt_builder.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../data/models/parking_constants.dart';
 import '../bloc/entry_bloc.dart';
 import '../bloc/entry_state.dart';
 import '../widgets/plate_scanner.dart';
