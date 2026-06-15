@@ -106,7 +106,7 @@ export default {
       </ul>
       <div class="pb-2 mt-3 mt-md-0 d-flex gap-2">
         <DateRangeFilter :date-from="filters.date_from" :date-to="filters.date_to" @change="onDateRangeChange" />
-        <BButton variant="primary" @click="printReport" class="flex-shrink-0">
+        <BButton variant="primary" size="sm" @click="printReport" class="flex-shrink-0">
           <i class="ri-printer-line me-1"></i>Cetak Laporan
         </BButton>
       </div>

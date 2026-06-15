@@ -117,18 +117,18 @@ export default {
           <div class="navbar-brand-box">
             <Link href="/" class="logo logo-dark">
               <span class="logo-sm">
-                <img src="/images/logo_parkirgo.png?v=2" alt="PG" height="40" />
+                <img src="/images/logo_parkirgo.png?v=2" alt="PG" height="50" />
               </span>
               <span class="logo-lg">
-                <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="40" />
+                <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="50" />
               </span>
             </Link>
             <Link href="/" class="logo logo-light">
               <span class="logo-sm">
-                <img src="/images/logo_parkirgo.png?v=2" alt="PG" height="40" />
+                <img src="/images/logo_parkirgo.png?v=2" alt="PG" height="50" />
               </span>
               <span class="logo-lg">
-                <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="40" />
+                <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="50" />
               </span>
             </Link>
           <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"

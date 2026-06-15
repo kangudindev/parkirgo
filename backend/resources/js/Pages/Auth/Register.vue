@@ -53,7 +53,7 @@ export default {
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
                                 <Link href="/" class="d-inline-block auth-logo">
-                                <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="36" />
+                                <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="50" class="auth-logo-img" />
                                 </Link>
                             </div>
                             <p class="mt-3 fs-15 fw-medium">System Manajemen Parkir Digital</p>
@@ -109,33 +109,16 @@ export default {
                                             <InputError :message="form.errors.terms" />
                                         </div>
                                         <div class="mt-4">
-                                            <BButton variant="success" class="w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Sign
-                                                Up</BButton>
-                                        </div>
-
-                                        <div class="mt-4 text-center">
-                                            <div class="signin-other-title">
-                                                <h5 class="fs-13 mb-4 title text-muted">Create account with</h5>
-                                            </div>
-
-                                            <div>
-                                                <BButton type="button" variant="primary" class="btn-icon"><i class="ri-facebook-fill fs-16"></i></BButton>
-                                                <BButton type="button" variant="danger" class="btn-icon ms-1"><i class="ri-google-fill fs-16"></i></BButton>
-                                                <BButton type="button" variant="dark" class="btn-icon ms-1"><i class="ri-github-fill fs-16"></i></BButton>
-                                                <BButton type="button" variant="info" class="btn-icon ms-1"><i class="ri-twitter-fill fs-16"></i></BButton>
-                                            </div>
+                                            <BButton variant="success" class="w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Sign Up</BButton>
                                         </div>
                                     </form>
-
                                 </div>
                             </BCardBody>
                         </BCard>
-
-                        <div class="mt-4 text-center">
-                            <p class="mb-0">Already have an account ?
-                                <Link :href="route('login')" class="fw-semibold text-primary text-decoration-underline"> Signin </Link>
-                            </p>
-                        </div>
+                    </BCol>
+                </BRow>
+            </BContainer>
+        </div>
                     </BCol>
                 </BRow>
             </BContainer>
@@ -154,3 +137,7 @@ export default {
         </footer>
     </div>
 </template>
+
+<style>
+.auth-logo-img { filter: brightness(0) invert(1); }
+</style>

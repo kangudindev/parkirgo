@@ -37,7 +37,7 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
                                 <Link href="/" class="d-inline-block auth-logo">
-                                <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="36" />
+                                <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="50" class="auth-logo-img" />
                                 </Link>
                             </div>
                             <p class="mt-3 fs-15 fw-medium">System Manajemen Parkir Digital</p>
@@ -112,3 +112,7 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
         </footer>
     </div>
 </template>
+
+<style>
+.auth-logo-img { filter: brightness(0) invert(1); }
+</style>
