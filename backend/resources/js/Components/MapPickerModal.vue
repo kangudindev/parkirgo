@@ -31,6 +31,12 @@ export default {
       }
     },
   },
+  computed: {
+    isVisible: {
+      get() { return this.visible; },
+      set(val) { if (!val) this.$emit('close'); }
+    }
+  },
   methods: {
     onMapClick(e) {
       this.marker = { lat: e.latlng.lat, lng: e.latlng.lng };
@@ -77,7 +83,7 @@ export default {
 </script>
 
 <template>
-  <BModal :visible="visible" @hidden="$emit('close')" title="Pilih Lokasi Zona" hide-footer centered size="xl">
+  <BModal v-model="isVisible" title="Pilih Lokasi Zona" hide-footer centered size="xl">
     <div class="mb-3">
       <div class="input-group">
         <input
