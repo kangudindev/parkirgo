@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig({
     build: {
         chunkSizeWarningLimit: 4000,
+        emptyOutDir: false,
     },
     server: {
         host: '0.0.0.0',

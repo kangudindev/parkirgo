@@ -23,7 +23,7 @@ jobs:
           docker exec parkirgo-backend php artisan migrate --force 2>&1 || echo "migrate selesai"
 
           echo "=== Install dependencies & Build frontend ==="
-          docker exec -e NODE_OPTIONS='--max-old-space-size=2048' parkirgo-backend bash -c 'cd /var/www/html && npm install html2canvas --legacy-peer-deps 2>&1' || true
+          docker exec -e NODE_OPTIONS='--max-old-space-size=2048' parkirgo-backend bash -c 'cd /var/www/html && npm install --legacy-peer-deps 2>&1' || true
           docker exec -e NODE_OPTIONS='--max-old-space-size=2048' parkirgo-backend bash -c 'cd /var/www/html && npm run build 2>&1' || echo "build selesai"
 
           echo "=== Optimize ==="
