@@ -24,7 +24,11 @@ export default {
     apexChartOptions() {
       return {
         chart: { height: 380, type: "line", zoom: { enabled: false }, toolbar: { show: false } },
-        dataLabels: { enabled: true, style: { fontSize: '10px' } },
+        dataLabels: { 
+          enabled: true, 
+          style: { fontSize: '10px' },
+          formatter: (v) => v ? v.toLocaleString("id-ID") : v
+        },
         stroke: { width: 3, curve: "smooth" },
         markers: { size: 5 },
         xaxis: { categories: this.chartData.labels, title: { text: "Waktu" } },
