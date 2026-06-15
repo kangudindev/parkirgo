@@ -77,7 +77,7 @@ export default {
 </script>
 
 <template>
-  <BModal v-model="visible" title="Pilih Lokasi Zona" hide-footer centered size="xl">
+  <BModal :visible="visible" @hidden="$emit('close')" title="Pilih Lokasi Zona" hide-footer centered size="xl">
     <div class="mb-3">
       <div class="input-group">
         <input
