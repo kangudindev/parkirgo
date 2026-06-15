@@ -104,12 +104,12 @@ export default {
           <!-- LOGO -->
           <div class="navbar-brand-box horizontal-logo">
             <Link href="/" class="logo logo-dark">
-              <span class="logo-sm"><img src="/images/logo_parkirgo.png" alt="" height="28" /></span>
-              <span class="logo-lg"><img src="/images/logo_parkirgo.png" alt="" height="28" /></span>
+              <span class="logo-sm"><img src="/images/logo_parkirgo.png?v=2" alt="" height="28" /></span>
+              <span class="logo-lg"><img src="/images/logo_parkirgo.png?v=2" alt="" height="28" /></span>
             </Link>
             <Link href="/" class="logo logo-light">
-              <span class="logo-sm"><img src="/images/logo_parkirgo.png" alt="" height="28" /></span>
-              <span class="logo-lg"><img src="/images/logo_parkirgo.png" alt="" height="28" /></span>
+              <span class="logo-sm"><img src="/images/logo_parkirgo.png?v=2" alt="" height="28" /></span>
+              <span class="logo-lg"><img src="/images/logo_parkirgo.png?v=2" alt="" height="28" /></span>
             </Link>
           </div>
 

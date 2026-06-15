@@ -77,7 +77,7 @@ export default {
 
       <div class="print-only text-center mb-5">
         <div class="d-flex justify-content-center mb-3">
-           <img src="/images/logo_parkirgo.png" alt="ParkirGo" height="50" />
+           <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="50" />
         </div>
         <h2 class="fw-bold mb-1">LAPORAN PENDAPATAN PARKIRGO</h2>
         <p class="text-uppercase letter-spacing-1 mb-1">System Manajemen Parkir Digital</p>

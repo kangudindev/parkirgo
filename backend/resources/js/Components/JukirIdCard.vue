@@ -45,7 +45,7 @@ defineExpose({ downloadCard });
       <div class="id-card front">
         <div class="card-header">
           <div class="logo-section">
-            <img src="/images/logo_parkirgo.png" alt="ParkirGo Logo" class="logo" />
+            <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo Logo" class="logo" />
           </div>
           <div class="role-badge">JURU PARKIR</div>
         </div>
