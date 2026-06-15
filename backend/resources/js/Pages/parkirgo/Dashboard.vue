@@ -1,14 +1,13 @@
 <script>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
-import DateRangeFilter from "@/Components/DateRangeFilter.vue";
 import { Link, router } from "@inertiajs/vue3";
 import { VueEcharts } from "vue3-echarts";
 
 const currency = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
 
 export default {
-  components: { Layout, PageHeader, Link, VueEcharts, DateRangeFilter },
+  components: { Layout, PageHeader, Link, VueEcharts },
   props: {
     summary: { type: Object, default: () => ({}) },
     zones: { type: Array, default: () => [] },
@@ -83,9 +82,6 @@ export default {
     switchPeriod(p) {
       router.get("/", { period: p }, { preserveState: true });
     },
-    onDateRangeChange(range) {
-      router.get("/", { date_from: range.date_from, date_to: range.date_to, period: 'custom' }, { preserveState: true });
-    },
   },
 };
 </script>
@@ -96,7 +92,12 @@ export default {
 
     <BCard no-body class="border-0 shadow-sm mb-4">
       <BCardBody class="py-2">
-        <DateRangeFilter :date-from="$page.props.filters?.date_from" :date-to="$page.props.filters?.date_to" @change="onDateRangeChange" />
+        <div class="d-flex flex-wrap gap-1" role="group">
+          <button type="button" class="btn btn-sm" :class="period === 'today' ? 'btn-primary' : 'btn-soft-primary'" @click="switchPeriod('today')">Hari Ini</button>
+          <button type="button" class="btn btn-sm" :class="period === 'week' ? 'btn-primary' : 'btn-soft-primary'" @click="switchPeriod('week')">Minggu Ini</button>
+          <button type="button" class="btn btn-sm" :class="period === 'month' ? 'btn-primary' : 'btn-soft-primary'" @click="switchPeriod('month')">Bulan Ini</button>
+          <button type="button" class="btn btn-sm" :class="period === 'year' ? 'btn-primary' : 'btn-soft-primary'" @click="switchPeriod('year')">Tahun Ini</button>
+        </div>
       </BCardBody>
     </BCard>
 
