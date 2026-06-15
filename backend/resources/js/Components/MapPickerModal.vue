@@ -30,19 +30,17 @@ export default {
   watch: {
     visible(val) {
       if (val) {
-        this.$nextTick(() => {
-          setTimeout(() => this.initMap(), 150);
-        });
-      } else {
-        this.destroyMap();
+        setTimeout(() => this.initMap(), 350);
       }
     },
   },
   methods: {
     initMap() {
       this.destroyMap();
-      const el = this.$el?.querySelector("#leaflet-map");
-      if (!el) return;
+      const el = document.querySelector("#leaflet-map");
+      if (!el) { console.warn("leaflet-map element not found"); return; }
+      // Reset inner HTML to prevent duplicate initialization
+      el.innerHTML = "";
 
       this.map = L.map(el, {
         center: this.center,
@@ -189,5 +187,7 @@ export default {
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 #leaflet-map { position: relative; }
-:deep(.leaflet-container) { border-radius: 8px; z-index: 1; }
+</style>
+<style>
+.leaflet-container { border-radius: 8px; z-index: 1; }
 </style>
