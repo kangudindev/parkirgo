@@ -1,7 +1,15 @@
 <script>
 import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet";
-import { latLng } from "leaflet";
+import { latLng, Icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
+
+// Fix leaflet default marker icon path issue with bundler
+delete Icon.Default.prototype._getIconUrl;
+Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
 
 export default {
   components: { LMap, LTileLayer, LMarker },
@@ -60,15 +68,21 @@ export default {
       this.searching = true;
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.searchQuery)}&limit=5&countrycodes=id`
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.searchQuery)}&limit=5&countrycodes=id`,
+          { headers: { "Accept-Language": "id", "User-Agent": "ParkirGoApp/1.0" } }
         );
+        if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
         this.searchResults = data;
       } catch (e) {
+        console.warn("Nominatim search error:", e);
         this.searchResults = [];
       } finally {
         this.searching = false;
       }
+      this.$nextTick(() => {
+        if (this.mapInstance) setTimeout(() => this.mapInstance.invalidateSize(), 100);
+      });
     },
     selectResult(item) {
       const lat = parseFloat(item.lat);
