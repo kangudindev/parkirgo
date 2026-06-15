@@ -119,11 +119,6 @@ export default {
                 </BRow>
             </BContainer>
         </div>
-                    </BCol>
-                </BRow>
-            </BContainer>
-        </div>
-
         <footer class="footer">
             <BContainer>
                 <BRow>
