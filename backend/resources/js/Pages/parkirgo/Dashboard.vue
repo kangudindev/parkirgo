@@ -61,29 +61,7 @@ export default {
         hour: "2-digit", minute: "2-digit"
       }).format(new Date(v));
     },
-    gaugeOption(active, capacity) {
-      const pct = capacity ? (active / capacity) * 100 : 0;
-      const color = pct > 90 ? "#f06548" : pct > 70 ? "#f7b84b" : "#0ab39c";
-      return {
-        series: [{
-          type: "gauge",
-          center: ["50%", "60%"],
-          radius: "100%",
-          startAngle: 200,
-          endAngle: -20,
-          min: 0,
-          max: capacity || 100,
-          progress: { show: true, width: 6, itemStyle: { color: color } },
-          pointer: { show: true, length: '60%', width: 3, itemStyle: { color: color } },
-          axisLine: { lineStyle: { width: 6, color: [[1, "#e9ebec"]] } },
-          axisTick: { show: false },
-          splitLine: { show: false },
-          axisLabel: { show: false },
-          detail: { show: false },
-          data: [{ value: active || 0 }]
-        }]
-      };
-    },
+
     switchPeriod(p) {
       router.get("/", { period: p }, { preserveState: true });
     },
@@ -234,15 +212,11 @@ export default {
 
             <div class="d-flex flex-wrap" style="gap:4px">
               <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center px-1 mb-2" style="width: 19%; min-width: 75px; flex-grow: 1;">
-                <i :class="vt.icon || 'ri-car-line'" class="fs-18 d-block mb-1 text-primary"></i>
-                <span class="small fw-medium d-block text-truncate mx-auto" style="max-width:70px; font-size: 11px;">{{ vt.name }}</span>
-                <div class="d-flex justify-content-center" style="height:65px">
-                  <VueEcharts :option="gaugeOption(vt.active_count, vt.pivot.capacity)" style="width:75px;height:65px" />
+                <div class="avatar-sm rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mx-auto mb-2">
+                  <i :class="vt.icon || 'ri-car-line'" class="fs-18"></i>
                 </div>
-                <div class="small fw-semibold mt-1" style="font-size: 12px;">{{ vt.active_count || 0 }}<span class="text-muted fw-normal">/{{ vt.pivot.capacity }}</span></div>
-                <div class="small" :class="(vt.pivot.capacity - vt.active_count) > 0 ? 'text-success' : 'text-danger'" style="font-size: 11px;">
-                  {{ Math.max(0, vt.pivot.capacity - vt.active_count) }} sisa
-                </div>
+                <span class="small fw-medium d-block text-truncate mx-auto mb-1" style="max-width:70px;">{{ vt.name }}</span>
+                <div class="fw-bold fs-16">{{ vt.paid_count || 0 }} <span class="fs-12 text-muted fw-normal">unit</span></div>
               </div>
             </div>
           </BCardBody>

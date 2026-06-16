@@ -66,23 +66,35 @@ class AdminController extends Controller
                 ->selectRaw('zone_id, sum(amount) as sum')
                 ->pluck('sum', 'zone_id');
 
-            // Per-type active count for gauges
-            $activeByZoneType = ParkingSession::where('status', 'active')
+            // Per-type paid count for the period
+            $paidByZoneType = ParkingSession::whereIn('zone_id', $zoneIds)
+                ->whereBetween('exit_at', [$dateFrom, $dateTo])
                 ->where('payment_status', 'paid')
-                ->whereIn('zone_id', $zoneIds)
                 ->groupBy('zone_id', 'vehicle_type_id')
                 ->selectRaw('zone_id, vehicle_type_id, COUNT(*) as count')
                 ->get()
                 ->groupBy('zone_id');
 
-            $zones->each(function ($zone) use ($jukirCounts, $parkirOutCounts, $revenueSums, $activeByZoneType) {
+            // Per-type revenue for the period
+            $revenueByZoneType = Transaction::join('parking_sessions', 'transactions.parking_session_id', '=', 'parking_sessions.id')
+                ->whereIn('transactions.zone_id', $zoneIds)
+                ->whereBetween('transactions.created_at', [$dateFrom, $dateTo])
+                ->groupBy('transactions.zone_id', 'parking_sessions.vehicle_type_id')
+                ->selectRaw('transactions.zone_id, parking_sessions.vehicle_type_id, sum(transactions.amount) as sum')
+                ->get()
+                ->groupBy('zone_id');
+
+            $zones->each(function ($zone) use ($jukirCounts, $parkirOutCounts, $revenueSums, $paidByZoneType, $revenueByZoneType) {
                 $zone->jukirs_count = $jukirCounts[$zone->id] ?? 0;
                 $zone->parkir_out_count = $parkirOutCounts[$zone->id] ?? 0;
                 $zone->revenue_sum = (int) ($revenueSums[$zone->id] ?? 0);
 
-                $typeCounts = $activeByZoneType->get($zone->id, collect())->keyBy('vehicle_type_id');
-                $zone->vehicleTypes->each(function ($vt) use ($typeCounts) {
-                    $vt->active_count = (int) ($typeCounts[$vt->id]['count'] ?? 0);
+                $typeCounts = $paidByZoneType->get($zone->id, collect())->keyBy('vehicle_type_id');
+                $revenueTypeCounts = $revenueByZoneType->get($zone->id, collect())->keyBy('vehicle_type_id');
+                
+                $zone->vehicleTypes->each(function ($vt) use ($typeCounts, $revenueTypeCounts) {
+                    $vt->paid_count = (int) ($typeCounts[$vt->id]['count'] ?? 0);
+                    $vt->revenue = (int) ($revenueTypeCounts[$vt->id]['sum'] ?? 0);
                 });
             });
 
