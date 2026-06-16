@@ -147,12 +147,12 @@ export default {
           <div class="table-responsive table-card">
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
-                <tr>
+                <tr class="text-center">
                   <th>#</th>
                   <th>Nama Jukir</th>
-                  <th class="text-end">Total Transaksi</th>
-                  <th class="text-end">Total Setoran</th>
-                  <th class="text-center">Jumlah Transaksi</th>
+                  <th>Total Transaksi</th>
+                  <th>Total Setoran</th>
+                  <th>Jumlah Transaksi</th>
                   <th>Jenis Kendaraan</th>
                 </tr>
               </thead>
@@ -223,15 +223,15 @@ export default {
           <div class="table-responsive table-card">
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
-                <tr>
+                <tr class="text-center">
                   <th>No. Setoran</th>
                   <th>Jukir</th>
                   <th>Zona</th>
-                  <th class="text-end">Cash</th>
-                  <th class="text-end">QRIS</th>
-                  <th class="text-end">Total</th>
+                  <th>Cash</th>
+                  <th>QRIS</th>
+                  <th>Total</th>
                   <th>Jenis Kendaraan</th>
-                  <th class="text-center">Status</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -297,13 +297,13 @@ export default {
           <div class="table-responsive table-card">
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
-                <tr>
+                <tr class="text-center">
                   <th>#</th>
                   <th>Zona</th>
                   <th>Kota</th>
-                  <th class="text-end">Total Transaksi</th>
-                  <th class="text-end">Total Setoran</th>
-                  <th class="text-center">Jumlah Transaksi</th>
+                  <th>Total Transaksi</th>
+                  <th>Total Setoran</th>
+                  <th>Jumlah Transaksi</th>
                   <th>Jenis Kendaraan</th>
                 </tr>
               </thead>

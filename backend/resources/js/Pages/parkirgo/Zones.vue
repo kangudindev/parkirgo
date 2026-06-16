@@ -265,7 +265,7 @@ export default {
         <div class="table-responsive">
           <table class="table table-hover">
             <thead class="table-light">
-              <tr><th>Zona</th><th>Kendaraan</th><th>Tipe Tarif</th><th>Waktu Bayar</th><th>Tarif Dasar</th><th>Tambahan</th><th>Maks Harian</th><th>Aksi</th></tr>
+              <tr class="text-center"><th>Zona</th><th>Kendaraan</th><th>Tipe Tarif</th><th>Waktu Bayar</th><th>Tarif Dasar</th><th>Tambahan</th><th>Maks Harian</th><th>Aksi</th></tr>
             </thead>
             <tbody>
               <tr v-for="t in tariffs" :key="t.id">

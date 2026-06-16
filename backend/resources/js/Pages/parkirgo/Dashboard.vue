@@ -241,16 +241,13 @@ export default {
             <hr class="my-3" />
 
             <div class="d-flex flex-wrap" style="gap:4px">
-              <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center px-1 mb-2" style="width: 19%; min-width: 75px; flex-grow: 1;">
+              <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center px-1 mb-1" style="width: 19%; min-width: 75px; flex-grow: 1;">
                 <i :class="vt.icon || 'ri-car-line'" class="fs-18 d-block mb-1 text-primary"></i>
-                <span class="small fw-medium d-block text-truncate mx-auto" style="max-width:70px; font-size: 11px;">{{ vt.name }}</span>
-                <div class="d-flex justify-content-center" style="height:65px">
-                  <VueEcharts :option="gaugeOption(vt.active_count, vt.capacity)" style="width:75px;height:65px" />
+                <span class="small fw-medium d-block text-truncate mx-auto mb-n1" style="max-width:70px; font-size: 11px;">{{ vt.name }}</span>
+                <div class="d-flex justify-content-center" style="height:60px">
+                  <VueEcharts :option="gaugeOption(vt.active_count, vt.capacity)" style="width:75px;height:60px" />
                 </div>
-                <div class="small fw-semibold mt-1" style="font-size: 12px;">{{ vt.active_count || 0 }}<span class="text-muted fw-normal">/{{ vt.capacity }}</span></div>
-                <div class="small" :class="(vt.capacity - vt.active_count) > 0 ? 'text-success' : 'text-danger'" style="font-size: 11px;">
-                  {{ Math.max(0, vt.capacity - vt.active_count) }} sisa
-                </div>
+                <div class="small fw-semibold mt-n2 mb-2" style="font-size: 12px;">{{ vt.active_count || 0 }}<span class="text-muted fw-normal">/{{ vt.capacity }}</span></div>
               </div>
             </div>
           </BCardBody>

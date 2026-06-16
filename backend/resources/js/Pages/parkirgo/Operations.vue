@@ -199,8 +199,8 @@ export default {
             <DataTable :columns="columns" :data="sessions" :sort-field="tableSortField" :sort-dir="tableSortDir"
               @sort="onSort" @search="onSearch" @page-change="onPage" @per-page-change="onPerPage">
               <template #cell-vehicle_name="{ row }">
-                <div class="text-center" :title="row.vehicleTypeMaster?.name || row.vehicle_type || '-'">
-                  <i :class="row.vehicleTypeMaster?.icon || 'ri-car-line'" class="fs-22 text-primary"></i>
+                <div class="text-center" :title="row.vehicle_type_master?.name || row.vehicle_type || '-'">
+                  <i :class="row.vehicle_type_master?.icon || 'ri-car-line'" class="fs-22 text-primary"></i>
                 </div>
               </template>
               <template #cell-zone_name="{ row }">{{ row.zone?.name }}</template>

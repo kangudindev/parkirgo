@@ -108,7 +108,7 @@ export default {
               @click="col.sortable !== false && onSort(col.key)"
               :scope="'col'"
             >
-              <span v-if="col.label" class="d-flex align-items-center gap-1">
+              <span v-if="col.label" class="d-flex align-items-center justify-content-center gap-1 text-center">
                 {{ col.label }}
                 <i v-if="col.sortable !== false" :class="sortIndicator(col.key)" class="sort-icon fs-12"></i>
               </span>
