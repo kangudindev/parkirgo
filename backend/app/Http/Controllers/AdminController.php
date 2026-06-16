@@ -36,7 +36,7 @@ class AdminController extends Controller
         try {
             $summary = [
                 'revenue_period' => Transaction::whereBetween('created_at', [$dateFrom, $dateTo])->sum('amount'),
-                'active_sessions' => ParkingSession::where('status', 'active')->count(),
+                'active_sessions' => ParkingSession::where('status', 'active')->where('payment_status', 'paid')->count(),
                 'zones_active' => Zone::where('status', 'active')->count(),
                 'jukirs_online' => User::where('role', 'jukir')->where('status', 'active')->count(),
                 'pending_qris' => Transaction::where('payment_method', 'qris')->where('status', 'recorded')->count(),
@@ -55,6 +55,7 @@ class AdminController extends Controller
 
             $parkirOutCounts = ParkingSession::whereIn('zone_id', $zoneIds)
                 ->whereBetween('exit_at', [$dateFrom, $dateTo])
+                ->where('payment_status', 'paid')
                 ->groupBy('zone_id')
                 ->selectRaw('zone_id, count(*) as count')
                 ->pluck('count', 'zone_id');
@@ -67,6 +68,7 @@ class AdminController extends Controller
 
             // Per-type active count for gauges
             $activeByZoneType = ParkingSession::where('status', 'active')
+                ->where('payment_status', 'paid')
                 ->whereIn('zone_id', $zoneIds)
                 ->groupBy('zone_id', 'vehicle_type_id')
                 ->selectRaw('zone_id, vehicle_type_id, COUNT(*) as count')
