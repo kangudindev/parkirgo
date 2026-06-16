@@ -49,7 +49,7 @@ export default {
       return [
         { key: "ticket_number", label: "Tiket" },
         { key: "plate_number", label: "Plat" },
-        { key: "vehicle_name", label: "Kendaraan", width: "100px" },
+        { key: "vehicle_name", label: "Kendaraan", width: "100px", align: "center" },
         { key: "zone_name", label: "Zona" },
         { key: "jukir_name", label: "Jukir" },
         { key: "entry_at", label: "Masuk" },
@@ -198,7 +198,11 @@ export default {
           <BCardBody>
             <DataTable :columns="columns" :data="sessions" :sort-field="tableSortField" :sort-dir="tableSortDir"
               @sort="onSort" @search="onSearch" @page-change="onPage" @per-page-change="onPerPage">
-              <template #cell-vehicle_name="{ row }">{{ row.vehicleTypeMaster?.name || row.vehicle_type || "-" }}</template>
+              <template #cell-vehicle_name="{ row }">
+                <div class="text-center" :title="row.vehicleTypeMaster?.name || row.vehicle_type || '-'">
+                  <i :class="row.vehicleTypeMaster?.icon || 'ri-car-line'" class="fs-22 text-primary"></i>
+                </div>
+              </template>
               <template #cell-zone_name="{ row }">{{ row.zone?.name }}</template>
               <template #cell-jukir_name="{ row }">{{ row.jukir?.name }}</template>
               <template #cell-entry_at="{ row }">{{ formatDateShort(row.entry_at) }}</template>

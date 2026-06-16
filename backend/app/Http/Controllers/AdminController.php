@@ -44,7 +44,7 @@ class AdminController extends Controller
             ];
 
             $zones = Zone::select('id', 'name', 'code', 'city', 'status')->with(['vehicleTypes' => function($q) {
-                $q->select('vehicle_types.id', 'vehicle_types.name', 'vehicle_types.code')
+                $q->select('vehicle_types.id', 'vehicle_types.name', 'vehicle_types.code', 'vehicle_types.icon')
                   ->withPivot('capacity');
             }])->latest()->get();
             $zoneIds = $zones->pluck('id');

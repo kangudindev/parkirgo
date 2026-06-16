@@ -177,6 +177,10 @@ export default {
       const vt = this.vehicleTypes.find(v => v.id === id);
       return vt ? vt.name : "-";
     },
+    vtIcon(id) {
+      const vt = this.vehicleTypes.find(v => v.id === id);
+      return vt ? vt.icon : "ri-car-line";
+    },
     typeLabel(t) { return t === "flat" ? "Flat" : "Progresif"; },
     timingLabel(t) { return t === "entry" ? "Bayar Masuk" : "Bayar Keluar"; },
     formatRp(v) { return "Rp " + Number(v).toLocaleString("id-ID"); },
@@ -229,14 +233,15 @@ export default {
           @sort="onSort" @search="onSearch" @page-change="onPage" @per-page-change="onPerPage">
           <template #cell-city="{ row }">{{ row.city || "-" }}</template>
           <template #cell-vehicle_capacities="{ row }">
-            <div class="d-flex flex-wrap gap-1">
-              <span v-for="vt in row.vehicle_types" :key="vt.id" 
-                class="badge bg-light text-dark border fw-normal d-flex align-items-center gap-1"
+            <div class="d-flex flex-wrap gap-2">
+              <div v-for="vt in row.vehicle_types" :key="vt.id" 
+                class="d-flex align-items-center bg-light px-2 py-1 rounded small"
                 v-show="vt.pivot?.capacity > 0"
+                :title="vt.name"
               >
-                <i v-if="vt.icon" :class="vt.icon"></i>
-                {{ vt.name }}: {{ vt.pivot.capacity }}
-              </span>
+                <i v-if="vt.icon" :class="vt.icon" class="text-primary me-1 fs-15"></i>
+                <span class="fw-semibold">{{ vt.pivot.capacity }}</span>
+              </div>
               <span v-if="!(row.vehicle_types || []).some(vt => vt.pivot?.capacity > 0)" class="text-muted small">-</span>
             </div>
           </template>
@@ -265,7 +270,11 @@ export default {
             <tbody>
               <tr v-for="t in tariffs" :key="t.id">
                 <td>{{ t.zone?.name || "-" }}</td>
-                <td>{{ t.vehicle_type_master?.name || vtName(t.vehicle_type_id) || "-" }}</td>
+                <td>
+                  <div class="text-center" :title="t.vehicle_type_master?.name || vtName(t.vehicle_type_id) || '-'">
+                    <i :class="t.vehicle_type_master?.icon || vtIcon(t.vehicle_type_id) || 'ri-car-line'" class="fs-22 text-primary"></i>
+                  </div>
+                </td>
                 <td><span class="badge bg-info-subtle text-info">{{ typeLabel(t.pricing_type) }}</span></td>
                 <td>{{ timingLabel(t.payment_timing) }}</td>
                 <td>{{ formatRp(t.base_rate) }}{{ t.base_minutes ? "/"+t.base_minutes+"m" : "" }}</td>
