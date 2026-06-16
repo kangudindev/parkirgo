@@ -207,7 +207,7 @@ export default {
               <span class="badge bg-success-subtle text-success">{{ zone.status }}</span>
             </div>
 
-            <div class="table-responsive mb-3">
+            <div class="table-responsive mb-2">
               <table class="table table-sm table-borderless align-middle mb-0 text-center">
                 <thead>
                   <tr class="text-muted small border-bottom">
@@ -238,7 +238,11 @@ export default {
               </table>
             </div>
 
-            <hr class="my-3" />
+            <div class="d-flex align-items-center my-2">
+              <hr class="flex-grow-1 m-0">
+              <span class="px-2 text-muted" style="font-size: 10px; font-weight: 600; text-transform: uppercase;">Kendaraan Aktif</span>
+              <hr class="flex-grow-1 m-0">
+            </div>
 
             <div class="d-flex flex-wrap" style="gap:4px">
               <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center px-1 mb-1" style="width: 19%; min-width: 75px; flex-grow: 1;">

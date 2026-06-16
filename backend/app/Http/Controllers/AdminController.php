@@ -85,8 +85,8 @@ class AdminController extends Controller
                 ->get()
                 ->groupBy('zone_id');
 
-            // Real-time active sessions per zone per type (live, no period filter)
-            $liveActiveByZoneType = ParkingSession::where('status', 'active')
+            // Real-time active sessions per zone per type (live, no period filter, vehicle hasn't exited)
+            $liveActiveByZoneType = ParkingSession::whereNull('exit_at')
                 ->whereIn('zone_id', $zoneIds)
                 ->groupBy('zone_id', 'vehicle_type_id')
                 ->selectRaw('zone_id, vehicle_type_id, COUNT(*) as count')
