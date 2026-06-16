@@ -307,18 +307,18 @@ export default {
       </div>
 
       <div class="mb-3">
-        <label class="form-label fw-semibold">Kozdinat & Radius Absensi</label>
-        <div class="row g-2">
+        <label class="form-label fw-semibold">Koordinat & Radius Absensi</label>
+        <div class="row g-2 align-items-end">
           <div class="col-4"><label class="form-label small">Latitude</label><input v-model.number="zoneForm.center_lat" type="number" step="any" class="form-control" placeholder="-6.175110" /></div>
           <div class="col-4"><label class="form-label small">Longitude</label><input v-model.number="zoneForm.center_lng" type="number" step="any" class="form-control" placeholder="106.827153" /></div>
-          <div class="col-3"><label class="form-label small">Radius (meter)</label><input v-model.number="zoneForm.radius_meters" type="number" min="50" max="5000" class="form-control" /></div>
-          <div class="col-1 d-flex align-items-end">
-            <BButton size="sm" variant="outline-info" title="Pilih Lokasi di Peta" @click="openMap">
+          <div class="col-3"><label class="form-label small text-nowrap">Radius (m)</label><input v-model.number="zoneForm.radius_meters" type="number" min="50" max="5000" class="form-control" /></div>
+          <div class="col-1">
+            <BButton variant="outline-info" class="w-100" title="Pilih Lokasi di Peta" @click="openMap" style="padding-left: 0; padding-right: 0;">
               <i class="ri-map-pin-2-line"></i>
             </BButton>
           </div>
         </div>
-        <small class="text-muted">Klik tombol pin untuk memilih lokasi di peta interaktif.</small>
+        <small class="text-muted d-block mt-1">Klik tombol pin untuk memilih lokasi di peta interaktif.</small>
       </div>
 
       <MapPickerModal
