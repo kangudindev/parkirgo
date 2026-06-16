@@ -62,42 +62,26 @@ export default {
       }).format(new Date(v));
     },
 
-    gaugeOption(vt) {
-      const maxVal = vt.capacity || 1;
-      const val = Math.min(vt.active_count, maxVal);
-      const pct = val / maxVal;
-      let color = '#10b981';
-      if (pct >= 0.9) color = '#ef4444';
-      else if (pct >= 0.7) color = '#f59e0b';
-
+    gaugeOption(active, capacity) {
+      const pct = capacity ? (active / capacity) * 100 : 0;
+      const color = pct > 90 ? "#f06548" : pct > 70 ? "#f7b84b" : "#0ab39c";
       return {
         series: [{
-          type: 'gauge',
-          center: ['50%', '55%'],
-          radius: '90%',
-          startAngle: 220,
-          endAngle: -40,
+          type: "gauge",
+          center: ["50%", "60%"],
+          radius: "100%",
+          startAngle: 200,
+          endAngle: -20,
           min: 0,
-          max: maxVal,
-          progress: { show: true, width: 10, itemStyle: { color } },
-          axisLine: { lineStyle: { width: 10, color: [[1, '#e2e8f0']] } },
+          max: capacity || 100,
+          progress: { show: true, width: 6, itemStyle: { color } },
+          pointer: { show: true, length: '60%', width: 3, itemStyle: { color } },
+          axisLine: { lineStyle: { width: 6, color: [[1, "#e9ebec"]] } },
           axisTick: { show: false },
           splitLine: { show: false },
           axisLabel: { show: false },
-          pointer: { show: false },
-          detail: {
-            formatter: '{value}',
-            fontSize: 16,
-            fontWeight: 'bold',
-            offsetCenter: [0, '30%'],
-            color: '#334155'
-          },
-          title: {
-            offsetCenter: [0, '55%'],
-            fontSize: 10,
-            color: '#64748b'
-          },
-          data: [{ value: val, name: 'Terisi' }]
+          detail: { show: false },
+          data: [{ value: active || 0 }]
         }]
       };
     },
@@ -256,24 +240,19 @@ export default {
 
             <hr class="my-3" />
 
-            <BRow class="g-3">
-              <BCol v-for="vt in zone.vehicle_types" :key="vt.id" cols="6" class="text-center">
-                <div class="d-flex flex-column align-items-center">
-                  <VueEcharts
-                    v-if="vt.capacity > 0"
-                    :option="gaugeOption(vt)"
-                    :autoresize="true"
-                    style="width: 100%; height: 110px;"
-                  />
-                  <div v-else class="d-flex flex-column align-items-center justify-content-center py-3" style="height: 110px;">
-                    <i :class="vt.icon || 'ri-car-line'" class="fs-24 text-muted mb-1"></i>
-                  </div>
-                  <span class="fw-semibold small mt-1">{{ vt.name }}</span>
-                  <div class="text-muted small">Terisi {{ vt.active_count }} · Tersisa {{ Math.max(vt.capacity - vt.active_count, 0) }}</div>
-                  <div class="text-muted small">Kapasitas {{ vt.capacity }}</div>
+            <div class="d-flex flex-wrap" style="gap:4px">
+              <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center px-1 mb-2" style="width: 19%; min-width: 75px; flex-grow: 1;">
+                <i :class="vt.icon || 'ri-car-line'" class="fs-18 d-block mb-1 text-primary"></i>
+                <span class="small fw-medium d-block text-truncate mx-auto" style="max-width:70px; font-size: 11px;">{{ vt.name }}</span>
+                <div class="d-flex justify-content-center" style="height:65px">
+                  <VueEcharts :option="gaugeOption(vt.active_count, vt.capacity)" style="width:75px;height:65px" />
                 </div>
-              </BCol>
-            </BRow>
+                <div class="small fw-semibold mt-1" style="font-size: 12px;">{{ vt.active_count || 0 }}<span class="text-muted fw-normal">/{{ vt.capacity }}</span></div>
+                <div class="small" :class="(vt.capacity - vt.active_count) > 0 ? 'text-success' : 'text-danger'" style="font-size: 11px;">
+                  {{ Math.max(0, vt.capacity - vt.active_count) }} sisa
+                </div>
+              </div>
+            </div>
           </BCardBody>
         </BCard>
       </BCol>
