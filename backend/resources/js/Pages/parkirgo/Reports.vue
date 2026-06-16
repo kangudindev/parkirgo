@@ -153,6 +153,7 @@ export default {
                   <th class="text-end">Total Transaksi</th>
                   <th class="text-end">Total Setoran</th>
                   <th class="text-center">Jumlah Transaksi</th>
+                  <th>Jenis Kendaraan</th>
                 </tr>
               </thead>
               <tbody>
@@ -162,6 +163,14 @@ export default {
                   <td class="text-end">{{ money(item.total_amount) }}</td>
                   <td class="text-end">{{ money(item.total_settlement) }}</td>
                   <td class="text-center">{{ item.transaction_count }}</td>
+                  <td>
+                    <div class="d-flex flex-wrap gap-2">
+                      <div v-for="vt in item.vehicles" :key="vt.id" class="d-flex align-items-center bg-light px-2 py-1 rounded small">
+                        <i :class="vt.icon" class="text-primary me-1"></i>
+                        <span class="fw-semibold">{{ vt.count }}</span>
+                      </div>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -221,6 +230,7 @@ export default {
                   <th class="text-end">Cash</th>
                   <th class="text-end">QRIS</th>
                   <th class="text-end">Total</th>
+                  <th>Jenis Kendaraan</th>
                   <th class="text-center">Status</th>
                 </tr>
               </thead>
@@ -232,6 +242,14 @@ export default {
                   <td class="text-end">{{ money(item.cash_amount) }}</td>
                   <td class="text-end">{{ money(item.qris_amount) }}</td>
                   <td class="text-end fw-semibold">{{ money(item.total_amount) }}</td>
+                  <td>
+                    <div class="d-flex flex-wrap gap-2">
+                      <div v-for="vt in item.vehicles" :key="vt.id" class="d-flex align-items-center bg-light px-2 py-1 rounded small">
+                        <i :class="vt.icon" class="text-primary me-1"></i>
+                        <span class="fw-semibold">{{ vt.count }}</span>
+                      </div>
+                    </div>
+                  </td>
                   <td class="text-center">
                     <span class="badge" :class="`bg-${badge(item.status)}-subtle text-${badge(item.status)}`">{{ item.status }}</span>
                   </td>
@@ -286,6 +304,7 @@ export default {
                   <th class="text-end">Total Transaksi</th>
                   <th class="text-end">Total Setoran</th>
                   <th class="text-center">Jumlah Transaksi</th>
+                  <th>Jenis Kendaraan</th>
                 </tr>
               </thead>
               <tbody>
@@ -296,6 +315,14 @@ export default {
                   <td class="text-end">{{ money(item.total_amount) }}</td>
                   <td class="text-end">{{ money(item.total_settlement) }}</td>
                   <td class="text-center">{{ item.transaction_count }}</td>
+                  <td>
+                    <div class="d-flex flex-wrap gap-2">
+                      <div v-for="vt in item.vehicles" :key="vt.id" class="d-flex align-items-center bg-light px-2 py-1 rounded small">
+                        <i :class="vt.icon" class="text-primary me-1"></i>
+                        <span class="fw-semibold">{{ vt.count }}</span>
+                      </div>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>

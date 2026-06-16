@@ -43,8 +43,9 @@ class AdminController extends Controller
                 'settlements_period' => Settlement::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
             ];
 
-            $zones = Zone::select('id', 'name', 'code', 'status')->with(['vehicleTypes' => function($q) {
-                $q->select('vehicle_types.id', 'vehicle_types.name', 'vehicle_types.code');
+            $zones = Zone::select('id', 'name', 'code', 'city', 'status')->with(['vehicleTypes' => function($q) {
+                $q->select('vehicle_types.id', 'vehicle_types.name', 'vehicle_types.code')
+                  ->withPivot('capacity');
             }])->latest()->get();
             $zoneIds = $zones->pluck('id');
 
@@ -84,17 +85,28 @@ class AdminController extends Controller
                 ->get()
                 ->groupBy('zone_id');
 
-            $zones->each(function ($zone) use ($jukirCounts, $parkirOutCounts, $revenueSums, $paidByZoneType, $revenueByZoneType) {
+            // Real-time active sessions per zone per type (live, no period filter)
+            $liveActiveByZoneType = ParkingSession::where('status', 'active')
+                ->whereIn('zone_id', $zoneIds)
+                ->groupBy('zone_id', 'vehicle_type_id')
+                ->selectRaw('zone_id, vehicle_type_id, COUNT(*) as count')
+                ->get()
+                ->groupBy('zone_id');
+
+            $zones->each(function ($zone) use ($jukirCounts, $parkirOutCounts, $revenueSums, $paidByZoneType, $revenueByZoneType, $liveActiveByZoneType) {
                 $zone->jukirs_count = $jukirCounts[$zone->id] ?? 0;
                 $zone->parkir_out_count = $parkirOutCounts[$zone->id] ?? 0;
                 $zone->revenue_sum = (int) ($revenueSums[$zone->id] ?? 0);
 
                 $typeCounts = $paidByZoneType->get($zone->id, collect())->keyBy('vehicle_type_id');
                 $revenueTypeCounts = $revenueByZoneType->get($zone->id, collect())->keyBy('vehicle_type_id');
+                $liveTypeCounts = $liveActiveByZoneType->get($zone->id, collect())->keyBy('vehicle_type_id');
                 
-                $zone->vehicleTypes->each(function ($vt) use ($typeCounts, $revenueTypeCounts) {
+                $zone->vehicleTypes->each(function ($vt) use ($typeCounts, $revenueTypeCounts, $liveTypeCounts) {
                     $vt->paid_count = (int) ($typeCounts[$vt->id]['count'] ?? 0);
                     $vt->revenue = (int) ($revenueTypeCounts[$vt->id]['sum'] ?? 0);
+                    $vt->capacity = (int) ($vt->pivot->capacity ?? 0);
+                    $vt->active_count = (int) ($liveTypeCounts[$vt->id]['count'] ?? 0);
                 });
             });
 
@@ -392,26 +404,64 @@ class AdminController extends Controller
                 ->get()
                 ->keyBy('jukir_id');
 
-            $revenuePerUser = $revenuePerUser->map(function($item) use ($settlementPerUser) {
+            // Vehicle Type Mapping
+            $vehicleTypes = \App\Models\VehicleType::where('status', 'active')->get(['id', 'name', 'icon'])->keyBy('id');
+
+            // Vehicle count per jukir
+            $vehiclePerUser = ParkingSession::select('jukir_id', 'vehicle_type_id', DB::raw('COUNT(*) as count'))
+                ->whereBetween('exit_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
+                ->where('payment_status', 'paid')
+                ->groupBy('jukir_id', 'vehicle_type_id')
+                ->get()
+                ->groupBy('jukir_id');
+
+            $revenuePerUser = $revenuePerUser->map(function($item) use ($settlementPerUser, $vehiclePerUser, $vehicleTypes) {
                 $item['total_settlement'] = (int) ($settlementPerUser[$item['jukir_id']]['total_settlement'] ?? 0);
+                $types = $vehiclePerUser->get($item['jukir_id'], collect());
+                $item['vehicles'] = $types->map(fn($t) => [
+                    'id' => $t->vehicle_type_id,
+                    'name' => $vehicleTypes[$t->vehicle_type_id]->name ?? 'Unknown',
+                    'icon' => $vehicleTypes[$t->vehicle_type_id]->icon ?? 'ri-car-line',
+                    'count' => $t->count
+                ])->values();
                 return $item;
             });
 
+            // For shift, we need to map via zone_id and jukir_id and date for simplicity, but actually just map settlement to parking session via jukir, zone and date.
+            // Since settlement doesn't directly link to sessions, we query sessions by jukir, zone, and date of the shift
             $revenuePerShift = Settlement::with(['shift.user:id,name', 'shift.zone:id,name', 'jukir:id,name', 'zone:id,name'])
                 ->whereBetween('created_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
                 ->get()
-                ->map(fn($item) => [
-                    'id' => $item->id,
-                    'settlement_number' => $item->settlement_number,
-                    'shift_code' => $item->shift?->code,
-                    'shift_date' => $item->shift?->shift_date?->toDateString(),
-                    'jukir_name' => $item->jukir?->name ?? 'Unknown',
-                    'zone_name' => $item->zone?->name ?? 'Unknown',
-                    'cash_amount' => (int) $item->cash_amount,
-                    'qris_amount' => (int) $item->qris_amount,
-                    'total_amount' => (int) $item->total_amount,
-                    'status' => $item->status,
-                ])
+                ->map(function($item) use ($vehicleTypes) {
+                    $shiftDate = $item->shift?->shift_date?->toDateString();
+                    $vehicles = ParkingSession::select('vehicle_type_id', DB::raw('COUNT(*) as count'))
+                        ->where('jukir_id', $item->jukir_id)
+                        ->where('zone_id', $item->zone_id)
+                        ->whereDate('exit_at', $shiftDate)
+                        ->where('payment_status', 'paid')
+                        ->groupBy('vehicle_type_id')
+                        ->get()
+                        ->map(fn($t) => [
+                            'id' => $t->vehicle_type_id,
+                            'name' => $vehicleTypes[$t->vehicle_type_id]->name ?? 'Unknown',
+                            'icon' => $vehicleTypes[$t->vehicle_type_id]->icon ?? 'ri-car-line',
+                            'count' => $t->count
+                        ]);
+
+                    return [
+                        'id' => $item->id,
+                        'settlement_number' => $item->settlement_number,
+                        'shift_code' => $item->shift?->code,
+                        'shift_date' => $shiftDate,
+                        'jukir_name' => $item->jukir?->name ?? 'Unknown',
+                        'zone_name' => $item->zone?->name ?? 'Unknown',
+                        'cash_amount' => (int) $item->cash_amount,
+                        'qris_amount' => (int) $item->qris_amount,
+                        'total_amount' => (int) $item->total_amount,
+                        'status' => $item->status,
+                        'vehicles' => $vehicles->values()
+                    ];
+                })
                 ->sortByDesc(fn($s) => $s['total_amount'])
                 ->values();
 
@@ -436,9 +486,25 @@ class AdminController extends Controller
                 ->groupBy('zone_id')
                 ->get()
                 ->keyBy('zone_id');
+                
+            $vehiclePerZone = ParkingSession::select('zone_id', 'vehicle_type_id', DB::raw('COUNT(*) as count'))
+                ->whereBetween('exit_at', [$dateFrom.' 00:00:00', $dateTo.' 23:59:59'])
+                ->where('payment_status', 'paid')
+                ->groupBy('zone_id', 'vehicle_type_id')
+                ->get()
+                ->groupBy('zone_id');
 
-            $revenuePerZone = $revenuePerZone->map(function($item) use ($settlementPerZone) {
+            $revenuePerZone = $revenuePerZone->map(function($item) use ($settlementPerZone, $vehiclePerZone, $vehicleTypes) {
                 $item['total_settlement'] = (int) ($settlementPerZone[$item['zone_id']]['total_settlement'] ?? 0);
+                
+                $types = $vehiclePerZone->get($item['zone_id'], collect());
+                $item['vehicles'] = $types->map(fn($t) => [
+                    'id' => $t->vehicle_type_id,
+                    'name' => $vehicleTypes[$t->vehicle_type_id]->name ?? 'Unknown',
+                    'icon' => $vehicleTypes[$t->vehicle_type_id]->icon ?? 'ri-car-line',
+                    'count' => $t->count
+                ])->values();
+                
                 return $item;
             });
         } catch (\Exception $e) {

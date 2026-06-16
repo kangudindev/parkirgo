@@ -62,6 +62,46 @@ export default {
       }).format(new Date(v));
     },
 
+    gaugeOption(vt) {
+      const maxVal = vt.capacity || 1;
+      const val = Math.min(vt.active_count, maxVal);
+      const pct = val / maxVal;
+      let color = '#10b981';
+      if (pct >= 0.9) color = '#ef4444';
+      else if (pct >= 0.7) color = '#f59e0b';
+
+      return {
+        series: [{
+          type: 'gauge',
+          center: ['50%', '55%'],
+          radius: '90%',
+          startAngle: 220,
+          endAngle: -40,
+          min: 0,
+          max: maxVal,
+          progress: { show: true, width: 10, itemStyle: { color } },
+          axisLine: { lineStyle: { width: 10, color: [[1, '#e2e8f0']] } },
+          axisTick: { show: false },
+          splitLine: { show: false },
+          axisLabel: { show: false },
+          pointer: { show: false },
+          detail: {
+            formatter: '{value}',
+            fontSize: 16,
+            fontWeight: 'bold',
+            offsetCenter: [0, '30%'],
+            color: '#334155'
+          },
+          title: {
+            offsetCenter: [0, '55%'],
+            fontSize: 10,
+            color: '#64748b'
+          },
+          data: [{ value: val, name: 'Terisi' }]
+        }]
+      };
+    },
+
     switchPeriod(p) {
       router.get("/", { period: p }, { preserveState: true });
     },
@@ -199,6 +239,12 @@ export default {
                     </td>
                     <td class="pt-2">
                       <h4 class="fw-semibold mb-0">{{ zone.parkir_out_count || 0 }}</h4>
+                      <div class="d-flex gap-2 mt-1 justify-content-center flex-wrap">
+                        <span v-for="vt in zone.vehicle_types" :key="vt.id" class="small text-muted d-inline-flex align-items-center gap-1">
+                          <i :class="vt.icon || 'ri-car-line'" class="fs-13"></i>
+                          <span>{{ vt.paid_count || 0 }}</span>
+                        </span>
+                      </div>
                     </td>
                     <td class="pt-2">
                       <h4 class="fw-semibold mb-0">{{ zone.jukirs_count || 0 }}</h4>
@@ -210,15 +256,24 @@ export default {
 
             <hr class="my-3" />
 
-            <div class="d-flex flex-wrap" style="gap:4px">
-              <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center px-1 mb-2" style="width: 19%; min-width: 75px; flex-grow: 1;">
-                <div class="avatar-sm rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mx-auto mb-2">
-                  <i :class="vt.icon || 'ri-car-line'" class="fs-18"></i>
+            <BRow class="g-3">
+              <BCol v-for="vt in zone.vehicle_types" :key="vt.id" cols="6" class="text-center">
+                <div class="d-flex flex-column align-items-center">
+                  <VueEcharts
+                    v-if="vt.capacity > 0"
+                    :option="gaugeOption(vt)"
+                    :autoresize="true"
+                    style="width: 100%; height: 110px;"
+                  />
+                  <div v-else class="d-flex flex-column align-items-center justify-content-center py-3" style="height: 110px;">
+                    <i :class="vt.icon || 'ri-car-line'" class="fs-24 text-muted mb-1"></i>
+                  </div>
+                  <span class="fw-semibold small mt-1">{{ vt.name }}</span>
+                  <div class="text-muted small">Terisi {{ vt.active_count }} · Tersisa {{ Math.max(vt.capacity - vt.active_count, 0) }}</div>
+                  <div class="text-muted small">Kapasitas {{ vt.capacity }}</div>
                 </div>
-                <span class="small fw-medium d-block text-truncate mx-auto mb-1" style="max-width:70px;">{{ vt.name }}</span>
-                <div class="fw-bold fs-16">{{ vt.paid_count || 0 }} <span class="fs-12 text-muted fw-normal">unit</span></div>
-              </div>
-            </div>
+              </BCol>
+            </BRow>
           </BCardBody>
         </BCard>
       </BCol>
