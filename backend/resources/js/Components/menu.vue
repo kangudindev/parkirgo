@@ -228,6 +228,18 @@ export default {
           </Link>
         </li>
         <li class="nav-item">
+          <Link href="/parkirgo/subscription-packages" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/subscription-packages') }">
+            <i class="ri-vip-crown-line"></i>
+            <span>Paket Langganan</span>
+          </Link>
+        </li>
+        <li class="nav-item">
+          <Link href="/parkirgo/user-subscriptions" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/user-subscriptions') }">
+            <i class="ri-user-star-line"></i>
+            <span>Member Langganan</span>
+          </Link>
+        </li>
+        <li class="nav-item">
           <Link href="/parkirgo/users" class="nav-link menu-link" :class="{ active: $page.url.startsWith('/parkirgo/users') }">
             <i class="ri-user-settings-line"></i>
             <span>User</span>
