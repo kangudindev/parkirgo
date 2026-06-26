@@ -35,6 +35,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     // Zones CRUD
     Route::get('/parkirgo/zones', [ZoneController::class, 'index'])->name('parkirgo.zones');
     Route::post('/parkirgo/zones', [ZoneController::class, 'store'])->name('parkirgo.zones.store');
+    Route::get('/parkirgo/zones/{zone}', [ZoneController::class, 'show'])->name('parkirgo.zones.show');
     Route::post('/parkirgo/zones/{zone}', [ZoneController::class, 'update'])->name('parkirgo.zones.update');
     Route::delete('/parkirgo/zones/{zone}', [ZoneController::class, 'destroy'])->name('parkirgo.zones.destroy');
 

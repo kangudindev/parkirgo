@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
     build: {
@@ -42,6 +43,14 @@ export default defineConfig({
         alias: {
             '@assets': '/resources/', // Update this with the correct path to your images
             '@favicon': '/resources/images/', // Update this with the correct path to your images
+            'bootstrap': fileURLToPath(new URL('./node_modules/bootstrap', import.meta.url)),
+        },
+    },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                loadPaths: ['node_modules'],
+            },
         },
     },
 });

@@ -61,7 +61,7 @@ export default {
                                     <img src="/images/logo_parkirgo.png?v=2" alt="ParkirGo" height="50" class="auth-logo-img" />
                                 </Link>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">System Manajemen Parkir Digital</p>
+                        <!--    <p class="mt-3 fs-15 fw-medium">System Manajemen Parkir Digital</p>-->
                         </div>
                     </BCol>
                 </BRow>

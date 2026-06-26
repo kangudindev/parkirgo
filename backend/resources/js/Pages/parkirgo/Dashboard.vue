@@ -68,8 +68,8 @@ export default {
       return {
         series: [{
           type: "gauge",
-          center: ["50%", "60%"],
-          radius: "100%",
+          center: ["50%", "75%"],
+          radius: "120%",
           startAngle: 200,
           endAngle: -20,
           min: 0,
@@ -245,12 +245,12 @@ export default {
             </div>
 
             <div class="d-flex flex-wrap" style="gap:4px">
-              <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center px-1 mb-1" style="width: 19%; min-width: 75px; flex-grow: 1;">
+              <div v-for="vt in zone.vehicle_types" :key="vt.id" class="text-center px-1 mb-1 cursor-pointer" style="width: 19%; min-width: 75px; flex-grow: 1;" :title="vt.name">
                 <div class="d-flex justify-content-center" style="height:60px">
-                  <VueEcharts :option="gaugeOption(vt.active_count, vt.capacity)" style="width:75px;height:60px" />
+                  <VueEcharts :option="gaugeOption(vt.active_count, vt.capacity)" style="width:75px;height:60px;pointer-events:none;" />
                 </div>
                 <div class="small fw-semibold mt-n2 mb-1" style="font-size: 12px;">{{ vt.active_count || 0 }}<span class="text-muted fw-normal">/{{ vt.capacity }}</span></div>
-                <i :class="vt.icon || 'ri-car-line'" class="fs-18 d-block mb-1 text-primary" :title="vt.name"></i>
+                <i :class="vt.icon || 'ri-car-line'" class="fs-18 d-block text-primary"></i>
               </div>
             </div>
           </BCardBody>

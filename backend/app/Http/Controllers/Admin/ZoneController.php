@@ -139,6 +139,25 @@ class ZoneController extends Controller
         $zone->vehicleTypes()->sync($pivot);
     }
 
+    public function show(Zone $zone)
+    {
+        $zone->load([
+            'tariffs.vehicleTypeMaster',
+            'vehicleTypes',
+            'jukirs',
+        ]);
+
+        $zone->loadCount([
+            'jukirs',
+            'parkingSessions',
+            'transactions',
+        ]);
+
+        return Inertia::render('parkirgo/ZoneDetail', [
+            'zone' => $zone,
+        ]);
+    }
+
     public function destroy(Zone $zone)
     {
         if ($zone->parkingSessions()->exists() || $zone->jukirs()->exists()) {

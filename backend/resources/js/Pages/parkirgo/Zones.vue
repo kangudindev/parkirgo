@@ -213,6 +213,9 @@ export default {
       this.perPageVal = val;
       router.get("/parkirgo/zones", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
     },
+    viewDetail(z) {
+      router.get(route("parkirgo.zones.show", z.id));
+    },
   },
 };
 </script>
@@ -248,8 +251,9 @@ export default {
           <template #cell-status="{ row }"><span class="badge bg-success-subtle text-success">{{ row.status }}</span></template>
           <template #cell-actions="{ row }">
             <div class="d-flex gap-1">
-              <BButton size="sm" variant="outline-secondary" @click="openZone(row)"><i class="ri-pencil-line"></i></BButton>
-              <BButton size="sm" variant="outline-danger" @click="deleteZone(row)"><i class="ri-delete-bin-line"></i></BButton>
+              <BButton size="sm" variant="outline-info" @click="viewDetail(row)" title="Detail Zona"><i class="ri-eye-line"></i></BButton>
+              <BButton size="sm" variant="outline-secondary" @click="openZone(row)" title="Edit"><i class="ri-pencil-line"></i></BButton>
+              <BButton size="sm" variant="outline-danger" @click="deleteZone(row)" title="Hapus"><i class="ri-delete-bin-line"></i></BButton>
             </div>
           </template>
         </DataTable>

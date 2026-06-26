@@ -30,6 +30,7 @@ export default {
         "ri-bus-line",
         "ri-truck-line",
         "ri-e-bike-2-line",
+        "ri-bike-line",
         "ri-caravan-line",
         "ri-ship-2-line"
       ],
