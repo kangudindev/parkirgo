@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ZoneController;
 use App\Http\Controllers\Admin\TariffController;
 use App\Http\Controllers\Admin\ShiftController;
+use App\Http\Controllers\Admin\SubscriptionPackageController;
+use App\Http\Controllers\Admin\UserSubscriptionController;
 use App\Http\Controllers\VelzonRoutesController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +59,18 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::post('/parkirgo/shifts', [ShiftController::class, 'store'])->name('parkirgo.shifts.store');
     Route::post('/parkirgo/shifts/{shift}', [ShiftController::class, 'update'])->name('parkirgo.shifts.update');
     Route::delete('/parkirgo/shifts/{shift}', [ShiftController::class, 'destroy'])->name('parkirgo.shifts.destroy');
+
+    // Subscription Packages CRUD
+    Route::get('/parkirgo/subscription-packages', [SubscriptionPackageController::class, 'index'])->name('parkirgo.subscription-packages');
+    Route::post('/parkirgo/subscription-packages', [SubscriptionPackageController::class, 'store'])->name('parkirgo.subscription-packages.store');
+    Route::put('/parkirgo/subscription-packages/{subscriptionPackage}', [SubscriptionPackageController::class, 'update'])->name('parkirgo.subscription-packages.update');
+    Route::delete('/parkirgo/subscription-packages/{subscriptionPackage}', [SubscriptionPackageController::class, 'destroy'])->name('parkirgo.subscription-packages.destroy');
+
+    // User Subscriptions & Member Registrations CRUD
+    Route::get('/parkirgo/user-subscriptions', [UserSubscriptionController::class, 'index'])->name('parkirgo.user-subscriptions');
+    Route::post('/parkirgo/user-subscriptions', [UserSubscriptionController::class, 'store'])->name('parkirgo.user-subscriptions.store');
+    Route::put('/parkirgo/user-subscriptions/{userSubscription}', [UserSubscriptionController::class, 'update'])->name('parkirgo.user-subscriptions.update');
+    Route::delete('/parkirgo/user-subscriptions/{userSubscription}', [UserSubscriptionController::class, 'destroy'])->name('parkirgo.user-subscriptions.destroy');
 
     // Vehicle Types CRUD
     Route::resource('/parkirgo/vehicle-types', VehicleTypeController::class)

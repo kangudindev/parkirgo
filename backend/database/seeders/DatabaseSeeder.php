@@ -301,6 +301,8 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        $this->call(SubscriptionSeeder::class);
+
         $admin->auditLogs()->create([
             'action' => 'seeded',
             'entity_type' => 'database',

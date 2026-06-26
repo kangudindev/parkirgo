@@ -108,4 +108,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(AuditLog::class);
     }
+
+    public function userSubscriptions()
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    public function wallet()
+    {
+        return $this->hasOne(UserWallet::class);
+    }
 }

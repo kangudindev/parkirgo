@@ -52,8 +52,17 @@ class ParkingSessionController extends Controller
                 ->where('status', 'active')
                 ->first();
 
+        // Cek Langganan Aktif
+        $subCheck = \App\Services\SubscriptionService::checkSubscriptionForPlate($data['plate_number'], $data['vehicle_type']);
+        $isSubActive = in_array($subCheck['type'], ['pass', 'quota']);
+
         $entryAt = isset($data['entry_at']) ? Carbon::parse($data['entry_at']) : now();
-        $calculation = $tariff ? TariffCalculator::calculate($tariff, $entryAt) : ['amount' => 0];
+        
+        if ($isSubActive) {
+            $calculation = ['amount' => 0];
+        } else {
+            $calculation = $tariff ? TariffCalculator::calculate($tariff, $entryAt) : ['amount' => 0];
+        }
 
         $zone = Zone::find($data['zone_id']);
         $zoneCode = $zone?->code ?? 'XXX';
@@ -63,16 +72,36 @@ class ParkingSessionController extends Controller
             ->count();
         $sequence = str_pad($lastToday + 1, 4, '0', STR_PAD_LEFT);
 
+        $metadata = [];
+        $paymentStatus = 'unpaid';
+        $finalAmount = null;
+
+        if ($isSubActive) {
+            $paymentStatus = 'paid';
+            $finalAmount = 0;
+            $metadata['subscription_type'] = $subCheck['type'];
+            $metadata['subscription_id'] = $subCheck['subscription_id'];
+
+            // Jika tipe kuota dan bayar di muka, kurangi kuota langsung
+            if ($subCheck['type'] === 'quota' && $tariff?->payment_timing === ZoneTariff::PAYMENT_ENTRY) {
+                \App\Services\SubscriptionService::deductQuotaOrBalance($subCheck, 0);
+            }
+        } elseif ($tariff?->payment_timing === ZoneTariff::PAYMENT_ENTRY) {
+            $finalAmount = $calculation['amount'];
+            $paymentStatus = 'paid';
+        }
+
         $payload = array_merge($data, [
             'tariff_id' => $tariff?->id,
             'jukir_id' => $request->user()->id,
             'ticket_number' => "{$zoneCode}-{$today}-{$sequence}",
             'entry_at' => $entryAt,
             'estimated_amount' => $calculation['amount'],
-            'final_amount' => $tariff?->payment_timing === ZoneTariff::PAYMENT_ENTRY ? $calculation['amount'] : null,
-            'payment_status' => $tariff?->payment_timing === ZoneTariff::PAYMENT_ENTRY ? 'paid' : 'unpaid',
+            'final_amount' => $finalAmount,
+            'payment_status' => $paymentStatus,
             'sync_status' => 'synced',
             'status' => 'active',
+            'metadata' => $metadata,
         ]);
 
         $session = $this->createOrUpdateByIdempotency($data['idempotency_key'] ?? null, $payload);
@@ -104,12 +133,63 @@ class ParkingSessionController extends Controller
         $tariff = $parkingSession->tariff;
         $calculation = $tariff ? TariffCalculator::calculate($tariff, $parkingSession->entry_at, $exitAt) : ['amount' => $parkingSession->estimated_amount, 'duration_minutes' => null];
 
+        $finalAmount = $calculation['amount'];
+        $paymentStatus = 'unpaid';
+        $metadata = $parkingSession->metadata ?? [];
+
+        // Cek jika sudah lunas saat masuk lewat langganan
+        $alreadyPaidBySub = isset($metadata['subscription_type']) && in_array($metadata['subscription_type'], ['pass', 'quota']);
+
+        if ($alreadyPaidBySub) {
+            $finalAmount = 0;
+            $paymentStatus = 'paid';
+        } else {
+            // Cek langganan baru saat keluar
+            $subCheck = \App\Services\SubscriptionService::checkSubscriptionForPlate($parkingSession->plate_number, $parkingSession->vehicle_type);
+
+            if ($subCheck['type'] === 'pass') {
+                $finalAmount = 0;
+                $paymentStatus = 'paid';
+                $metadata['subscription_type'] = 'pass';
+                $metadata['subscription_id'] = $subCheck['subscription_id'];
+            } elseif ($subCheck['type'] === 'quota') {
+                // Potong kuota sesi
+                if (\App\Services\SubscriptionService::deductQuotaOrBalance($subCheck, 0)) {
+                    $finalAmount = 0;
+                    $paymentStatus = 'paid';
+                    $metadata['subscription_type'] = 'quota';
+                    $metadata['subscription_id'] = $subCheck['subscription_id'];
+                }
+            } elseif ($subCheck['type'] === 'wallet' && $finalAmount > 0) {
+                // Potong saldo prabayar
+                if (\App\Services\SubscriptionService::deductQuotaOrBalance($subCheck, $finalAmount)) {
+                    $paymentStatus = 'paid';
+                    $metadata['payment_method'] = 'wallet';
+                    $metadata['wallet_id'] = $subCheck['wallet_id'];
+
+                    // Catat transaksi lunas otomatis via dompet prabayar
+                    \App\Models\Transaction::create([
+                        'transaction_number' => 'TRX-WAL-' . now()->format('Ymd') . '-' . $parkingSession->zone_id . '-' . rand(1000, 9999),
+                        'parking_session_id' => $parkingSession->id,
+                        'zone_id' => $parkingSession->zone_id,
+                        'jukir_id' => $request->user()->id,
+                        'payment_method' => 'wallet',
+                        'amount' => $finalAmount,
+                        'status' => 'recorded',
+                        'created_at' => $exitAt,
+                    ]);
+                }
+            }
+        }
+
         $parkingSession->update([
             'exit_at' => $exitAt,
             'exit_photo_path' => $data['exit_photo_path'] ?? null,
             'duration_minutes' => $calculation['duration_minutes'] ?? null,
-            'final_amount' => $calculation['amount'],
+            'final_amount' => $finalAmount,
+            'payment_status' => $paymentStatus,
             'status' => 'exited',
+            'metadata' => $metadata,
         ]);
 
         if (! $parkingSession->closed_by) {
