@@ -76,6 +76,10 @@ export default {
     formatRp(v) {
       return "Rp " + Number(v).toLocaleString("id-ID");
     },
+    typeLabel(t) {
+      const labels = { pass: "Unlimited Pass", quota: "Kuota Sesi", balance: "Top Up Saldo" };
+      return labels[t] || t;
+    },
     formatDate(d) {
       if (!d) return "-";
       return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(new Date(d));
