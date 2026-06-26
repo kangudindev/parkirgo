@@ -18,6 +18,7 @@ export default {
     zones: { type: Array, default: () => [] },
     sortField: { type: String, default: "created_at" },
     sortDir: { type: String, default: "desc" },
+    currentTab: { type: String, default: "staff" },
   },
   data() {
     return {
@@ -36,6 +37,16 @@ export default {
   },
   computed: {
     columns() {
+      if (this.currentTab === "customer") {
+        return [
+          { key: "name", label: "Nama Member" },
+          { key: "email", label: "Email" },
+          { key: "phone", label: "Telepon" },
+          { key: "status", label: "Status", width: "100px" },
+          { key: "created_at", label: "Tanggal Daftar" },
+          { key: "actions", label: "Aksi", sortable: false, width: "120px" },
+        ];
+      }
       return [
         { key: "name", label: "Nama" },
         { key: "nik", label: "NIK", width: "140px" },
@@ -50,7 +61,7 @@ export default {
   },
   methods: {
     roleLabel(role) {
-      const labels = { admin: "Admin ParkirGo", supervisor: "Supervisor", jukir: "Juru Parkir" };
+      const labels = { admin: "Admin ParkirGo", supervisor: "Supervisor", jukir: "Juru Parkir", customer: "Member Langganan" };
       return labels[role] || role || "-";
     },
     statusClass(status) {
@@ -63,7 +74,7 @@ export default {
     open(u) {
       this.editing = u;
       if (u) this.form = { name: u.name, email: u.email, nik: u.nik || "", phone: u.phone || "", role: u.role, status: u.status, assigned_zone_id: u.assigned_zone_id, password: "" };
-      else this.form = { name: "", email: "", nik: "", phone: "", role: "jukir", status: "active", assigned_zone_id: null, password: "" };
+      else this.form = { name: "", email: "", nik: "", phone: "", role: this.currentTab === "customer" ? "customer" : "jukir", status: "active", assigned_zone_id: null, password: "" };
       this.showModal = true;
     },
     save() {
@@ -127,21 +138,24 @@ export default {
         this.idCardRef.downloadCard();
       }
     },
+    changeTab(tab) {
+      router.get("/parkirgo/users", { tab, search: this.searchQuery, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal });
+    },
     onSort(field, dir) {
       this.tableSortField = field;
       this.tableSortDir = dir;
-      router.get("/parkirgo/users", { sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+      router.get("/parkirgo/users", { tab: this.currentTab, sort_field: field, sort_dir: dir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
     },
     onSearch(q) {
       this.searchQuery = q;
-      router.get("/parkirgo/users", { search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
+      router.get("/parkirgo/users", { tab: this.currentTab, search: q, sort_field: this.tableSortField, sort_dir: this.tableSortDir, per_page: this.perPageVal }, { preserveState: true });
     },
     onPage(page) {
-      router.get("/parkirgo/users", { page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
+      router.get("/parkirgo/users", { tab: this.currentTab, page, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery, per_page: this.perPageVal }, { preserveState: true });
     },
     onPerPage(val) {
       this.perPageVal = val;
-      router.get("/parkirgo/users", { per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
+      router.get("/parkirgo/users", { tab: this.currentTab, per_page: val, sort_field: this.tableSortField, sort_dir: this.tableSortDir, search: this.searchQuery }, { preserveState: true });
     },
   },
 };
@@ -205,14 +219,28 @@ export default {
     <BCard no-body class="border-0 shadow-sm">
       <BCardHeader class="d-flex align-items-center justify-content-between">
         <div>
-          <BCardTitle class="mb-1">Daftar Pengguna</BCardTitle>
-          <p class="text-muted mb-0">Akun admin, supervisor, dan juru parkir ParkirGo.</p>
+          <BCardTitle class="mb-1">{{ currentTab === 'customer' ? 'Daftar Member Berlangganan' : 'Daftar Pengguna Jukir & Staf' }}</BCardTitle>
+          <p class="text-muted mb-0">{{ currentTab === 'customer' ? 'Kelola akun pengendara/member terdaftar ParkirGo.' : 'Akun admin, supervisor, dan juru parkir ParkirGo.' }}</p>
         </div>
         <BButton variant="primary" @click="open(null)">
-          <i class="ri-add-line me-1"></i>Tambah Pengguna
+          <i class="ri-add-line me-1"></i>{{ currentTab === 'customer' ? 'Tambah Member' : 'Tambah Pengguna' }}
         </BButton>
       </BCardHeader>
       <BCardBody>
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'staff' }" @click="changeTab('staff')" href="javascript:void(0);">
+              <i class="ri-user-settings-line me-1 align-bottom"></i> Jukir & Staf
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" :class="{ active: currentTab === 'customer' }" @click="changeTab('customer')" href="javascript:void(0);">
+              <i class="ri-user-star-line me-1 align-bottom"></i> Member Berlangganan
+            </a>
+          </li>
+        </ul>
+
         <DataTable
           :columns="columns"
           :data="users"
@@ -246,8 +274,13 @@ export default {
             </span>
           </template>
           <template #cell-last_seen_at="{ row }">{{ formatDate(row.last_seen_at) }}</template>
+          <template #cell-created_at="{ row }">{{ formatDate(row.created_at) }}</template>
           <template #cell-actions="{ row }">
-            <div v-if="row.role !== 'admin'" class="d-flex gap-1">
+            <div v-if="row.role === 'customer'" class="d-flex gap-1">
+              <BButton size="sm" variant="outline-secondary" @click="open(row)" title="Edit Member"><i class="ri-pencil-line"></i></BButton>
+              <BButton size="sm" variant="outline-danger" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></BButton>
+            </div>
+            <div v-else-if="row.role !== 'admin'" class="d-flex gap-1">
               <BButton size="sm" variant="outline-secondary" @click="open(row)" title="Edit"><i class="ri-pencil-line"></i></BButton>
               <BButton v-if="!row.has_qr_token" size="sm" variant="primary" @click="generateQr(row.id)" title="Generate QR">
                 <i class="ri-scanner-2-line"></i>
@@ -266,14 +299,14 @@ export default {
       </BCardBody>
     </BCard>
 
-    <BModal v-model="showModal" :title="editing ? 'Edit Pengguna' : 'Tambah Pengguna'" hide-footer>
+    <BModal v-model="showModal" :title="editing ? (form.role === 'customer' ? 'Edit Member Berlangganan' : 'Edit Pengguna') : (currentTab === 'customer' ? 'Tambah Member Berlangganan Baru' : 'Tambah Pengguna Baru')" hide-footer>
       <div class="mb-2"><label class="form-label">Nama</label><input v-model="form.name" class="form-control" /></div>
       <div class="mb-2"><label class="form-label">Email</label><input v-model="form.email" type="email" class="form-control" /></div>
       <div class="row mb-2">
-        <div class="col-6"><label class="form-label">NIK</label><input v-model="form.nik" class="form-control" /></div>
-        <div class="col-6"><label class="form-label">Telepon</label><input v-model="form.phone" class="form-control" /></div>
+        <div class="col-6" v-if="form.role !== 'customer'"><label class="form-label">NIK</label><input v-model="form.nik" class="form-control" /></div>
+        <div class="col-6" :class="{ 'col-12': form.role === 'customer' }"><label class="form-label">Telepon</label><input v-model="form.phone" class="form-control" /></div>
       </div>
-      <div class="row mb-2">
+      <div class="row mb-2" v-if="form.role !== 'customer'">
         <div class="col-6"><label class="form-label">Role</label>
           <select v-model="form.role" class="form-select">
             <option value="admin">Admin ParkirGo</option>
@@ -288,7 +321,15 @@ export default {
           </select>
         </div>
       </div>
-      <div class="mb-2"><label class="form-label">Zona</label>
+      <div class="row mb-2" v-else>
+        <div class="col-12"><label class="form-label">Status</label>
+          <select v-model="form.status" class="form-select">
+            <option value="active">Aktif</option>
+            <option value="inactive">Nonaktif</option>
+          </select>
+        </div>
+      </div>
+      <div class="mb-2" v-if="form.role !== 'customer'"><label class="form-label">Zona</label>
         <select v-model="form.assigned_zone_id" class="form-select">
           <option value="">- Pilih Zona -</option>
           <option v-for="z in zones" :key="z.id" :value="z.id">{{ z.name }}</option>

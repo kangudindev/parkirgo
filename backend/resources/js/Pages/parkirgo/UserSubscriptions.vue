@@ -1,12 +1,18 @@
 <script>
+import { ref } from "vue";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import DataTable from "@/Components/DataTable.vue";
+import MemberIdCard from "@/Components/MemberIdCard.vue";
 import { router } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 
 export default {
-  components: { Layout, PageHeader, DataTable },
+  components: { Layout, PageHeader, DataTable, MemberIdCard },
+  setup() {
+    const memberCardRef = ref(null);
+    return { memberCardRef };
+  },
   props: {
     subscriptions: { type: Object, default: () => ({ data: [] }) },
     packages: { type: Array, default: () => [] },
@@ -18,7 +24,9 @@ export default {
   data() {
     return {
       showModal: false,
+      showCardModal: false,
       editing: null,
+      cardSub: null,
       searchQuery: "",
       perPageVal: 15,
       tableSortField: this.sortField,
@@ -148,6 +156,15 @@ export default {
         },
       });
     },
+    showMemberCard(sub) {
+      this.cardSub = sub;
+      this.showCardModal = true;
+    },
+    downloadMemberCard() {
+      if (this.memberCardRef) {
+        this.memberCardRef.downloadCard();
+      }
+    },
     remove(sub) {
       Swal.fire({
         title: "Hapus Langganan?",
@@ -241,6 +258,7 @@ export default {
               </template>
               <template #cell-actions="{ row }">
                 <div class="d-flex gap-1">
+                  <BButton size="sm" variant="outline-info" @click="showMemberCard(row)" title="Cetak Kartu Member"><i class="ri-printer-line"></i></BButton>
                   <BButton size="sm" variant="outline-secondary" @click="openEdit(row)" title="Edit Status/Kuota"><i class="ri-pencil-line"></i></BButton>
                   <BButton size="sm" variant="outline-danger" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></BButton>
                 </div>
@@ -345,6 +363,22 @@ export default {
       <div class="d-flex justify-content-end gap-2 mt-4">
         <BButton variant="light" @click="showEditModal = false">Batal</BButton>
         <BButton variant="primary" @click="updateSub">Simpan Perubahan</BButton>
+      </div>
+    </BModal>
+
+    <!-- Modal Preview Kartu Member -->
+    <BModal v-model="showCardModal" title="Preview Kartu Member" hide-footer centered size="xl">
+      <div v-if="cardSub" class="text-center py-3">
+        <div class="d-flex justify-content-center mb-4">
+          <MemberIdCard ref="memberCardRef" :subscription="cardSub" />
+        </div>
+        <div class="d-flex justify-content-center gap-3">
+          <BButton variant="light" @click="showCardModal=false">Tutup</BButton>
+          <BButton variant="primary" @click="downloadMemberCard">
+            <i class="ri-download-2-line me-1"></i>Download Kartu Member (PNG)
+          </BButton>
+        </div>
+        <p class="text-muted small mt-3">Kartu member dapat diunduh dalam format gambar berkualitas tinggi untuk dicetak.</p>
       </div>
     </BModal>
   </Layout>

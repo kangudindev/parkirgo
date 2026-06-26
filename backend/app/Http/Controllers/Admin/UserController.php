@@ -15,13 +15,23 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
+        $tab = $request->input('tab', 'staff');
+
+        $query = User::query();
+        if ($tab === 'customer') {
+            $query->where('role', 'customer');
+        } else {
+            $query->whereIn('role', ['admin', 'supervisor', 'jukir'])->with('assignedZone');
+        }
+
         return Inertia::render('parkirgo/Users', [
             'users' => $this->applySort(
-                $this->applySearch(User::with('assignedZone'), $request, ['name', 'email', 'nik', 'phone', 'role']),
+                $this->applySearch($query, $request, ['name', 'email', 'nik', 'phone', 'role']),
                 $request,
                 ['name', 'email', 'role', 'status', 'created_at']
             )->paginate($this->perPage($request)),
             'zones' => Zone::where('status', 'active')->orderBy('name')->get(['id', 'name', 'code']),
+            'currentTab' => $tab,
         ]);
     }
 
@@ -32,7 +42,7 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:100', 'unique:users,email'],
             'nik' => ['nullable', 'string', 'max:30', 'unique:users,nik'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'role' => ['required', 'in:admin,supervisor,jukir'],
+            'role' => ['required', 'in:admin,supervisor,jukir,customer'],
             'status' => ['required', 'in:active,inactive'],
             'assigned_zone_id' => ['nullable', 'exists:zones,id'],
             'password' => ['required', 'string', 'min:6'],
@@ -60,7 +70,7 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:100', 'unique:users,email,' . $user->id],
             'nik' => ['nullable', 'string', 'max:30', 'unique:users,nik,' . $user->id],
             'phone' => ['nullable', 'string', 'max:20'],
-            'role' => ['required', 'in:admin,supervisor,jukir'],
+            'role' => ['required', 'in:admin,supervisor,jukir,customer'],
             'status' => ['required', 'in:active,inactive'],
             'assigned_zone_id' => ['nullable', 'exists:zones,id'],
             'password' => ['nullable', 'string', 'min:6'],
