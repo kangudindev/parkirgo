@@ -1,6 +1,7 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { ref, watch } from 'vue';
 import html2canvas from 'html2canvas';
+import QRCode from 'qrcode';
 
 const props = defineProps({
   user: {
@@ -10,11 +11,22 @@ const props = defineProps({
 });
 
 const idCardRef = ref(null);
+const qrCodeUrl = ref('');
 
-const qrCodeUrl = computed(() => {
-  if (!props.user?.qr_auth_token) return null;
-  return `https://quickchart.io/qr?text=${props.user.qr_auth_token}&size=300&margin=2`;
-});
+const generateQr = async () => {
+  if (!props.user?.qr_auth_token) {
+    qrCodeUrl.value = '';
+    return;
+  }
+  try {
+    qrCodeUrl.value = await QRCode.toDataURL(props.user.qr_auth_token, { width: 300, margin: 2 });
+  } catch (err) {
+    console.error('Failed to generate local QR code:', err);
+    qrCodeUrl.value = '';
+  }
+};
+
+watch(() => props.user?.qr_auth_token, generateQr, { immediate: true });
 
 const downloadCard = async () => {
   if (!idCardRef.value) return;

@@ -14,29 +14,7 @@ class ZoneController extends Controller
 {
     use HasAdvancedFilter;
 
-    private function handleQrisImage(Request $request, string $prefix = 'zone-'): ?string
-    {
-        if (! $request->hasFile('qris_image')) {
-            return null;
-        }
 
-        $path = $request->file('qris_image')->store("parkirgo/qris/{$prefix}", 'public');
-        $fullPath = Storage::disk('public')->path($path);
-
-        if (class_exists(\Zxing\QrReader::class)) {
-            try {
-                $reader = new \Zxing\QrReader($fullPath);
-                $decoded = $reader->text();
-                if ($decoded) {
-                    session()->flash('qris_payload', $decoded);
-                }
-            } catch (\Throwable $e) {
-                report($e);
-            }
-        }
-
-        return $path;
-    }
 
     public function index(Request $request)
     {
@@ -79,11 +57,6 @@ class ZoneController extends Controller
         $payload = array_merge($data, ['status' => $data['status'] ?? 'active']);
         unset($payload['qris_image'], $payload['capacities']);
 
-        $payload['qris_image_path'] = $this->handleQrisImage($request, 'zone-');
-        if ($request->hasFile('qris_image') && ! $payload['qris_payload']) {
-            $payload['qris_payload'] = session()->pull('qris_payload', '');
-        }
-
         $zone = Zone::create($payload);
 
         $this->syncCapacities($zone, $data['capacities'] ?? []);
@@ -111,14 +84,10 @@ class ZoneController extends Controller
         $payload = $data;
         unset($payload['qris_image'], $payload['capacities']);
 
-        if ($request->hasFile('qris_image')) {
-            if ($zone->qris_image_path) {
-                Storage::disk('public')->delete($zone->qris_image_path);
-            }
-            $payload['qris_image_path'] = $this->handleQrisImage($request, "zone-{$zone->id}-");
-            if (! $payload['qris_payload']) {
-                $payload['qris_payload'] = session()->pull('qris_payload', '');
-            }
+        // Clean up old QRIS image path since we don't store image files anymore
+        if ($zone->qris_image_path) {
+            Storage::disk('public')->delete($zone->qris_image_path);
+            $payload['qris_image_path'] = null;
         }
 
         $zone->update($payload);

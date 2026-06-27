@@ -6,6 +6,7 @@ import MapPickerModal from "@/Components/MapPickerModal.vue";
 import { router } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 import axios from "axios";
+import QRCode from "qrcode";
 
 export default {
   components: { Layout, PageHeader, DataTable, MapPickerModal },
@@ -78,6 +79,22 @@ export default {
       return "";
     }
   },
+  watch: {
+    'zoneForm.qris_payload'(newVal) {
+      if (newVal) {
+        QRCode.toDataURL(newVal, { width: 300, margin: 2 })
+          .then(url => {
+            this.qrisPreviewUrl = url;
+          })
+          .catch(err => {
+            console.error("Gagal generate QR Code lokal:", err);
+            this.qrisPreviewUrl = null;
+          });
+      } else {
+        this.qrisPreviewUrl = null;
+      }
+    }
+  },
   methods: {
     nextZoneCode() {
       const existing = (this.zones.data || this.zones || []);
@@ -89,16 +106,27 @@ export default {
       return String(max + 1).padStart(3, "0");
     },
     initCapacities() {
-      const existing = this.editingZone
-        ? (this.editingZone.vehicle_types || []).filter(vt => (vt.pivot?.capacity || 0) > 0).map(vt => ({ vehicle_type_id: vt.id, capacity: vt.pivot.capacity }))
-        : [];
+      const existing = this.editingZone ? this.editingZone.vehicle_types.map(vt => ({ vehicle_type_id: vt.id, capacity: vt.pivot.capacity })) : [];
       this.zoneForm.capacities = [...existing];
     },
     openZone(z) {
       if (z) {
         this.editingZone = z;
         this.zoneForm = { code: z.code, name: z.name, city: z.city || "", capacities: [], center_lat: z.center_lat, center_lng: z.center_lng, radius_meters: z.radius_meters ?? 150, qris_payload: z.qris_payload || "", qris_image: null, status: z.status };
-        this.qrisPreviewUrl = z.qris_image_path ? "/storage/" + z.qris_image_path : null;
+        if (z.qris_payload) {
+          QRCode.toDataURL(z.qris_payload, { width: 300, margin: 2 })
+            .then(url => {
+              this.qrisPreviewUrl = url;
+            })
+            .catch(err => {
+              console.error("Gagal generate QR Code lokal:", err);
+              this.qrisPreviewUrl = null;
+            });
+        } else if (z.qris_image_path) {
+          this.qrisPreviewUrl = "/storage/" + z.qris_image_path;
+        } else {
+          this.qrisPreviewUrl = null;
+        }
       } else {
         this.editingZone = null;
         const nextCode = this.nextZoneCode();

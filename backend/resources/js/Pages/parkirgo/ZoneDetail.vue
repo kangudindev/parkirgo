@@ -4,6 +4,7 @@ import PageHeader from "@/Components/page-header.vue";
 import { Link } from "@inertiajs/vue3";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import QRCode from "qrcode";
 
 export default {
   components: { Layout, PageHeader, Link },
@@ -13,12 +14,22 @@ export default {
   data() {
     return {
       map: null,
+      localQrisQrUrl: null,
     };
+  },
+  watch: {
+    zone: {
+      handler() {
+        this.generateLocalQrisQr();
+      },
+      deep: true,
+    }
   },
   mounted() {
     if (this.zone.center_lat && this.zone.center_lng) {
       setTimeout(() => this.initMap(), 400);
     }
+    this.generateLocalQrisQr();
   },
   beforeUnmount() {
     if (this.map) {
@@ -89,6 +100,22 @@ export default {
     roleLabel(role) {
       const labels = { admin: "Admin ParkirGo", supervisor: "Supervisor", jukir: "Juru Parkir" };
       return labels[role] || role || "-";
+    },
+    generateLocalQrisQr() {
+      if (this.zone.qris_payload) {
+        QRCode.toDataURL(this.zone.qris_payload, { width: 300, margin: 2 })
+          .then(url => {
+            this.localQrisQrUrl = url;
+          })
+          .catch(err => {
+            console.error("Gagal generate QR Code lokal:", err);
+            this.localQrisQrUrl = null;
+          });
+      } else if (this.zone.qris_image_path) {
+        this.localQrisQrUrl = `/storage/${this.zone.qris_image_path}`;
+      } else {
+        this.localQrisQrUrl = null;
+      }
     },
   },
 };
@@ -320,21 +347,21 @@ export default {
             <BCardTitle class="mb-0"><i class="ri-qr-code-line me-1 align-middle text-primary"></i> QRIS Pembayaran</BCardTitle>
           </BCardHeader>
           <BCardBody class="text-center">
-            <div v-if="zone.qris_image_path">
+            <div v-if="localQrisQrUrl">
               <div v-if="zone.qris_merchant_name" class="alert alert-info py-2 px-3 mb-3 text-start small">
                 <i class="ri-store-2-line me-1 align-middle"></i>
                 <span>Merchant: <strong>{{ zone.qris_merchant_name }}</strong></span>
               </div>
               <div class="p-3 bg-light rounded d-inline-block border mb-3">
-                <img :src="`/storage/${zone.qris_image_path}`" alt="QRIS Code" class="img-fluid" style="max-height: 200px;" />
+                <img :src="localQrisQrUrl" alt="QRIS Code" class="img-fluid" style="max-height: 200px;" />
               </div>
-              <a :href="`/storage/${zone.qris_image_path}`" download target="_blank" class="btn btn-sm btn-light w-100 mb-2">
+              <a :href="localQrisQrUrl" download="qris-pembayaran.png" target="_blank" class="btn btn-sm btn-light w-100 mb-2">
                 <i class="ri-download-line me-1"></i> Download Gambar QRIS
               </a>
             </div>
             <div v-else class="py-4 text-muted">
               <i class="ri-qr-code-line fs-40 d-block mb-2 text-secondary"></i>
-              Gambar QRIS belum diunggah.
+              QRIS belum dikonfigurasi.
             </div>
           </BCardBody>
         </BCard>
