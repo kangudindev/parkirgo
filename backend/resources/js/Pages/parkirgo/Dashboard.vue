@@ -207,7 +207,7 @@ export default {
     </BRow>
 
     <BRow class="g-3 mb-4">
-      <BCol v-for="zone in zones" :key="zone.id" xl="4" md="6">
+      <BCol v-for="zone in zones" :key="zone.id" xl="3" md="6">
         <BCard no-body class="border-0 shadow-sm h-100 zone-card">
           <BCardBody>
             <div class="d-flex justify-content-between align-items-start mb-3">
@@ -215,6 +215,7 @@ export default {
                 <h5 class="mb-0 fw-bold">{{ zone.name }}</h5>
                 <span class="badge bg-primary-subtle text-primary">{{ zone.code }}</span>
                 <span v-if="zone.city" class="ms-1 text-muted small">{{ zone.city }}</span>
+                <span class="badge bg-info-subtle text-info ms-1">{{ periodLabel }}</span>
               </div>
               <span class="badge bg-success-subtle text-success">{{ zone.status }}</span>
             </div>
@@ -223,8 +224,8 @@ export default {
               <table class="table table-sm table-borderless align-middle mb-0 text-center">
                 <thead>
                   <tr class="text-muted small border-bottom">
-                    <th class="pb-1">PENDAPATAN<br><span class="text-muted text-capitalize fw-normal" style="font-size: 10px;">({{ periodLabel.toLowerCase() }})</span></th>
-                    <th class="pb-1">KENDARAAN<br><span class="text-muted text-capitalize fw-normal" style="font-size: 10px;">({{ periodLabel.toLowerCase() }})</span></th>
+                    <th class="pb-1">PENDAPATAN</th>
+                    <th class="pb-1">KENDARAAN</th>
                     <th class="pb-1">JUKIR</th>
                   </tr>
                 </thead>

@@ -220,9 +220,9 @@ export default {
                 <span class="badge" :class="row.payment_status === 'paid' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'">{{ row.payment_status }}</span>
               </template>
               <template #cell-actions="{ row }">
-                <BButton size="sm" variant="soft-primary" @click="openDetail(row)" title="Detail">
-                  <i class="ri-eye-line"></i>
-                </BButton>
+                <button class="btn p-0 border-0 bg-transparent link-info fs-17" @click="openDetail(row)" title="Detail">
+                  <i class="ri-checkbox-line"></i>
+                </button>
               </template>
             </DataTable>
           </BCardBody>

@@ -158,6 +158,38 @@ class ZoneController extends Controller
         ]);
     }
 
+    public function decodeQris(Request $request)
+    {
+        $request->validate([
+            'qris_image' => ['required', 'image', 'max:2048'],
+        ]);
+
+        if (! $request->hasFile('qris_image')) {
+            return response()->json(['error' => 'No image file uploaded'], 400);
+        }
+
+        $tempPath = $request->file('qris_image')->store('temp', 'public');
+        $fullPath = Storage::disk('public')->path($tempPath);
+
+        $decoded = null;
+        if (class_exists(\Zxing\QrReader::class)) {
+            try {
+                $reader = new \Zxing\QrReader($fullPath);
+                $decoded = $reader->text();
+            } catch (\Exception $e) {
+                report($e);
+            }
+        }
+
+        // Clean up temp file
+        Storage::disk('public')->delete($tempPath);
+
+        return response()->json([
+            'success' => (bool)$decoded,
+            'payload' => $decoded ?? '',
+        ]);
+    }
+
     public function destroy(Zone $zone)
     {
         if ($zone->parkingSessions()->exists() || $zone->jukirs()->exists()) {

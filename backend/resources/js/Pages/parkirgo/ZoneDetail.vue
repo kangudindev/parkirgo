@@ -321,6 +321,10 @@ export default {
           </BCardHeader>
           <BCardBody class="text-center">
             <div v-if="zone.qris_image_path">
+              <div v-if="zone.qris_merchant_name" class="alert alert-info py-2 px-3 mb-3 text-start small">
+                <i class="ri-store-2-line me-1 align-middle"></i>
+                <span>Merchant: <strong>{{ zone.qris_merchant_name }}</strong></span>
+              </div>
               <div class="p-3 bg-light rounded d-inline-block border mb-3">
                 <img :src="`/storage/${zone.qris_image_path}`" alt="QRIS Code" class="img-fluid" style="max-height: 200px;" />
               </div>
@@ -331,10 +335,6 @@ export default {
             <div v-else class="py-4 text-muted">
               <i class="ri-qr-code-line fs-40 d-block mb-2 text-secondary"></i>
               Gambar QRIS belum diunggah.
-            </div>
-            <div class="mt-2 text-start">
-              <label class="form-label text-muted small mb-1">QRIS Payload</label>
-              <textarea class="form-control form-control-sm bg-light" readonly rows="2" placeholder="Payload QRIS tidak terdeteksi..." :value="zone.qris_payload || ''"></textarea>
             </div>
           </BCardBody>
         </BCard>

@@ -277,10 +277,10 @@ export default {
                 <span :class="`badge ${statusBadgeClass(row.status)}`">{{ statusLabel(row.status) }}</span>
               </template>
               <template #cell-actions="{ row }">
-                <div class="d-flex gap-1">
-                  <BButton size="sm" variant="outline-info" @click="showMemberCard(row)" title="Cetak Kartu Member"><i class="ri-printer-line"></i></BButton>
-                  <BButton size="sm" variant="outline-secondary" @click="openEdit(row)" title="Edit Status/Kuota"><i class="ri-pencil-line"></i></BButton>
-                  <BButton size="sm" variant="outline-danger" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></BButton>
+                <div class="d-flex gap-2 align-items-center">
+                  <button class="btn p-0 border-0 bg-transparent link-primary fs-17" @click="showMemberCard(row)" title="Cetak Kartu Member"><i class="ri-printer-line"></i></button>
+                  <button class="btn p-0 border-0 bg-transparent link-warning fs-17" @click="openEdit(row)" title="Edit Status/Kuota"><i class="ri-pencil-line"></i></button>
+                  <button class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></button>
                 </div>
               </template>
             </DataTable>

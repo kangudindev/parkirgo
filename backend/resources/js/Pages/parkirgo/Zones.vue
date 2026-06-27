@@ -5,6 +5,7 @@ import DataTable from "@/Components/DataTable.vue";
 import MapPickerModal from "@/Components/MapPickerModal.vue";
 import { router } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
+import axios from "axios";
 
 export default {
   components: { Layout, PageHeader, DataTable, MapPickerModal },
@@ -56,6 +57,26 @@ export default {
         { key: "actions", label: "Aksi", sortable: false, width: "100px" },
       ];
     },
+    detectedMerchantName() {
+      const payload = this.zoneForm.qris_payload;
+      if (!payload) return "";
+      
+      let i = 0;
+      const len = payload.length;
+      while (i < len - 4) {
+        const tag = payload.substring(i, i + 2);
+        const lengthStr = payload.substring(i + 2, i + 4);
+        const length = parseInt(lengthStr, 10);
+        if (isNaN(length)) break;
+        
+        const value = payload.substring(i + 4, i + 4 + length);
+        if (tag === "59") {
+          return value;
+        }
+        i += 4 + length;
+      }
+      return "";
+    }
   },
   methods: {
     nextZoneCode() {
@@ -93,6 +114,30 @@ export default {
       if (!file) return;
       this.zoneForm.qris_image = file;
       this.qrisPreviewUrl = URL.createObjectURL(file);
+
+      const formData = new FormData();
+      formData.append("qris_image", file);
+
+      axios.post(route("parkirgo.zones.decode-qris"), formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      })
+      .then(response => {
+        if (response.data.success && response.data.payload) {
+          this.zoneForm.qris_payload = response.data.payload;
+        } else {
+          this.zoneForm.qris_payload = "";
+          Swal.fire({
+            title: "QRIS Decode Gagal",
+            text: "Payload QRIS tidak dapat dideteksi dari gambar ini. Masukkan payload secara manual jika diperlukan.",
+            icon: "warning",
+            confirmButtonColor: "#405189"
+          });
+        }
+      })
+      .catch(error => {
+        console.error("Gagal decode QRIS:", error);
+        this.zoneForm.qris_payload = "";
+      });
     },
     addCapacity() {
       if (!this.selectedVehicleTypeId) return;
@@ -250,10 +295,10 @@ export default {
           </template>
           <template #cell-status="{ row }"><span class="badge bg-success-subtle text-success">{{ row.status }}</span></template>
           <template #cell-actions="{ row }">
-            <div class="d-flex gap-1">
-              <BButton size="sm" variant="outline-info" @click="viewDetail(row)" title="Detail Zona"><i class="ri-eye-line"></i></BButton>
-              <BButton size="sm" variant="outline-secondary" @click="openZone(row)" title="Edit"><i class="ri-pencil-line"></i></BButton>
-              <BButton size="sm" variant="outline-danger" @click="deleteZone(row)" title="Hapus"><i class="ri-delete-bin-line"></i></BButton>
+            <div class="d-flex gap-2 align-items-center">
+              <button class="btn p-0 border-0 bg-transparent link-info fs-17" @click="viewDetail(row)" title="Detail Zona"><i class="ri-checkbox-line"></i></button>
+              <button class="btn p-0 border-0 bg-transparent link-warning fs-17" @click="openZone(row)" title="Edit"><i class="ri-pencil-line"></i></button>
+              <button class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="deleteZone(row)" title="Hapus"><i class="ri-delete-bin-line"></i></button>
             </div>
           </template>
         </DataTable>
@@ -284,9 +329,11 @@ export default {
                 <td>{{ formatRp(t.base_rate) }}{{ t.base_minutes ? "/"+t.base_minutes+"m" : "" }}</td>
                 <td>{{ t.increment_rate ? formatRp(t.increment_rate)+"/"+t.increment_minutes+"m" : "-" }}</td>
                 <td>{{ t.daily_max_rate ? formatRp(t.daily_max_rate) : "-" }}</td>
-                <td class="d-flex gap-1">
-                  <BButton size="sm" variant="outline-secondary" @click="openTariff(t)"><i class="ri-pencil-line"></i></BButton>
-                  <BButton size="sm" variant="outline-danger" @click="deleteTariff(t)"><i class="ri-delete-bin-line"></i></BButton>
+                <td>
+                  <div class="d-flex gap-2 align-items-center justify-content-center">
+                    <button class="btn p-0 border-0 bg-transparent link-warning fs-17" @click="openTariff(t)" title="Edit"><i class="ri-pencil-line"></i></button>
+                    <button class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="deleteTariff(t)" title="Hapus"><i class="ri-delete-bin-line"></i></button>
+                  </div>
                 </td>
               </tr>
               <tr v-if="!tariffs.length"><td colspan="8" class="text-center text-muted">Belum ada tarif.</td></tr>
@@ -353,6 +400,9 @@ export default {
             <label class="form-label small">QRIS Payload (auto-detected)</label>
             <input v-model="zoneForm.qris_payload" class="form-control" placeholder="Hasil deteksi otomatis..." />
           </div>
+        </div>
+        <div v-if="detectedMerchantName" class="mt-2 text-success small fw-semibold">
+          <i class="ri-store-2-line me-1"></i> Merchant Terdeteksi: {{ detectedMerchantName }}
         </div>
         <div v-if="qrisPreviewUrl" class="mt-2">
           <img :src="qrisPreviewUrl" class="rounded border" style="max-height:100px" alt="QRIS preview" />

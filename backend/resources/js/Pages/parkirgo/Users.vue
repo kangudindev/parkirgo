@@ -276,24 +276,18 @@ export default {
           <template #cell-last_seen_at="{ row }">{{ formatDate(row.last_seen_at) }}</template>
           <template #cell-created_at="{ row }">{{ formatDate(row.created_at) }}</template>
           <template #cell-actions="{ row }">
-            <div v-if="row.role === 'customer'" class="d-flex gap-1">
-              <Link :href="route('parkirgo.users.show', row.id)" class="btn btn-sm btn-outline-primary" title="Detail Member"><i class="ri-eye-line"></i></Link>
-              <BButton size="sm" variant="outline-secondary" @click="open(row)" title="Edit Member"><i class="ri-pencil-line"></i></BButton>
-              <BButton size="sm" variant="outline-danger" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></BButton>
+            <div v-if="row.role === 'customer'" class="d-flex gap-2 align-items-center">
+              <Link :href="route('parkirgo.users.show', row.id)" class="link-info fs-17" title="Detail Member"><i class="ri-checkbox-line"></i></Link>
+              <button class="btn p-0 border-0 bg-transparent link-warning fs-17" @click="open(row)" title="Edit Member"><i class="ri-pencil-line"></i></button>
+              <button class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></button>
             </div>
-            <div v-else-if="row.role !== 'admin'" class="d-flex gap-1">
-              <Link :href="route('parkirgo.users.show', row.id)" class="btn btn-sm btn-outline-primary" title="Detail Jukir"><i class="ri-eye-line"></i></Link>
-              <BButton size="sm" variant="outline-secondary" @click="open(row)" title="Edit"><i class="ri-pencil-line"></i></BButton>
-              <BButton v-if="!row.has_qr_token" size="sm" variant="primary" @click="generateQr(row.id)" title="Generate QR">
-                <i class="ri-scanner-2-line"></i>
-              </BButton>
-              <BButton v-if="row.has_qr_token" size="sm" variant="outline-info" @click="showIdCard(row)" title="Cetak ID Card">
-                <i class="ri-printer-line"></i>
-              </BButton>
-              <BButton v-if="row.has_qr_token" size="sm" variant="outline-danger" @click="revokeQr(row.id)" title="Cabut QR">
-                <i class="ri-forbid-line"></i>
-              </BButton>
-              <BButton size="sm" variant="outline-danger" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></BButton>
+            <div v-else-if="row.role !== 'admin'" class="d-flex gap-2 align-items-center">
+              <Link :href="route('parkirgo.users.show', row.id)" class="link-info fs-17" title="Detail Jukir"><i class="ri-checkbox-line"></i></Link>
+              <button class="btn p-0 border-0 bg-transparent link-warning fs-17" @click="open(row)" title="Edit"><i class="ri-pencil-line"></i></button>
+              <button v-if="!row.has_qr_token" class="btn p-0 border-0 bg-transparent link-success fs-17" @click="generateQr(row.id)" title="Generate QR"><i class="ri-checkbox-line"></i></button>
+              <button v-if="row.has_qr_token" class="btn p-0 border-0 bg-transparent link-primary fs-17" @click="showIdCard(row)" title="Cetak ID Card"><i class="ri-printer-line"></i></button>
+              <button v-if="row.has_qr_token" class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="revokeQr(row.id)" title="Cabut QR"><i class="ri-forbid-line"></i></button>
+              <button class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></button>
             </div>
             <span v-else class="text-muted">-</span>
           </template>

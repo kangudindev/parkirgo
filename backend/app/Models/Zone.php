@@ -28,6 +28,36 @@ class Zone extends Model
         'center_lng' => 'float',
     ];
 
+    protected $appends = [
+        'qris_merchant_name',
+    ];
+
+    public function getQrisMerchantNameAttribute()
+    {
+        if (!$this->qris_payload) {
+            return null;
+        }
+
+        $payload = $this->qris_payload;
+        $len = strlen($payload);
+        $i = 0;
+        while ($i < $len - 4) {
+            $tag = substr($payload, $i, 2);
+            $lengthStr = substr($payload, $i + 2, 2);
+            if (!is_numeric($lengthStr)) {
+                break;
+            }
+            $length = (int)$lengthStr;
+            $value = substr($payload, $i + 4, $length);
+            
+            if ($tag === '59') {
+                return $value;
+            }
+            $i += 4 + $length;
+        }
+        return null;
+    }
+
     public function tariffs()
     {
         return $this->hasMany(ZoneTariff::class);

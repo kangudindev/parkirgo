@@ -196,9 +196,9 @@ export default {
             <span :class="`badge ${statusBadgeClass(row.status)}`">{{ row.status === 'active' ? 'Aktif' : 'Nonaktif' }}</span>
           </template>
           <template #cell-actions="{ row }">
-            <div class="d-flex gap-1">
-              <BButton size="sm" variant="outline-secondary" @click="open(row)" title="Edit Paket"><i class="ri-pencil-line"></i></BButton>
-              <BButton size="sm" variant="outline-danger" @click="remove(row)" title="Hapus Paket"><i class="ri-delete-bin-line"></i></BButton>
+            <div class="d-flex gap-2 align-items-center">
+              <button class="btn p-0 border-0 bg-transparent link-warning fs-17" @click="open(row)" title="Edit Paket"><i class="ri-pencil-line"></i></button>
+              <button class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="remove(row)" title="Hapus Paket"><i class="ri-delete-bin-line"></i></button>
             </div>
           </template>
         </DataTable>
