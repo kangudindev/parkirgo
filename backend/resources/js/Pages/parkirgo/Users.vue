@@ -277,16 +277,16 @@ export default {
           <template #cell-created_at="{ row }">{{ formatDate(row.created_at) }}</template>
           <template #cell-actions="{ row }">
             <div v-if="row.role === 'customer'" class="d-flex gap-2 align-items-center">
-              <Link :href="route('parkirgo.users.show', row.id)" class="link-info fs-17" title="Detail Member"><i class="ri-checkbox-line"></i></Link>
+              <Link :href="route('parkirgo.users.show', row.id)" class="link-info fs-17" title="Detail Member"><i class="ri-eye-line"></i></Link>
               <button class="btn p-0 border-0 bg-transparent link-warning fs-17" @click="open(row)" title="Edit Member"><i class="ri-pencil-line"></i></button>
               <button class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></button>
             </div>
             <div v-else-if="row.role !== 'admin'" class="d-flex gap-2 align-items-center">
-              <Link :href="route('parkirgo.users.show', row.id)" class="link-info fs-17" title="Detail Jukir"><i class="ri-checkbox-line"></i></Link>
+              <Link :href="route('parkirgo.users.show', row.id)" class="link-info fs-17" title="Detail Jukir"><i class="ri-eye-line"></i></Link>
               <button class="btn p-0 border-0 bg-transparent link-warning fs-17" @click="open(row)" title="Edit"><i class="ri-pencil-line"></i></button>
-              <button v-if="!row.has_qr_token" class="btn p-0 border-0 bg-transparent link-success fs-17" @click="generateQr(row.id)" title="Generate QR"><i class="ri-checkbox-line"></i></button>
+              <button v-if="!row.has_qr_token" class="btn p-0 border-0 bg-transparent link-success fs-17" @click="generateQr(row.id)" title="Generate QR"><i class="ri-scanner-2-line"></i></button>
               <button v-if="row.has_qr_token" class="btn p-0 border-0 bg-transparent link-primary fs-17" @click="showIdCard(row)" title="Cetak ID Card"><i class="ri-printer-line"></i></button>
-              <button v-if="row.has_qr_token" class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="revokeQr(row.id)" title="Cabut QR"><i class="ri-forbid-line"></i></button>
+              <button v-if="row.has_qr_token" class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="revokeQr(row.id)" title="Cabut QR"><i class="ri-qr-code-line"></i></button>
               <button class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></button>
             </div>
             <span v-else class="text-muted">-</span>

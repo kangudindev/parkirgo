@@ -296,7 +296,7 @@ export default {
           <template #cell-status="{ row }"><span class="badge bg-success-subtle text-success">{{ row.status }}</span></template>
           <template #cell-actions="{ row }">
             <div class="d-flex gap-2 align-items-center">
-              <button class="btn p-0 border-0 bg-transparent link-info fs-17" @click="viewDetail(row)" title="Detail Zona"><i class="ri-checkbox-line"></i></button>
+              <button class="btn p-0 border-0 bg-transparent link-info fs-17" @click="viewDetail(row)" title="Detail Zona"><i class="ri-eye-line"></i></button>
               <button class="btn p-0 border-0 bg-transparent link-warning fs-17" @click="openZone(row)" title="Edit"><i class="ri-pencil-line"></i></button>
               <button class="btn p-0 border-0 bg-transparent link-danger fs-17" @click="deleteZone(row)" title="Hapus"><i class="ri-delete-bin-line"></i></button>
             </div>

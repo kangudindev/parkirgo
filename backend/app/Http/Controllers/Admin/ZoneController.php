@@ -30,7 +30,7 @@ class ZoneController extends Controller
                 if ($decoded) {
                     session()->flash('qris_payload', $decoded);
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 report($e);
             }
         }
@@ -69,7 +69,7 @@ class ZoneController extends Controller
             'center_lng' => ['nullable', 'numeric', 'min:-180', 'max:180'],
             'radius_meters' => ['nullable', 'integer', 'min:50', 'max:5000'],
             'qris_payload' => ['nullable', 'string'],
-            'qris_image' => ['nullable', 'image', 'max:1024'],
+            'qris_image' => ['nullable', 'image', 'max:5120'],
             'status' => ['nullable', 'in:active,inactive'],
             'capacities' => ['nullable', 'array'],
             'capacities.*.vehicle_type_id' => ['required', 'exists:vehicle_types,id'],
@@ -101,7 +101,7 @@ class ZoneController extends Controller
             'center_lng' => ['nullable', 'numeric', 'min:-180', 'max:180'],
             'radius_meters' => ['nullable', 'integer', 'min:50', 'max:5000'],
             'qris_payload' => ['nullable', 'string'],
-            'qris_image' => ['nullable', 'image', 'max:1024'],
+            'qris_image' => ['nullable', 'image', 'max:5120'],
             'status' => ['required', 'in:active,inactive'],
             'capacities' => ['nullable', 'array'],
             'capacities.*.vehicle_type_id' => ['required', 'exists:vehicle_types,id'],
@@ -161,7 +161,7 @@ class ZoneController extends Controller
     public function decodeQris(Request $request)
     {
         $request->validate([
-            'qris_image' => ['required', 'image', 'max:2048'],
+            'qris_image' => ['required', 'image', 'max:5120'],
         ]);
 
         if (! $request->hasFile('qris_image')) {
@@ -176,7 +176,7 @@ class ZoneController extends Controller
             try {
                 $reader = new \Zxing\QrReader($fullPath);
                 $decoded = $reader->text();
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 report($e);
             }
         }

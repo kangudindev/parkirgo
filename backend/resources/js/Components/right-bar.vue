@@ -182,9 +182,11 @@ export default {
         if (mode == "dark") {
           this.changeMode({ mode: mode });
           this.changeTopbar({ topbar: "light" });
+          this.changeSidebarColor({ sidebarColor: "dark" });
         } else {
           this.changeMode({ mode: mode });
           this.changeTopbar({ topbar: "light" });
+          this.changeSidebarColor({ sidebarColor: "light" });
         }
       },
     },
@@ -525,12 +527,6 @@ export default {
     <BButton variant="danger" @click="topFunction" class="btn-icon" id="back-to-top">
       <i class="ri-arrow-up-line"></i>
     </BButton>
-
-    <div class="customizer-setting d-none d-md-block" @click="click">
-      <div class="btn-primary rounded-pill shadow-lg btn btn-icon btn-lg p-2" data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas" aria-controls="theme-settings-offcanvas" id="mdi-cog">
-        <i class="mdi mdi-spin mdi-cog-outline fs-22"></i>
-      </div>
-    </div>
     <BOffcanvas class="border-0" id="theme-settings-offcanvas" header-class="d-flex align-items-center bg-primary bg-gradient p-3" body-class="p-0" z-index="1005" footer-class="offcanvas-footer border-top p-3 text-center" placement="end" v-model="show">
       <template #header>
         <div class="me-2">
@@ -1118,7 +1114,7 @@ export default {
               </BCol>
               <BCol cols="4">
                 <div class="form-check sidebar-setting card-radio">
-                  <input class="form-check-input" v-model="sidebarColor" type="radio" name="data-sidebar" id="sidebar-color-dark" value="dark" @click="onSideBarColorClick('light')" />
+                   <input class="form-check-input" v-model="sidebarColor" type="radio" name="data-sidebar" id="sidebar-color-dark" value="dark" @click="onSideBarColorClick('dark')" />
                   <label class="form-check-label p-0 avatar-md w-100" for="sidebar-color-dark">
                     <span class="d-flex gap-1 h-100">
                       <span class="flex-shrink-0">

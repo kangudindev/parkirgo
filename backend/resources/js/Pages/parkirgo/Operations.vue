@@ -221,7 +221,7 @@ export default {
               </template>
               <template #cell-actions="{ row }">
                 <button class="btn p-0 border-0 bg-transparent link-info fs-17" @click="openDetail(row)" title="Detail">
-                  <i class="ri-checkbox-line"></i>
+                  <i class="ri-eye-line"></i>
                 </button>
               </template>
             </DataTable>
