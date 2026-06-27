@@ -24,17 +24,29 @@ export default {
     apexChartOptions() {
       return {
         chart: { height: 380, type: "line", zoom: { enabled: false }, toolbar: { show: false } },
-        dataLabels: { 
-          enabled: true, 
-          style: { fontSize: '10px' },
-          formatter: (v) => v ? v.toLocaleString("id-ID") : v
+        dataLabels: { enabled: false },
+        stroke: { width: 2.5, curve: "smooth" },
+        markers: { size: 0, hover: { size: 6 } },
+        xaxis: { 
+          categories: this.chartData.labels, 
+          title: { text: "Waktu", style: { fontWeight: 600 } },
+          axisBorder: { show: false },
+          axisTicks: { show: false }
         },
-        stroke: { width: 3, curve: "smooth" },
-        markers: { size: 5 },
-        xaxis: { categories: this.chartData.labels, title: { text: "Waktu" } },
-        yaxis: { title: { text: "Pendapatan (Rp)" }, labels: { formatter: (v) => this.moneyShort(v) } },
+        yaxis: { 
+          title: { text: "Pendapatan (Rp)", style: { fontWeight: 600 } }, 
+          labels: { formatter: (v) => this.moneyShort(v) } 
+        },
+        grid: {
+          borderColor: "#f3f3f3",
+          row: { colors: ["transparent", "transparent"], opacity: 0.5 }
+        },
         legend: { position: "top", horizontalAlign: "center" },
-        tooltip: { y: { formatter: (v) => this.money(v) } }
+        tooltip: { 
+          shared: true, 
+          intersect: false,
+          y: { formatter: (v) => this.money(v) } 
+        }
       };
     }
   },
@@ -211,8 +223,8 @@ export default {
               <table class="table table-sm table-borderless align-middle mb-0 text-center">
                 <thead>
                   <tr class="text-muted small border-bottom">
-                    <th class="pb-1">PENDAPATAN</th>
-                    <th class="pb-1">KENDARAAN</th>
+                    <th class="pb-1">PENDAPATAN<br><span class="text-muted text-capitalize fw-normal" style="font-size: 10px;">({{ periodLabel.toLowerCase() }})</span></th>
+                    <th class="pb-1">KENDARAAN<br><span class="text-muted text-capitalize fw-normal" style="font-size: 10px;">({{ periodLabel.toLowerCase() }})</span></th>
                     <th class="pb-1">JUKIR</th>
                   </tr>
                 </thead>
@@ -240,7 +252,7 @@ export default {
 
             <div class="d-flex align-items-center my-2">
               <hr class="flex-grow-1 m-0">
-              <span class="px-2 text-muted" style="font-size: 10px; font-weight: 600; text-transform: uppercase;">Kendaraan Aktif</span>
+              <span class="px-2 text-muted text-uppercase" style="font-size: 10px; font-weight: 600;">Kendaraan Aktif <span class="text-danger fw-bold">(LIVE)</span></span>
               <hr class="flex-grow-1 m-0">
             </div>
 

@@ -48,6 +48,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     // Users CRUD
     Route::get('/parkirgo/users', [UserController::class, 'index'])->name('parkirgo.users');
+    Route::get('/parkirgo/users/{user}', [UserController::class, 'show'])->name('parkirgo.users.show');
     Route::post('/parkirgo/users', [UserController::class, 'store'])->name('parkirgo.users.store');
     Route::post('/parkirgo/users/{user}', [UserController::class, 'update'])->name('parkirgo.users.update');
     Route::delete('/parkirgo/users/{user}', [UserController::class, 'destroy'])->name('parkirgo.users.destroy');

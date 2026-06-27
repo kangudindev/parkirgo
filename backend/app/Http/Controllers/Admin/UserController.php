@@ -85,6 +85,67 @@ class UserController extends Controller
         return back()->with('success', 'Pengguna berhasil diperbarui.');
     }
 
+    public function show(User $user)
+    {
+        if ($user->role === 'jukir') {
+            $user->load(['assignedZone']);
+            
+            // Ambil histori shift terbaru
+            $shifts = \App\Models\Shift::where('user_id', $user->id)
+                ->with(['zone', 'settlement'])
+                ->orderBy('shift_date', 'desc')
+                ->orderBy('start_time', 'desc')
+                ->take(10)
+                ->get();
+                
+            // Ambil histori absensi terbaru
+            $attendance = \App\Models\Attendance::where('user_id', $user->id)
+                ->with(['zone'])
+                ->orderBy('check_in_at', 'desc')
+                ->take(10)
+                ->get();
+
+            return Inertia::render('parkirgo/UserDetail', [
+                'user' => $user,
+                'shifts' => $shifts,
+                'attendance' => $attendance,
+            ]);
+        }
+
+        if ($user->role === 'customer') {
+            $user->load([
+                'wallet', 
+                'userSubscriptions' => function($q) {
+                    $q->with(['package', 'vehicles'])->orderBy('created_at', 'desc');
+                }
+            ]);
+
+            // Ambil histori parkir berdasarkan kendaraan terdaftar pelanggan
+            $plates = \App\Models\SubscriptionVehicle::whereHas('userSubscription', function($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })->pluck('license_plate')->toArray();
+            
+            $parkingHistory = [];
+            if (!empty($plates)) {
+                $parkingHistory = \App\Models\ParkingSession::whereIn('plate_number', $plates)
+                    ->with(['zone', 'vehicleType'])
+                    ->orderBy('entry_at', 'desc')
+                    ->take(10)
+                    ->get();
+            }
+
+            return Inertia::render('parkirgo/UserDetail', [
+                'user' => $user,
+                'parkingHistory' => $parkingHistory,
+            ]);
+        }
+
+        // Fallback untuk admin / supervisor
+        return Inertia::render('parkirgo/UserDetail', [
+            'user' => $user,
+        ]);
+    }
+
     public function destroy(User $user)
     {
         if ($user->parkingSessions()->exists() || $user->settlements()->exists()) {

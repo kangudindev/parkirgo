@@ -36,7 +36,7 @@ class AdminController extends Controller
         try {
             $summary = [
                 'revenue_period' => Transaction::whereBetween('created_at', [$dateFrom, $dateTo])->sum('amount'),
-                'active_sessions' => ParkingSession::where('status', 'active')->where('payment_status', 'paid')->count(),
+                'active_sessions' => ParkingSession::where('status', 'active')->count(),
                 'zones_active' => Zone::where('status', 'active')->count(),
                 'jukirs_online' => User::where('role', 'jukir')->where('status', 'active')->count(),
                 'pending_qris' => Transaction::where('payment_method', 'qris')->where('status', 'recorded')->count(),
@@ -232,7 +232,7 @@ class AdminController extends Controller
         return match ($period) {
             'today' => ['from' => $now->copy()->startOfDay()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
             'yesterday' => ['from' => $now->copy()->subDay()->startOfDay()->toDateTimeString(), 'to' => $now->copy()->subDay()->endOfDay()->toDateTimeString()],
-            'week' => ['from' => $now->copy()->subDays(6)->startOfDay()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
+            'week' => ['from' => $now->copy()->startOfWeek()->toDateTimeString(), 'to' => $now->copy()->endOfWeek()->toDateTimeString()],
             'month' => ['from' => $now->copy()->startOfMonth()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
             'year' => ['from' => $now->copy()->startOfYear()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],
             default => ['from' => $now->copy()->startOfDay()->toDateTimeString(), 'to' => $now->copy()->endOfDay()->toDateTimeString()],

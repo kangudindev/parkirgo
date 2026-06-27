@@ -4,11 +4,11 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import DataTable from "@/Components/DataTable.vue";
 import MemberIdCard from "@/Components/MemberIdCard.vue";
-import { router } from "@inertiajs/vue3";
+import { router, Link } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 
 export default {
-  components: { Layout, PageHeader, DataTable, MemberIdCard },
+  components: { Layout, PageHeader, DataTable, MemberIdCard, Link },
   setup() {
     const memberCardRef = ref(null);
     return { memberCardRef };
@@ -245,7 +245,11 @@ export default {
               @per-page-change="onPerPage"
             >
               <template #cell-user="{ row }">
-                <div v-if="row.user" class="fw-semibold">{{ row.user.name }}<br><small class="text-muted">{{ row.user.email }}</small></div>
+                <div v-if="row.user" class="fw-semibold">
+                  <Link :href="route('parkirgo.users.show', row.user.id)" class="text-primary fw-semibold">{{ row.user.name }}</Link>
+                  <br>
+                  <small class="text-muted">{{ row.user.email }}</small>
+                </div>
                 <div v-else class="text-muted fst-italic">Pelanggan Offline</div>
               </template>
               <template #cell-package="{ row }">

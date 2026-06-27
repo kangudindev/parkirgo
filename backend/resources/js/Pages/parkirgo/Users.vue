@@ -4,11 +4,11 @@ import PageHeader from "@/Components/page-header.vue";
 import DataTable from "@/Components/DataTable.vue";
 import JukirIdCard from "@/Components/JukirIdCard.vue";
 import { ref } from "vue";
-import { router } from "@inertiajs/vue3";
+import { router, Link } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
 
 export default {
-  components: { Layout, PageHeader, DataTable, JukirIdCard },
+  components: { Layout, PageHeader, DataTable, JukirIdCard, Link },
   setup() {
     const idCardRef = ref(null);
     return { idCardRef };
@@ -254,7 +254,7 @@ export default {
           <template #cell-name="{ row }">
             <div class="d-flex align-items-center gap-2">
               <img :src="row.profile_photo_url" :alt="row.name" class="rounded-circle avatar-xs" />
-              <span class="fw-semibold">{{ row.name }}</span>
+              <Link :href="route('parkirgo.users.show', row.id)" class="text-primary fw-semibold">{{ row.name }}</Link>
             </div>
           </template>
           <template #cell-role="{ row }">
@@ -277,10 +277,12 @@ export default {
           <template #cell-created_at="{ row }">{{ formatDate(row.created_at) }}</template>
           <template #cell-actions="{ row }">
             <div v-if="row.role === 'customer'" class="d-flex gap-1">
+              <Link :href="route('parkirgo.users.show', row.id)" class="btn btn-sm btn-outline-primary" title="Detail Member"><i class="ri-eye-line"></i></Link>
               <BButton size="sm" variant="outline-secondary" @click="open(row)" title="Edit Member"><i class="ri-pencil-line"></i></BButton>
               <BButton size="sm" variant="outline-danger" @click="remove(row)" title="Hapus"><i class="ri-delete-bin-line"></i></BButton>
             </div>
             <div v-else-if="row.role !== 'admin'" class="d-flex gap-1">
+              <Link :href="route('parkirgo.users.show', row.id)" class="btn btn-sm btn-outline-primary" title="Detail Jukir"><i class="ri-eye-line"></i></Link>
               <BButton size="sm" variant="outline-secondary" @click="open(row)" title="Edit"><i class="ri-pencil-line"></i></BButton>
               <BButton v-if="!row.has_qr_token" size="sm" variant="primary" @click="generateQr(row.id)" title="Generate QR">
                 <i class="ri-scanner-2-line"></i>
@@ -306,23 +308,16 @@ export default {
         <div class="col-6" v-if="form.role !== 'customer'"><label class="form-label">NIK</label><input v-model="form.nik" class="form-control" /></div>
         <div class="col-6" :class="{ 'col-12': form.role === 'customer' }"><label class="form-label">Telepon</label><input v-model="form.phone" class="form-control" /></div>
       </div>
-      <div class="row mb-2" v-if="form.role !== 'customer'">
+      <div class="row mb-2">
         <div class="col-6"><label class="form-label">Role</label>
           <select v-model="form.role" class="form-select">
             <option value="admin">Admin ParkirGo</option>
             <option value="supervisor">Supervisor</option>
             <option value="jukir">Juru Parkir</option>
+            <option value="customer">Member Berlangganan</option>
           </select>
         </div>
         <div class="col-6"><label class="form-label">Status</label>
-          <select v-model="form.status" class="form-select">
-            <option value="active">Aktif</option>
-            <option value="inactive">Nonaktif</option>
-          </select>
-        </div>
-      </div>
-      <div class="row mb-2" v-else>
-        <div class="col-12"><label class="form-label">Status</label>
           <select v-model="form.status" class="form-select">
             <option value="active">Aktif</option>
             <option value="inactive">Nonaktif</option>
