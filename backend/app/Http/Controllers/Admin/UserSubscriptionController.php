@@ -24,7 +24,7 @@ class UserSubscriptionController extends Controller
 
         $packages = SubscriptionPackage::where('status', 'active')->with('vehicleType')->get();
         
-        $users = User::orderBy('name')->get(['id', 'name', 'email']);
+        $users = User::where('role', 'customer')->orderBy('name')->get(['id', 'name', 'email']);
         
         $wallets = UserWallet::with('user')->paginate($this->perPage($request), ['*'], 'wallet_page');
 

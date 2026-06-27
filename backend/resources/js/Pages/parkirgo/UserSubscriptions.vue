@@ -32,6 +32,8 @@ export default {
       tableSortField: this.sortField,
       tableSortDir: this.sortDir,
       selectedPackageId: "",
+      userSearchQuery: "",
+      selectedUserName: "",
       form: {
         user_id: "",
         subscription_package_id: "",
@@ -66,6 +68,14 @@ export default {
     },
     maxVehicles() {
       return this.selectedPackage?.max_vehicles || 1;
+    },
+    filteredUsers() {
+      if (!this.userSearchQuery) return this.users;
+      const q = this.userSearchQuery.toLowerCase();
+      return this.users.filter(u => 
+        u.name.toLowerCase().includes(q) || 
+        (u.email && u.email.toLowerCase().includes(q))
+      );
     },
   },
   watch: {
@@ -102,12 +112,18 @@ export default {
     },
     openCreate() {
       this.selectedPackageId = "";
+      this.userSearchQuery = "";
+      this.selectedUserName = "";
       this.form = {
         user_id: "",
         subscription_package_id: "",
         vehicles: [],
       };
       this.showModal = true;
+    },
+    selectUser(id, displayName) {
+      this.form.user_id = id;
+      this.selectedUserName = displayName;
     },
     openEdit(sub) {
       this.editForm = {
@@ -311,10 +327,45 @@ export default {
 
       <div class="mb-3">
         <label class="form-label fw-medium">Pengguna Terdaftar (Optional untuk Pass/Kuota, Wajib untuk Top Up)</label>
-        <select v-model="form.user_id" class="form-select">
-          <option value="">-- Pengguna Offline (Tanpa Akun) --</option>
-          <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }} ({{ u.email }})</option>
-        </select>
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center dropdown-toggle bg-white text-dark border-secondary-subtle" 
+                  type="button" 
+                  data-bs-toggle="dropdown" 
+                  aria-expanded="false">
+            <span>{{ selectedUserName || '-- Pengguna Offline (Tanpa Akun) --' }}</span>
+          </button>
+          
+          <div class="dropdown-menu w-100 p-2 shadow-lg" style="max-height: 250px; overflow-y: auto; z-index: 1060;">
+            <!-- Search Input -->
+            <input v-model="userSearchQuery" 
+                   type="text" 
+                   class="form-control form-control-sm mb-2" 
+                   placeholder="Cari nama atau email..." 
+                   @click.stop />
+                   
+            <!-- Default Option -->
+            <button class="dropdown-item py-2 border-bottom border-light" 
+                    type="button" 
+                    @click="selectUser('', '')">
+              -- Pengguna Offline (Tanpa Akun) --
+            </button>
+            
+            <!-- List Users -->
+            <button v-for="u in filteredUsers" 
+                    :key="u.id" 
+                    class="dropdown-item py-2 border-bottom border-light" 
+                    type="button" 
+                    @click="selectUser(u.id, `${u.name} (${u.email})`)">
+              <div class="fw-semibold fs-12">{{ u.name }}</div>
+              <small class="text-muted fs-11">{{ u.email }}</small>
+            </button>
+            
+            <!-- No results -->
+            <div v-if="filteredUsers.length === 0" class="text-muted text-center py-2 fs-11">
+              Tidak ada pengguna ditemukan.
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Form Kendaraan Dinamis berdasarkan batas kendaraan paket -->
